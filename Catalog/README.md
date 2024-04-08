@@ -1,1 +1,2 @@
-# Catalog
+# CATALOG
+The Gym Catalog serves all the system actors as a record of all the devices and services. It offers details on all of the endpoints (i.e., REST Web Services and MQTT topics) of the devices, resources, and services within the platform. Additionally, it offers configuration options for control strategies and applications (e.g. timers and sensor lists). Every actor needs to use the Gym Catalog's REST Web Services to obtain this data when it first launches.
