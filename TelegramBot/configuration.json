@@ -1,0 +1,13 @@
+{
+    "token": "6961607644:AAFCNHwGsNI67k5m53VjFY48b5O9DlCNgZg",
+    "chatIDs": ["chatID1","chatID2","chatID3"],
+    "message": ["switchon","switchoff","start","client","Administrator"],
+
+
+    "serviceId": "GeniusGym",
+    "broker": "test.mosquitto.org",
+    "port": 1883,
+    "homeCatAddress": "http://172.17.0.2:8090",
+    "webServerAddress":"http://192.168.1.101:8090",
+    "Topic":"IoT_project"
+}
