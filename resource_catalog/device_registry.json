@@ -1,0 +1,13 @@
+{
+    "devices": [
+      {
+        "device_id": "temperature_sensor_01",
+        "type": "temperature_sensor",
+        "location": "Main Room",
+        "status": "active",
+        "last_update": "2024-08-20T12:00:00",
+        "endpoint": "http://localhost:8081/sensors/temperature"
+      }
+    ]
+  }
+  

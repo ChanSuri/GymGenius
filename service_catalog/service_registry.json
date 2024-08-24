@@ -1,0 +1,10 @@
+{
+    "services": [
+      {
+        "service_id": "hvac_control",
+        "description": "Gestisce l'ottimizzazione energetica e il controllo HVAC",
+        "status": "active",
+        "endpoint": "http://localhost:8081/hvac"
+      }
+    ]
+  }

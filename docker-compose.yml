@@ -1,0 +1,34 @@
+services:
+  service_catalog:
+    build:
+      context: ./service_catalog
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./service_catalog:/app
+    networks:
+      - gym-genius-network
+
+  resource_catalog:
+    build:
+      context: ./resource_catalog
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./resource_catalog:/app
+    networks:
+      - gym-genius-network
+
+  device_connector:
+    build:
+      context: ./device_connector
+    ports:
+      - "8082:8082"
+    volumes:
+      - ./device_connector:/app
+    networks:
+      - gym-genius-network
+
+networks:
+  gym-genius-network:
+    driver: bridge
