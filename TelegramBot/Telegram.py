@@ -6,7 +6,7 @@ import requests
 from pprint import pprint
 from telepot.loop import MessageLoop
 from telepot.namedtuple import ReplyKeyboardMarkup,InlineKeyboardMarkup, InlineKeyboardButton
-from common.MyMQTT import MyMQTT
+from TelegramBot.MyMQTT import MyMQTT
 from common.RegManager import RegManager
 
 class Telegrambot():
@@ -39,7 +39,7 @@ class Telegrambot():
             exit()
         
         self.possibleSwitch =[]
-        zones = set(self.museumSetting["zones"].keys())-{"outdoor"}
+        zones = set(self.gymSetting["zones"].keys())-{"outdoor"}
         for zone in zones:
             temp = [zone]
             self.possibleSwitch.append(temp)

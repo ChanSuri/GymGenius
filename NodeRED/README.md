@@ -1,0 +1,2 @@
+# NodeRED
+It is a dashboard that employs Raspberry Pi's REST Web Services to retrieve data from IoT devices and visualize it. Additionally, it imports plots of environmental measurements through the use of the Thingspeak Web Services
