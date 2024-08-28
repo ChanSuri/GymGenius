@@ -24,7 +24,7 @@ class Telegrambot():
             self.serviceId, self.conf["broker"], int(self.conf["port"]), self)
         self.homeCatAddr = self.conf["homeCatAddress"]
         self.webServerAddr = self.conf["webServerAddress"]
-        self.Topic = self.conf["Topic"]
+        self.switchTopic = self.conf["switchTopic"]
 
         #self.__message = {"start": "", "info": ""}
         regMsg = {"registerType": "service",
