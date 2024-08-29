@@ -14,10 +14,6 @@ mqtt_topic_control = "gym/hvac/control"
 mqtt_topic_threshold = "gym/threshold"  # Topic for thresholds update
 mqtt_topic_occupancy = "gym/occupancy/current"  # Topic for current occupancy
 
-# Thingspeak Configuration
-thingspeak_write_api_key = "YOUR_THINGSPEAK_WRITE_API_KEY"
-thingspeak_url = "https://api.thingspeak.com/update"
-
 class TempOptimizationService:
     exposed = True
 
@@ -65,7 +61,6 @@ class TempOptimizationService:
             if temperature is not None and humidity is not None:
                 print(f"Received temperature: {temperature}°C, humidity: {humidity}%")
                 self.control_hvac(temperature, humidity)
-                self.send_data_to_thingspeak(temperature, humidity)
         
         elif message.topic == mqtt_topic_threshold:  # Handle threshold updates via MQTT
             try:
@@ -125,24 +120,11 @@ class TempOptimizationService:
         self.client.publish(mqtt_topic_control, payload)
         print(f"Sent HVAC command: {command}")
 
-    def send_data_to_thingspeak(self, temperature, humidity):
-        try:
-            response = requests.post(thingspeak_url, data={
-                'api_key': thingspeak_write_api_key,
-                'field1': temperature,
-                'field2': humidity
-            })
-            if response.status_code == 200:
-                print("Data sent to Thingspeak successfully.")
-            else:
-                print(f"Failed to send data to Thingspeak. Status code: {response.status_code}")
-        except Exception as e:
-            print(f"Error sending data to Thingspeak: {e}")
-
     # REST API to retrieve current HVAC status
     def GET(self, *uri, **params):
         return json.dumps({
             "status": "success",
+            "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "hvac_state": self.hvac_state,
             "thresholds": self.thresholds,
             "occupancy": self.current_occupancy
@@ -158,7 +140,7 @@ def initialize_service():
     service_id = "hvac_control"
     description = "Gestione e controllo HVAC"
     status = "active"
-    endpoint = "http://localhost:8083/hvac"
+    endpoint = "http://localhost:8084/hvac"
     register_service(service_id, description, status, endpoint)
     print("Temperature Optimization Service Initialized and Registered")
 
@@ -182,7 +164,7 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, stop_service)
     
     # Configurazione di CherryPy per esporre l'API REST
-    cherrypy.config.update({'server.socket_port': 8083, 'server.socket_host': '0.0.0.0'})
+    cherrypy.config.update({'server.socket_port': 8084, 'server.socket_host': '0.0.0.0'})
     conf = {
         '/': {
             'request.dispatch': cherrypy.dispatch.MethodDispatcher(),

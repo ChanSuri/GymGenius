@@ -11,10 +11,6 @@ from registration_functions import register_service
 mqtt_broker = "test.mosquitto.org"
 mqtt_topic_availability = "gym/availability/#"  # Subscribe to all machine availability
 
-# Thingspeak Configuration
-thingspeak_write_api_key = "YOUR_THINGSPEAK_WRITE_API_KEY"
-thingspeak_url = "https://api.thingspeak.com/update"
-
 class MachineAvailabilityService:
     exposed = True
 
@@ -76,48 +72,33 @@ class MachineAvailabilityService:
             machine_data['occupied'] -= 1
             machine_data['available'] += 1
 
-        # Publish the aggregated data to the specific MQTT topic for this machine type
-        self.publish_total_availability(machine_type)
+        # Save the aggregated data to a JSON file
+        self.save_availability_to_file()
 
-    def publish_total_availability(self, machine_type):
-        machine_data = self.machines[machine_type]
-        
-        data = {
-            "machineType": machine_type,
-            "total": machine_data['total'],
-            "available": machine_data['available'],
-            "occupied": machine_data['occupied']
-        }
-
-        mqtt_topic_total_availability = f"gym/total_availability/{machine_type}"
-        payload = json.dumps(data)
-        self.client.publish(mqtt_topic_total_availability, payload)
-        print(f"Published total availability for {machine_type}: {payload}")
-
-        # Also send data to ThingSpeak
-        self.send_data_to_thingspeak(machine_type)
-
-    def send_data_to_thingspeak(self, machine_type):
+    def save_availability_to_file(self):
         try:
-            machine_data = self.machines[machine_type]
-            response = requests.post(thingspeak_url, data={
-                'api_key': thingspeak_write_api_key,
-                'field1': machine_data['available'],
-                'field2': machine_data['occupied']
-            })
-            if response.status_code == 200:
-                print(f"Data for {machine_type} sent to ThingSpeak successfully.")
-            else:
-                print(f"Failed to send data to ThingSpeak for {machine_type}. Status code: {response.status_code}")
+            with open('availability.json', 'w') as f:
+                json.dump(self.machines, f, indent=4)
+            print("Availability data saved to availability.json")
         except Exception as e:
-            print(f"Error sending data to ThingSpeak for {machine_type}: {e}")
+            print(f"Failed to save availability data to file: {e}")
 
-    # REST API to retrieve current machine availability status for all types
+    # REST API to retrieve current machine availability status from the JSON file
     def GET(self, *uri, **params):
-        return json.dumps({
-            "status": "success",
-            "machines": self.machines
-        })
+        try:
+            with open('availability.json', 'r') as f:
+                availability_data = json.load(f)
+            return json.dumps({
+                "status": "success",
+                "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "machines": availability_data
+            })
+        except Exception as e:
+            return json.dumps({
+                "status": "error",
+                "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "message": str(e)
+            })
 
     def stop(self):
         self.client.loop_stop()
@@ -129,7 +110,7 @@ def initialize_service():
     service_id = "machine_availability"
     description = "Manages machine availability"
     status = "active"
-    endpoint = "http://localhost:8084/machine_availability"
+    endpoint = "http://localhost:8085/machine_availability"
     register_service(service_id, description, status, endpoint)
     print("Machine Availability Service Initialized and Registered")
 
@@ -148,7 +129,10 @@ if __name__ == "__main__":
         "elliptical_trainer": 4,
         "stationary_bike": 6,
         "rowing_machine": 3,
-        # Add other types of machines here
+        "cable_machine": 5,
+        "leg_press_machine": 5,
+        "smith_machine": 5,
+        "lat_pulldown_machine": 5
     }
 
     # Initialize the service
@@ -159,7 +143,7 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, stop_service)
     
     # CherryPy configuration to expose the REST API
-    cherrypy.config.update({'server.socket_port': 8084, 'server.socket_host': '0.0.0.0'})
+    cherrypy.config.update({'server.socket_port': 8085, 'server.socket_host': '0.0.0.0'})
     conf = {
         '/': {
             'request.dispatch': cherrypy.dispatch.MethodDispatcher(),

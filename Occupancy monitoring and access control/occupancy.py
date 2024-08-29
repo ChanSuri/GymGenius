@@ -2,7 +2,6 @@ import cherrypy
 import paho.mqtt.client as mqtt
 import time
 import json
-import requests
 import datetime
 import numpy as np
 import signal
@@ -27,12 +26,6 @@ min_training_samples = 2 * 9 * 7  # At least 2 data points for each slot-hour/da
 mqtt_broker = "test.mosquitto.org"
 mqtt_topic_entry = "gym/occupancy/entry"
 mqtt_topic_exit = "gym/occupancy/exit"
-
-# Thingspeak Configuration
-thingspeak_write_api_key = "YOUR_THINGSPEAK_WRITE_API_KEY"
-thingspeak_read_api_key = "YOUR_THINGSPEAK_READ_API_KEY"
-thingspeak_url = "https://api.thingspeak.com/update"
-thingspeak_channel_id = "YOUR_THINGSPEAK_CHANNEL_ID"
 
 # Model for regression
 model = LinearRegression()
@@ -146,36 +139,34 @@ class OccupancyService:
                 # Predict occupancy for each slot-hour/day combination
                 prediction_matrix[hour_slot, day] = model.predict([[hour_slot, day]])
         print(f"Prediction matrix updated: \n{prediction_matrix}")
-        self.send_prediction_to_thingspeak()
+        self.save_prediction_to_file()
 
-    # Function to send the current prediction to Thingspeak
-    def send_prediction_to_thingspeak(self):
+    # Function to save the prediction matrix to a file (prediction.json) at the end of the day
+    def save_prediction_to_file(self):
         try:
-            now = datetime.datetime.now()
-            hour_slot = self.get_time_slot(now.hour)
-            day_of_week = now.weekday()
-
-            current_prediction = prediction_matrix[hour_slot, day_of_week]
-
-            # Send the current prediction to Thingspeak field 1
-            response = requests.post(thingspeak_url, data={
-                'api_key': thingspeak_write_api_key,
-                'field1': current_prediction
-            })
-            if response.status_code == 200:
-                print(f"Prediction sent to Thingspeak: {current_prediction}")
-            else:
-                print(f"Error sending data to Thingspeak: {response.status_code}")
+            with open('prediction.json', 'w') as f:
+                json.dump(prediction_matrix.tolist(), f)
+            print("Prediction matrix saved to prediction.json")
         except Exception as e:
-            print(f"Error sending prediction data to Thingspeak: {e}")
+            print(f"Error saving prediction data to file: {e}")
 
     # REST API to retrieve the current occupancy and prediction matrix
     def GET(self, *uri, **params):
-        return json.dumps({
-            "status": "success",
-            "current_occupancy": current_occupancy,
-            "prediction_matrix": prediction_matrix.tolist()  # Convert matrix to list for JSON
-        })
+        try:
+            with open('prediction.json', 'r') as f:
+                prediction_data = json.load(f)
+            response = {
+                "status": "success",
+                "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "current_occupancy": current_occupancy,
+                "prediction_matrix": prediction_data
+            }
+        except FileNotFoundError:
+            response = {
+                "status": "error",
+                "message": "Prediction data not found."
+            }
+        return json.dumps(response)
 
 def initialize_service():
     # Register the service at startup
