@@ -4,10 +4,10 @@ import adafruit_dht
 import json
 from datetime import datetime, timezone
 
-# Inizializzazione del sensore DHT11
+# Initialization of the DHT11 sensor
 dhtDevice = adafruit_dht.DHT11(board.D15)
 
-# Imposta il nome univoco del sensore (ad esempio, il nome del dispositivo o una posizione)
+# Set the unique name of the sensor (e.g., device name or location)
 sensor_name = "GymGenius/entrance/environment"
 file_name = "environment_entrance.json"
 
@@ -18,30 +18,30 @@ try:
         current_time = datetime.now(timezone.utc).isoformat()
 
         if humidity is not None and temperature is not None:
-            # Creazione del payload SenML
+            # Create the SenML payload
             data = [
                 {"bn": sensor_name, 
                  "bt": current_time,
                  "n": "temperature",
-		         "u": "Cel",
+                 "u": "Cel",
                  "v": temperature},
 
-	            {"bn": sensor_name,
-		         "bt": current_time,
+                {"bn": sensor_name,
+                 "bt": current_time,
                  "n": "humidity",
                  "u": "%",
                  "v": humidity}
             ]
             
-            # Conversione in JSON
+            # Convert to JSON
             json_data = json.dumps(data)
 
-            # Scrive i dati JSON nel file
+            # Write the JSON data to the file
             with open(file_name, 'w') as file:
                 file.write(json_data)
             
-            # Stampa il percorso del file e la conferma di scrittura
-            print(f"Dati scritti in {file_name}")
+            # Print the file path and confirmation of write
+            print(f"Data written to {file_name}")
         else:
             print("Failed to retrieve data from humidity sensor")
 
@@ -51,4 +51,3 @@ except KeyboardInterrupt:
     print("Program stopped by user")
 finally:
     dhtDevice.exit()
-

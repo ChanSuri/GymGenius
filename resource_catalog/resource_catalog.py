@@ -1,6 +1,7 @@
 import cherrypy
 import json
 import os
+import datetime
 
 # Path to the device_registry.json file
 DEVICE_REGISTRY_FILE = 'device_registry.json'
@@ -46,34 +47,48 @@ class ResourceCatalog:
         if not device_id:
             raise cherrypy.HTTPError(400, "device_id is required")
 
-        # Check if the device already exists
-        if device_id in device_registry:
-            raise cherrypy.HTTPError(409, "Device already exists")
+        # Build a dictionary for quick lookup
+        devices_by_id = {device["device_id"]: device for device in device_registry["devices"]}
 
-        # Add the device to the registry and save to the file
-        device_registry[device_id] = input_data
+        # Check if the device already exists
+        if device_id in devices_by_id:
+            existing_device = devices_by_id[device_id]
+            if input_data == existing_device:
+                raise cherrypy.HTTPError(304, "Device already registered with the same data")
+            else:
+                raise cherrypy.HTTPError(409, "Device exists but data differs. Update required.")
+
+        # Add the device to the registry
+        device_registry["devices"].append(input_data)
+        
+        # update last update of the whole register 
+        device_registry["lastUpdate"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         save_device_registry(device_registry)
         return json.dumps({"status": "success", "message": "Device registered successfully"})
 
+
     def PUT(self, *uri, **params):
-        # Ensure device_id is provided in the URI
-        if len(uri) == 0:
-            raise cherrypy.HTTPError(400, "device_id is required")
-
-        device_id = uri[0]
-
-        # Check if the device exists
-        if device_id not in device_registry:
-            raise cherrypy.HTTPError(404, "Device not found")
-
         # Read and decode the request body
         body = cherrypy.request.body.read().decode('utf-8')
         input_data = json.loads(body)
+        device_id = input_data.get("device_id")
 
-        # Update the device in the registry
-        device_registry[device_id].update(input_data)
+        # Ensure device_id is present
+        if not device_id:
+            raise cherrypy.HTTPError(400, "device_id is required")
+
+        # Simply update the device in the registry
+        for i, device in enumerate(device_registry["devices"]):
+            if device["device_id"] == device_id:
+                device_registry["devices"][i] = input_data
+                break
+
+        # Update last update of the whole register
+        device_registry["lastUpdate"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         save_device_registry(device_registry)
+        
         return json.dumps({"status": "success", "message": "Device updated successfully"})
+
 
     def DELETE(self, *uri, **params):
         # Ensure device_id is provided in the URI
