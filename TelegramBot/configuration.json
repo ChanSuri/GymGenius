@@ -2,7 +2,7 @@
     "token": "6961607644:AAFCNHwGsNI67k5m53VjFY48b5O9DlCNgZg",
     "message": ["switchon","switchoff","start","client","Administrator"],
     "zones": ["entrance","changing_room","cardio","lifting"],
-    "machine":[],
+    "machines":["Treadmill","Elliptical_Trainer","Stationary_Bike","Rowing_Machine","Cable_Machine","LegPress_Machine","Smith_Machine","Lat_Pulldown_Machine"],
 
 
     "serviceId": "GeniusGym",
@@ -10,5 +10,7 @@
     "port": 1883,
     "webServerAddress":"http://localhost:8081/devices",
     "machineAvailable":"http://localhost:8085/machine_availability",
-    "switchTopic":"IoT_project"
+    "occupancy":"http://localhost:8083/occupancy",
+    "switchTopic":"gym/mainswitch",
+    "crowdTopic":"gym/occupancy"
 }

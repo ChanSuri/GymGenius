@@ -26,7 +26,9 @@ class Telegrambot():
         self.webServerAddr = self.conf["webServerAddress"]
         self.crowdTopic = self.conf["crowdTopic"]
         self.switchTopic = self.conf["switchTopic"]
-        self.machine = self.conf["machine"]
+        self.machines = self.conf["machines"]
+        self.availbilaity = self.conf["machineAvailable"]
+        self.occupancy = self.conf["occupancy"]
         self.user_states = {}
         self.status = None
         self.suggestion = []
@@ -40,7 +42,9 @@ class Telegrambot():
         self.possibleSwitch.append(["All AC"])
         self.possibleSwitch.append(["All camera"])
         self.possibleSwitch.append(["Entrance"])
+        self.possibleSwitch.append(["All Machines"])
         self.possibleSwitch.append(["ALL"])
+        self.possibleSwitch.append(["Machines"])
         
         self.chat_auth = {}
         self.switchMode = "None"
@@ -86,7 +90,6 @@ class Telegrambot():
             else:
                 self.bot.sendMessage(chat_id, "Please send '/administrator' to login first!")
         elif message == "/envdata":
-            print("1111")
             if self.check_auth(chat_id)==True:
                 self.admin_see_data(chat_id)
             else:
@@ -213,14 +216,14 @@ class Telegrambot():
             self.publish(target="AC",switchTo=switchMode)
         elif message == "All camera":
             self.publish(target="camera",switchTo=switchMode)
-        elif message == "All machine":
-            self.publish(target="machine",switchTo=switchMode)
+        elif message == "All machines":
+            self.publish(target="machines",switchTo=switchMode)
         elif message == "Entrance":
             self.publish(target="entrance",switchTo=switchMode)
-        else:
-            machines = self.machine[message]
-            for machine in machines:
-                self.publish(target=machine,switchTo=switchMode)
+        elif message == "Machines":
+            machines = self.machines
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=machine, callback_data=f"{machine}:{switchMode}")] for machine in machines])
+            self.bot.sendMessage(chat_id, parse_mode='Markdown',text='*Please select your machine to operate...*', reply_markup=keyboard)
     
     def getImage(self, uri, seq):
         uri = uri+"/"+str(seq)
@@ -260,11 +263,18 @@ class Telegrambot():
     def on_callback_query(self,msg):
         query_id, from_id, query_data = telepot.glance(msg, flavor='callback_query')
         if query_data  == 'Occupancy':
-            self.bot.answerCallbackQuery(query_id, text='Occupancy situation is %')
+            self.bot.answerCallbackQuery(query_id, text='Occupancy situation is %'+self.occupancy)
         if query_data  == 'Availability':
-            self.bot.sendMessage(text='Available machine:')
+            self.bot.answerCallbackQuery(query_id, text='Available machine:'+self.availbilaity)
         if query_data  == 'Forecast':
-            self.bot.answerCallbackQuery(query_id, text='Predict'+query_data)
+            self.bot.answerCallbackQuery(query_id, text='Predict')
+        else:
+            data_parts = query_data.split(':')  
+            machine = data_parts[0] 
+            switchMode = data_parts[1]
+            if machine in self.machines:
+                self.bot.answerCallbackQuery(query_id, text= machine + " is " + switchMode)
+                self.publish(target=machine, switchTo=switchMode)
         
         
 if __name__ == "__main__":
