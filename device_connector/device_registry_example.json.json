@@ -11,12 +11,12 @@
             "lastUpdate": "2023-11-30 10:20:47"
         },
         {
-            "device_id": "device_id_2”,
+            "device_id": "device_id_2",
             "type": "type",
             "location": "location",
             "status": "status",
             "endpoint": "endpoint",
             "lastUpdate": "2023-11-30 10:20:47"
-        }
-    ]
+        }
+    ]
 }

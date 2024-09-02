@@ -2,11 +2,13 @@
     "token": "6961607644:AAFCNHwGsNI67k5m53VjFY48b5O9DlCNgZg",
     "message": ["switchon","switchoff","start","client","Administrator"],
     "zones": ["entrance","changing_room","cardio","lifting"],
+    "machine":[],
 
 
     "serviceId": "GeniusGym",
     "broker": "test.mosquitto.org",
     "port": 1883,
     "webServerAddress":"http://localhost:8081/devices",
+    "machineAvailable":"http://localhost:8085/machine_availability",
     "switchTopic":"IoT_project"
 }

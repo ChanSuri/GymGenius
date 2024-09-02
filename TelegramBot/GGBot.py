@@ -1,4 +1,3 @@
-import time
 import requests
 import telepot
 import json
@@ -11,7 +10,6 @@ from MyMQTT import *
 from pprint import pprint
 from telepot.loop import MessageLoop
 from telepot.namedtuple import ReplyKeyboardMarkup,InlineKeyboardMarkup, InlineKeyboardButton
-TOKEN = '6961607644:AAFCNHwGsNI67k5m53VjFY48b5O9DlCNgZg'
 
 class Telegrambot():
 
@@ -26,7 +24,9 @@ class Telegrambot():
         self.serviceId = self.conf["serviceId"]
         self.client = MyMQTT(self.serviceId, self.conf["broker"], int(self.conf["port"]), self)
         self.webServerAddr = self.conf["webServerAddress"]
+        self.crowdTopic = self.conf["crowdTopic"]
         self.switchTopic = self.conf["switchTopic"]
+        self.machine = self.conf["machine"]
         self.user_states = {}
         self.status = None
         self.suggestion = []
@@ -39,6 +39,7 @@ class Telegrambot():
         self.possibleSwitch.append(["All light"])
         self.possibleSwitch.append(["All AC"])
         self.possibleSwitch.append(["All camera"])
+        self.possibleSwitch.append(["Entrance"])
         self.possibleSwitch.append(["ALL"])
         
         self.chat_auth = {}
@@ -47,7 +48,7 @@ class Telegrambot():
     def start(self):
         self.client.start()
         # subscribe to topic according to available device
-        self.client.mySubscribe(self.switchTopic)
+        self.client.mySubscribe(self.crowdTopic)
         MessageLoop(self.bot,{'chat': self.on_chat_message,'callback_query': self.on_callback_query}).run_as_thread()
         
     def stop(self):
@@ -212,6 +213,14 @@ class Telegrambot():
             self.publish(target="AC",switchTo=switchMode)
         elif message == "All camera":
             self.publish(target="camera",switchTo=switchMode)
+        elif message == "All machine":
+            self.publish(target="machine",switchTo=switchMode)
+        elif message == "Entrance":
+            self.publish(target="entrance",switchTo=switchMode)
+        else:
+            machines = self.machine[message]
+            for machine in machines:
+                self.publish(target=machine,switchTo=switchMode)
     
     def getImage(self, uri, seq):
         uri = uri+"/"+str(seq)
@@ -247,7 +256,6 @@ class Telegrambot():
                     self.bot.sendPhoto(chat_id,photo=open("./camera/"+str(msg["sequenceNum"])+".jpg","rb"))
         os.remove("./camera/"+str(msg["sequenceNum"])+".jpg")
         
-
 
     def on_callback_query(self,msg):
         query_id, from_id, query_data = telepot.glance(msg, flavor='callback_query')

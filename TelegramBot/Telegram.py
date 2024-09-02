@@ -1,13 +1,23 @@
+from re import S
+import re
 import time
-import os
-import json
+from requests.sessions import merge_setting
 import telepot
-import requests
-from pprint import pprint
+from telepot import Bot
 from telepot.loop import MessageLoop
-from telepot.namedtuple import ReplyKeyboardMarkup,InlineKeyboardMarkup, InlineKeyboardButton
-from TelegramBot.MyMQTT import MyMQTT
+from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup
+from common.MyMQTT import MyMQTT
 from common.RegManager import RegManager
+from common.Mapper import Mapper
+import datetime
+import json
+import requests
+import time
+import io
+import base64
+import pickle
+import cv2
+import os
 
 class Telegrambot():
 
@@ -24,22 +34,24 @@ class Telegrambot():
             self.serviceId, self.conf["broker"], int(self.conf["port"]), self)
         self.homeCatAddr = self.conf["homeCatAddress"]
         self.webServerAddr = self.conf["webServerAddress"]
+        self.overtempTopic = self.conf["overTempTopic"]
         self.switchTopic = self.conf["switchTopic"]
 
         #self.__message = {"start": "", "info": ""}
         regMsg = {"registerType": "service",
                   "id": self.serviceId,
                   "type": "telegram",
-                  "attribute": {"topic": self.Topic,
+                  "attribute": {"topic1": self.overtempTopic,
+                                  "topic2": self.switchTopic,
                                 }}
         self.Reg = RegManager(self.homeCatAddr)
-        self.gymSetting = self.Reg.register(regMsg)
+        self.museumSetting = self.Reg.register(regMsg)
         # check the register is correct or not
-        if self.gymSetting == "":
+        if self.museumSetting == "":
             exit()
         
         self.possibleSwitch =[]
-        zones = set(self.gymSetting["zones"].keys())-{"outdoor"}
+        zones = set(self.museumSetting["zones"].keys())-{"outdoor"}
         for zone in zones:
             temp = [zone]
             self.possibleSwitch.append(temp)
@@ -49,7 +61,7 @@ class Telegrambot():
         self.possibleSwitch.append(["All camera"])
         self.possibleSwitch.append(["ALL"])
 
-        self.mapper = Mapper()
+        self.mapper =Mapper()
         self.lights = self.Reg.getData("devices", "light", None)["data"]
         self.zone2light = self.mapper.getMap_zone2Light(self.lights,self.museumSetting["zones"])
         self.cameras = self.Reg.getData("devices", "camera", None)["data"]
@@ -61,7 +73,7 @@ class Telegrambot():
     def start(self):
         self.client.start()
         # subscribe to topic according to available device
-        self.client.mySubscribe(self.Topic)
+        self.client.mySubscribe(self.overtempTopic)
         MessageLoop(self.bot,self.msg_handler).run_as_thread()
         
 
@@ -266,5 +278,3 @@ if __name__ == "__main__":
             break
 
     telegrambot.stop()
-    
-  
