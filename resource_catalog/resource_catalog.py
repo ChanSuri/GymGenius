@@ -1,7 +1,7 @@
 import cherrypy
 import json
 import os
-import datetime
+from datetime import datetime
 
 # Path to the device_registry.json file
 DEVICE_REGISTRY_FILE = 'device_registry.json'
@@ -98,13 +98,18 @@ class ResourceCatalog:
         device_id = uri[0]
 
         # Check if the device exists in the registry
-        if device_id in device_registry:
-            # Remove the device from the registry
-            del device_registry[device_id]
-            save_device_registry(device_registry)
-            return json.dumps({"status": "success", "message": "Device deleted successfully"})
-        else:
-            raise cherrypy.HTTPError(404, "Device not found")
+        for i, device in enumerate(device_registry["devices"]):
+            if device["device_id"] == device_id:
+                # Remove the device from the registry
+                del device_registry["devices"][i]
+                
+                # Update lastUpdate
+                device_registry["lastUpdate"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                save_device_registry(device_registry)
+                return json.dumps({"status": "success", "message": f"Device {device_id} deleted successfully"})
+        
+        # If no matching device was found
+        raise cherrypy.HTTPError(404, "Device not found")
 
 
 if __name__ == '__main__':
