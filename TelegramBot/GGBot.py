@@ -24,14 +24,22 @@ class Telegrambot():
         self.serviceId = self.conf["serviceId"]
         self.client = MyMQTT(self.serviceId, self.conf["broker"], int(self.conf["port"]), self)
         self.webServerAddr = self.conf["webServerAddress"]
-        self.crowdTopic = self.conf["crowdTopic"]
+
         self.switchTopic = self.conf["switchTopic"]
+        self.availTopic = self.conf["availTopic"]
+        self.crowdTopic = self.conf["crowdTopic"]
+        self.topic_data = {self.availTopic: [],self.crowdTopic:[]}
+        #self.topic_data = {topic: [] for topic in self.conf["Topics"]}
+        
         self.machines = self.conf["machines"]
         self.availbilaity = self.conf["machineAvailable"]
         self.occupancy = self.conf["occupancy"]
+        
         self.user_states = {}
         self.status = None
         self.suggestion = []
+        self.chat_auth = {}
+        self.switchMode = "None"
         
         self.possibleSwitch =[]
         self.zones = self.conf["zones"]
@@ -46,24 +54,25 @@ class Telegrambot():
         self.possibleSwitch.append(["ALL"])
         self.possibleSwitch.append(["Machines"])
         
-        self.chat_auth = {}
-        self.switchMode = "None"
         
     def start(self):
         self.client.start()
         # subscribe to topic according to available device
-        self.client.mySubscribe(self.crowdTopic)
+        self.client.mySubscribe(self.crowdTopic) #occupancy
+        self.client.mySubscribe(self.availTopic)
         MessageLoop(self.bot,{'chat': self.on_chat_message,'callback_query': self.on_callback_query}).run_as_thread()
         
     def stop(self):
         self.workingStatus = False
         self.client.stop()
-        # unregister device
-        # self.Reg.delete("service", self.serviceId)
+    
     
     #example
     def on_chat_message(self,msg):
         content_type, chat_type, chat_id = telepot.glance(msg)
+        topic = msg.topic
+        if topic in self.topic_data:
+            self.topic_data[topic].append(message)
         print(content_type, chat_type, chat_id)
         message = msg['text']
         if chat_id in self.user_states and self.user_states[chat_id] == 'awaiting_suggestion':
@@ -72,6 +81,8 @@ class Telegrambot():
                 file.write(f"{current_time} | {chat_id} | {message}\n")
             self.bot.sendMessage(chat_id, "Your suggestion is saved! Thank you.")
             self.user_states[chat_id] = None
+        elif message ==  "/start":
+            self.bot.sendMessage(chat_id, 'Welcome to GymGenius! You can start your incredible experience here!')
         elif message == '/knowus':
             self.bot.sendMessage(chat_id, 'The IoT application Gym Genius is intended to optimize gym management, improve customer satisfaction, and guarantee optimal utilization of resources. It employs automated mechanisms, a variety of sensors, and a Telegram bot to facilitate user interaction.')
         elif message == "/suggestion": #write as client
@@ -263,15 +274,18 @@ class Telegrambot():
     def on_callback_query(self,msg):
         query_id, from_id, query_data = telepot.glance(msg, flavor='callback_query')
         if query_data  == 'Occupancy':
-            self.bot.answerCallbackQuery(query_id, text='Occupancy situation is %'+self.occupancy)
+            data = self.topic_data["crowdTopic"][-1:]
+            self.bot.answerCallbackQuery(query_id, text='Currecnt occupancy is %'+ data["current_occupancy"]+'Time:'+ data["time"])
         if query_data  == 'Availability':
-            self.bot.answerCallbackQuery(query_id, text='Available machine:'+self.availbilaity)
+            data = self.topic_data["availTopic"][-1:]
+            self.bot.answerCallbackQuery(query_id, text='Available machine:'+ data["machines"] +'Time:'+ data["time"])
         if query_data  == 'Forecast':
-            self.bot.answerCallbackQuery(query_id, text='Predict')
+            data = self.topic_data["crowdTopic"][-1:]
+            self.bot.answerCallbackQuery(query_id, text='Predict occupancy:'+data["prediction_matrix"])
         else:
-            data_parts = query_data.split(':')  
-            machine = data_parts[0] 
-            switchMode = data_parts[1]
+            data = query_data.split(':')  
+            machine = data[0] 
+            switchMode = data[1]
             if machine in self.machines:
                 self.bot.answerCallbackQuery(query_id, text= machine + " is " + switchMode)
                 self.publish(target=machine, switchTo=switchMode)

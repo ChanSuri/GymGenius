@@ -11,6 +11,8 @@
     "webServerAddress":"http://localhost:8081/devices",
     "machineAvailable":"http://localhost:8085/machine_availability",
     "occupancy":"http://localhost:8083/occupancy",
+    
     "switchTopic":"gym/mainswitch",
-    "crowdTopic":"gym/occupancy"
+    "crowdTopic":"gym/occupancy",
+    "availTopic":"gym/availability/#"
 }
