@@ -29,6 +29,32 @@ services:
     networks:
       - gym-genius-network
 
+  entry_sensor:
+    build:
+      context: ./sensors
+    command: python entrance_button.py
+    volumes:
+      - ./sensors:/app
+    networks:
+      - gym-genius-network
+    depends_on:
+      - device_connector
+    environment:
+      - DEVICE_CONNECTOR_URL=http://device_connector:8082
+
+  exit_sensor:
+    build:
+      context: ./sensors
+    command: python simulate_button.py 
+    volumes:
+      - ./sensors:/app
+    networks:
+      - gym-genius-network
+    depends_on:
+      - device_connector
+    environment:
+      - DEVICE_CONNECTOR_URL=http://device_connector:8082
+
 networks:
   gym-genius-network:
     driver: bridge
