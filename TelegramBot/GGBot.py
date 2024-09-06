@@ -2,14 +2,15 @@ import requests
 import telepot
 import json
 import datetime
-import base64
-import pickle
-import os
-import cv2
+import time
 from MyMQTT import *
 from pprint import pprint
 from telepot.loop import MessageLoop
 from telepot.namedtuple import ReplyKeyboardMarkup,InlineKeyboardMarkup, InlineKeyboardButton
+from registration_functions import register_service
+import cherrypy
+import threading
+
 
 class Telegrambot():
 
@@ -24,12 +25,12 @@ class Telegrambot():
         self.serviceId = self.conf["serviceId"]
         self.client = MyMQTT(self.serviceId, self.conf["broker"], int(self.conf["port"]), self)
         self.webServerAddr = self.conf["webServerAddress"]
+        self.__message={'service': self.serviceId,'n':'','value':'', 'timestamp':'','unit':"status"}
 
-        self.switchTopic = self.conf["switchTopic"]
+        self.switchTopic = self.conf["switchTopic"] 
         self.availTopic = self.conf["availTopic"]
         self.crowdTopic = self.conf["crowdTopic"]
-        self.topic_data = {self.availTopic: [],self.crowdTopic:[]}
-        #self.topic_data = {topic: [] for topic in self.conf["Topics"]}
+        self.overtempTopic = self.conf["overtempTopic"]
         
         self.machines = self.conf["machines"]
         self.availbilaity = self.conf["machineAvailable"]
@@ -39,6 +40,7 @@ class Telegrambot():
         self.status = None
         self.suggestion = []
         self.chat_auth = {}
+        self.chatIDs=[]
         self.switchMode = "None"
         
         self.possibleSwitch =[]
@@ -46,20 +48,18 @@ class Telegrambot():
         for zone in self.zones:
             temp = [zone]
             self.possibleSwitch.append(temp)
-        self.possibleSwitch.append(["All light"])
+        self.possibleSwitch.append(["ALL"])
         self.possibleSwitch.append(["All AC"])
-        self.possibleSwitch.append(["All camera"])
         self.possibleSwitch.append(["Entrance"])
         self.possibleSwitch.append(["All Machines"])
-        self.possibleSwitch.append(["ALL"])
         self.possibleSwitch.append(["Machines"])
         
         
     def start(self):
         self.client.start()
-        # subscribe to topic according to available device
-        self.client.mySubscribe(self.crowdTopic) #occupancy
-        self.client.mySubscribe(self.availTopic)
+        self.client.mySubscribe(self.crowdTopic) #occupancy alert
+        # subscribe to topic according to available device...not sure to subscribe
+        #self.client.mySubscribe(self.availTopic)
         MessageLoop(self.bot,{'chat': self.on_chat_message,'callback_query': self.on_callback_query}).run_as_thread()
         
     def stop(self):
@@ -70,10 +70,8 @@ class Telegrambot():
     #example
     def on_chat_message(self,msg):
         content_type, chat_type, chat_id = telepot.glance(msg)
-        topic = msg.topic
-        if topic in self.topic_data:
-            self.topic_data[topic].append(message)
         print(content_type, chat_type, chat_id)
+        self.chatIDs.append(chat_id)
         message = msg['text']
         if chat_id in self.user_states and self.user_states[chat_id] == 'awaiting_suggestion':
             current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -127,6 +125,9 @@ class Telegrambot():
                 del self.chat_auth[str(chat_id)]
             else:
                 self.bot.sendMessage(chat_id, "You haven't logged in!")
+        elif message in list(map(str, range(16, 27))):
+            self.publish(target="AC",switchTo="on:"+message)
+            self.bot.sendMessage(chat_id, f"AC switched on and set {message} °C")
         else:
             if self.switchMode == "on" or self.switchMode=="off":
                 if self.check_auth(chat_id) ==True:
@@ -171,9 +172,9 @@ class Telegrambot():
                         text="[See data]("+self.webServerAddr+")"
                         )
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                        [InlineKeyboardButton(text='Occupancy', callback_data='Occupancy')],
-                        [InlineKeyboardButton(text='Availability', callback_data='Availability')],
-                        [InlineKeyboardButton(text='Forecast', callback_data='Forecast')],
+                        [InlineKeyboardButton(text='Occupancy', callback_data='occupancy')],
+                        [InlineKeyboardButton(text='Availability', callback_data='availability')],
+                        [InlineKeyboardButton(text='Forecast', callback_data='forecast')],
                     ])
         self.bot.sendMessage(chat_id, '*What would you like to know?*', reply_markup=keyboard)
 
@@ -214,19 +215,27 @@ class Telegrambot():
         self.bot.sendMessage(chat_id, text='Please select the zone or the devices you want to switch...', reply_markup=mark_up)
     
     def publish(self,target, switchTo):
-        msg = {"target":target,"switchTo":switchTo,"timestamp":str(datetime.datetime.now())}
+        if switchTo not in ["on", "off"]:
+            data = switchTo.split(':')  
+            switchTo = data[0] 
+            temp = data[1]
+            msg = {"target":target,"switchTo":switchTo,"value":temp,"timestamp":str(datetime.datetime.now())}
+        else: 
+            msg = {"target":target,"switchTo":switchTo,"timestamp":str(datetime.datetime.now())}
         self.client.myPublish(self.switchTopic, msg)
         print("Published: " + json.dumps(msg))
         
     def admin_switch(self,chat_id,message,switchMode):
         if message == "ALL":
             self.publish(target="ALL",switchTo=switchMode)
-        elif message == "All light":
-            self.publish(target="light",switchTo=switchMode)
         elif message == "All AC":
-            self.publish(target="AC",switchTo=switchMode)
-        elif message == "All camera":
-            self.publish(target="camera",switchTo=switchMode)
+            if switchMode == "on":
+                temp = list(map(str, range(16, 27)))
+                mark_up = ReplyKeyboardMarkup(keyboard=[temp],one_time_keyboard=True)
+                self.bot.sendMessage(chat_id, text='Please select your operation...', reply_markup=mark_up)
+                time.sleep(5)
+            else:
+                self.publish(target="AC",switchTo=switchMode)
         elif message == "All machines":
             self.publish(target="machines",switchTo=switchMode)
         elif message == "Entrance":
@@ -235,61 +244,82 @@ class Telegrambot():
             machines = self.machines
             keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=machine, callback_data=f"{machine}:{switchMode}")] for machine in machines])
             self.bot.sendMessage(chat_id, parse_mode='Markdown',text='*Please select your machine to operate...*', reply_markup=keyboard)
+        else:
+            self.publish(target=message,switchTo=switchMode)
     
-    def getImage(self, uri, seq):
-        uri = uri+"/"+str(seq)
-        response = requests.get(uri,None)
-        img =self.exactImageFromResponse(response)
-        return img
-    def exactImageFromResponse(self,response):
-        data = response.text
-        imgs = json.loads(data)["img"]
-        img = self.json2img(imgs)
-        return img
-    def json2im(self,jstr):
-        """Convert a JSON string back to a Numpy array"""
-        load = json.loads(jstr)
-        imdata = base64.b64decode(load['image'])
-        im = pickle.loads(imdata)
-        return im
-                   
-    #Actuation via MQTT
-    def notify(self, topic, msg):
-        msg = json.loads(msg)
-        info = "ALERT!!Too crowded!!!"
+    def notify(self,topic,msg):
         print(msg)
-        info2 = "In "+self.zone[msg["id"]]+" ,with occupancy: "+str(msg["occupancy"])
-        imMagAddr = self.camera[msg["id"]]
-        photo = self.getImage(imMagAddr,msg["sequenceNum"])
-        cv2.imwrite("./camera/"+str(msg["sequenceNum"])+".jpg",photo)
-        if self.chat_auth!=[]:
-            for chat_id in set(self.chat_auth.keys()):
-                if self.chat_auth[chat_id]==True:
-                    self.bot.sendMessage(chat_id, info)
-                    self.bot.sendMessage(chat_id,info2)
-                    self.bot.sendPhoto(chat_id,photo=open("./camera/"+str(msg["sequenceNum"])+".jpg","rb"))
-        os.remove("./camera/"+str(msg["sequenceNum"])+".jpg")
-        
+        message=json.loads(msg)
+        self.tempthreshold=30
+        self.crowdthreshold=30
+        if message["n"]=="temperature":
+            if message["value"]>self.tempthreshold:
+                tosend=f"Temperature is reaching {message['value']}, do you want to turn on the AC?"                
+                keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(text='Yes 🟡', callback_data='22'),
+                    InlineKeyboardButton(text='No ⚪', callback_data='off')]
+                ])
+                for chat_ID in self.chatIDs:
+                    self.bot.sendMessage(chat_ID, text=tosend, reply_markup=keyboard)
+        elif message["n"]=="occupancy":
+            if message["value"]>self.crowdthreshold:
+                tosend=f"Our clients is reaching {message['value']}, we suggest you to come another time!"
+                for chat_ID in self.chatIDs:
+                    self.bot.sendMessage(chat_ID, text=tosend)
+       
 
     def on_callback_query(self,msg):
-        query_id, from_id, query_data = telepot.glance(msg, flavor='callback_query')
-        if query_data  == 'Occupancy':
-            data = self.topic_data["crowdTopic"][-1:]
-            self.bot.answerCallbackQuery(query_id, text='Currecnt occupancy is %'+ data["current_occupancy"]+'Time:'+ data["time"])
-        if query_data  == 'Availability':
-            data = self.topic_data["availTopic"][-1:]
-            self.bot.answerCallbackQuery(query_id, text='Available machine:'+ data["machines"] +'Time:'+ data["time"])
-        if query_data  == 'Forecast':
-            data = self.topic_data["crowdTopic"][-1:]
-            self.bot.answerCallbackQuery(query_id, text='Predict occupancy:'+data["prediction_matrix"])
+        query_id, chat_id, query_data = telepot.glance(msg, flavor='callback_query')
+        if query_data  == 'occupancy': #request
+            try:
+                response = requests.get(self.occupancy)
+                if response.status_code == 200:
+                    data = response.json()
+                    print(f'The response of the post is {data}.')
+                    self.bot.answerCallbackQuery(query_id, text='Currecnt occupancy is %'+ data["v"]+'Time:'+ data["bt"])
+            except requests.exceptions.RequestException as e:
+                print(f"Request failed: {e}") 
+        elif query_data  == 'availability':
+            try: #choose machine
+                response = requests.get(self.availbilaity, json=data)
+                if response.status_code == 200:
+                    data = response.json()
+                    self.bot.answerCallbackQuery(query_id, text='Available machine:'+ data["n"]+'number:'+ data["v"] +'Time:'+ data["time"])
+            except requests.exceptions.RequestException as e:
+                print(f"Request failed: {e}") 
+        elif query_data  == 'forecast':
+            try:
+                response = requests.post(self.occupancy, json=data)
+                if response.status_code == 200:
+                    data = response.json()
+                    self.bot.answerCallbackQuery(query_id, text='Predict occupancy:'+ data["prediction_matrix"])
+            except requests.exceptions.RequestException as e:
+                print(f"Request failed: {e}") 
+        elif query_data == 'on':
+            self.publish(target="AC",switchTo="on:22")
+            self.bot.sendMessage(chat_id, text=f"AC switched on and set 22°C")
+        elif query_data == 'off':
+            pass
         else:
+            print(query_data)
             data = query_data.split(':')  
             machine = data[0] 
             switchMode = data[1]
             if machine in self.machines:
                 self.bot.answerCallbackQuery(query_id, text= machine + " is " + switchMode)
                 self.publish(target=machine, switchTo=switchMode)
-        
+
+def start_cherrypy():
+    cherrypy.config.update({'server.socket_port': 8086, 'server.socket_host': '0.0.0.0'})
+    conf = {
+        '/': {
+            'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+        }
+    }
+    # Ensure 'service' is defined properly before this
+    cherrypy.tree.mount(telegrambot, '/', conf)
+    cherrypy.engine.start()
+    cherrypy.engine.block()
         
 if __name__ == "__main__":
     # configFile = input("Enter the location of configuration file: ")
@@ -297,8 +327,21 @@ if __name__ == "__main__":
     #     configFile = "TelegramBot/configuration.json"
     configFile = "TelegramBot/configuration.json"
     telegrambot = Telegrambot(configFile)
-    telegrambot.start()
     
+    
+    # Register the service at startup
+    service_id = "telegram"
+    description = "Telegram Bot"
+    status = "active"
+    endpoint = "http://localhost:8086/TelegramBot"
+    register_service(service_id, description, status, endpoint)
+    print("Telegram Service Initialized and Registered")
+    
+    # Start CherryPy in a separate thread
+    cherrypy_thread = threading.Thread(target=start_cherrypy)
+    cherrypy_thread.start()
+    
+    telegrambot.start()
 
     print('waiting ...')
 
@@ -308,3 +351,4 @@ if __name__ == "__main__":
             break
 
     telegrambot.stop()
+    cherrypy.engine.exit()

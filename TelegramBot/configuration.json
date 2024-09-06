@@ -10,9 +10,10 @@
     "port": 1883,
     "webServerAddress":"http://localhost:8081/devices",
     "machineAvailable":"http://localhost:8085/machine_availability",
-    "occupancy":"http://localhost:8083/occupancy",
+    "occupancy":"http://localhost:8082/occupancy",
     
     "switchTopic":"gym/mainswitch",
     "crowdTopic":"gym/occupancy",
-    "availTopic":"gym/availability/#"
+    "availTopic":"gym/availability",
+    "overtempTopic":"gym/overtemp"
 }

@@ -259,6 +259,28 @@ class Telegrambot():
                     
                     self.bot.sendPhoto(chat_id,photo=open("./temp/"+str(msg["sequenceNum"])+".jpg","rb"))
         os.remove("./temp/"+str(msg["sequenceNum"])+".jpg")
+        
+    def notify(self,topic,message):
+        print(message)
+        msg=json.loads(message)
+        self.tempthreshold=30
+        if msg["n"]=="temperature":
+            if msg["value"]>self.tempthreshold:
+                tosend=f"Temperature is reaching {msg['value']}, do you want to turn on the aircon?"
+                keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(text='Yes', callback_data='yes'),
+                    InlineKeyboardButton(text='No', callback_data='no')]
+                ])
+                for chat_ID in self.chatIDs:
+                    self.bot.sendMessage(chat_ID, text=tosend, reply_markup=keyboard)
+        elif msg["n"]=="toiletcon":
+            tosend="ATTENTION!!! Your cat has used unnormal times. You should be care of it."
+            for chat_ID in self.chatIDs:
+                self.bot.sendMessage(chat_ID, text=tosend)
+        elif msg["n"]=="doorcon":
+            tosend=f"Your cat try {msg['value']} times to go outside."
+            for chat_ID in self.chatIDs:
+                self.bot.sendMessage(chat_ID, text=tosend)
 
 
 if __name__ == "__main__":
