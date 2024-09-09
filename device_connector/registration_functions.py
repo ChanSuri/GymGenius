@@ -4,12 +4,13 @@ SERVICE_CATALOG_URL = "http://localhost:8080/services"
 RESOURCE_CATALOG_URL = "http://localhost:8081/devices"
 
 # Function to register services
-def register_service(service_id, description, status, endpoint):
+def register_service(service_id, description, status, endpoint, time):
     service = {
         "service_id": service_id,
         "description": description,
         "status": status,
-        "endpoint": endpoint
+        "endpoint": endpoint,
+        "last_update": time
     }
     
     try:
@@ -21,6 +22,21 @@ def register_service(service_id, description, status, endpoint):
     except requests.exceptions.RequestException as e:
         print(f"Connection error during service registration: {e}")
 
+# Function to delete services
+def delete_service(service_id):
+    try:
+        # Send a DELETE request to the service catalog to remove the service
+        response = requests.delete(f"{SERVICE_CATALOG_URL}/{service_id}")
+        if response.status_code == 200:
+            print(f"Service {service_id} deleted successfully.")
+        elif response.status_code == 404:
+            print(f"Service {service_id} not found.")
+        else:
+            print(f"Error deleting the service: {response.status_code} - {response.text}")
+    except requests.exceptions.RequestException as e:
+        print(f"Connection error during service deletion: {e}")
+
+
 # Function to register or update devices
 def register_device(device_id, type, location, status, endpoint, time):
     device = {
@@ -29,7 +45,7 @@ def register_device(device_id, type, location, status, endpoint, time):
         "location": location,
         "status": status,
         "endpoint": endpoint,
-        "time": time
+        "last_update": time
     }
     
     try:
@@ -47,3 +63,4 @@ def register_device(device_id, type, location, status, endpoint, time):
             print(f"Error registering/updating the device: {response.status_code} - {response.text}")
     except requests.exceptions.RequestException as e:
         print(f"Connection error during device registration: {e}")
+  
