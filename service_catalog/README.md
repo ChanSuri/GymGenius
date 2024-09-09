@@ -12,8 +12,6 @@
 ## Overview
 The **Service Catalog Management** system is a microservice designed to manage a registry of services. It allows for the creation, retrieval, updating, and deletion of service entries through a RESTful API. The services are stored in a local JSON file (`service_registry.json`) to persist the data.
 
-
-
 ## Features
 - **Service Registration**: Allows new services to be registered in the catalog.
 - **Service Retrieval**: Fetch details of a specific service or all services.
