@@ -30,7 +30,7 @@ The **Service Catalog Management** system is a microservice designed to manage a
 ## Usage
 
 ### Interacting with the REST API
-You can interact with the service's REST API at `http://localhost:8080/` to perform CRUD operations on the service catalog.
+You can interact with the service's REST API at `http://localhost:8080/` to perform GET, POST and DELETE operations on the service catalog.
 
 ## REST API
 
@@ -47,6 +47,7 @@ You can interact with the service's REST API at `http://localhost:8080/` to perf
             "description": "Example service description",
             "status": "active",
             "endpoint": "http://localhost:8081/example"
+            "last_update": "YYYY-MM-DD HH:MM:SS"
         },
         ...
     ]
@@ -65,6 +66,7 @@ You can interact with the service's REST API at `http://localhost:8080/` to perf
         "description": "Example service description",
         "status": "active",
         "endpoint": "http://localhost:8081/example"
+        "last_update": "YYYY-MM-DD HH:MM:SS"
     }
   }
   \```
@@ -79,6 +81,7 @@ You can interact with the service's REST API at `http://localhost:8080/` to perf
     "description": "New service description",
     "status": "active",
     "endpoint": "http://localhost:8082/new_service"
+    "last_update": "YYYY-MM-DD HH:MM:SS"
   }
   \```
 - **Response**:
@@ -86,24 +89,6 @@ You can interact with the service's REST API at `http://localhost:8080/` to perf
   {
     "status": "success",
     "message": "Service registered successfully"
-  }
-  \```
-
-### Update an Existing Service
-- **Endpoint**: `/<service_id>`
-- **Method**: PUT
-- **Request Body**:
-  \```json
-  {
-    "description": "Updated service description",
-    "status": "inactive"
-  }
-  \```
-- **Response**:
-  \```json
-  {
-    "status": "success",
-    "message": "Service updated successfully"
   }
   \```
 
