@@ -36,7 +36,7 @@ The service registers itself at startup by calling the `register_service` functi
 - Example payload:
   \```json
   {
-    "bn": "gym/environment"
+    "bn": "gym/environment",
     "e":[
       {"n": "temperature",
        "u": "Cel",
