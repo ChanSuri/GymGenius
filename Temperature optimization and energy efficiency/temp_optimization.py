@@ -81,9 +81,9 @@ class TempOptimizationService:
         elif message.topic == mqtt_topic_desired_temperature:  # Handle threshold updates via MQTT
             try:
                 threshold_data = json.loads(message.payload.decode())
-                self.desired_temperature = threshold_data.get('v')
-                upper = self.desired_temperature + 1
-                lower = self.desired_temperature - 1
+                desired_temperature = threshold_data['message']['data'].get('desired_temperature')
+                upper = desired_temperature + 1
+                lower = desired_temperature - 1
 
                 # Validate and set the thresholds with bounds
                 if upper is not None and isinstance(upper, (int, float)):
@@ -91,14 +91,14 @@ class TempOptimizationService:
                 if lower is not None and isinstance(lower, (int, float)):
                     self.thresholds['lower'] = max(15, min(lower, 35))
 
-                print(f"Updated desired temperature and thresholds: temperature = {self.desired_temperature}°C, upper = {self.thresholds['upper']}°C, lower = {self.thresholds['lower']}°C")
+                print(f"Updated desired temperature and thresholds: temperature = {desired_temperature}°C, upper = {self.thresholds['upper']}°C, lower = {self.thresholds['lower']}°C")
             except (json.JSONDecodeError, TypeError) as e:
                 print(f"Failed to decode threshold data: {e}")
 
         elif message.topic == mqtt_topic_occupancy:  # Handle occupancy updates via MQTT
             try:
                 occupancy_data = json.loads(message.payload.decode())
-                self.current_occupancy = occupancy_data.get('occupancy', 0)
+                self.current_occupancy = occupancy_data['message']['data'].get('current_occupancy', 0)
                 print(f"Received occupancy data: {self.current_occupancy} clients present.")
             except (json.JSONDecodeError, TypeError) as e:
                 print(f"Failed to decode occupancy data: {e}")
@@ -106,7 +106,7 @@ class TempOptimizationService:
         elif message.topic == mqtt_topic_HVAC_on_off:  # Handle HVAC controls command
             try:
                 command_data = json.loads(message.payload.decode())
-                self.current_command = command_data.get('state', "ON").upper()  # Retrieve from the "state" field, default to "ON"
+                self.current_command = command_data['message']['data'].get('state', "ON").upper()  # Retrieve from the "state" field, default to "ON"
                 print(f"Received administrator command: {self.current_command}.")
             except (json.JSONDecodeError, TypeError) as e:
                 print(f"Failed to decode command data: {e}")
@@ -146,7 +146,17 @@ class TempOptimizationService:
             self.send_hvac_command('turn_off')
 
     def send_hvac_command(self, command):
-        payload = json.dumps({"command": command})
+        # Publish the command in the required JSON structure
+        payload = json.dumps({
+            "topic": mqtt_topic_control,
+            "message": {
+                "device_id": "Temperature optimization and energy efficiency block",
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "data": {
+                    "control_command": command
+                }
+            }
+        })
         self.client.publish(mqtt_topic_control, payload)
         print(f"Sent HVAC command: {command}")
 
@@ -179,7 +189,17 @@ class TempOptimizationService:
 
     # Function to publish an alert message to the MQTT topic
     def send_alert(self, message):
-        payload = json.dumps({"alert": message})
+        # Publish the alert in the required JSON structure
+        payload = json.dumps({
+            "topic": mqtt_topic_alert,
+            "message": {
+                "device_id": "Temperature optimization and energy efficiency block",
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "data": {
+                    "alert": message
+                }
+            }
+        })
         self.client.publish(mqtt_topic_alert, payload)
         print(f"Sent alert: {message}")
 
