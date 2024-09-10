@@ -6,7 +6,6 @@
 - [Installation](#installation)
 - [Usage](#usage)
 - [MQTT Topics](#mqtt-topics)
-- [REST API](#rest-api)
 - [Service Configuration](#service-configuration)
 - [Shutdown and Cleanup](#shutdown-and-cleanup)
 
@@ -17,23 +16,18 @@ The **Temperature Optimization Service** is a microservice designed to manage an
 - **MQTT Integration**: Subscribes to environmental and occupancy data, and updates HVAC control commands based on the incoming data.
 - **Threshold Management**: Dynamically updates temperature thresholds through MQTT messages.
 - **Gym Schedule Awareness**: Controls HVAC based on the gym's opening hours, including pre-conditioning the environment before opening and shutting down when unoccupied before closing.
-- **REST API**: Provides a RESTful API endpoint to check the current HVAC state, thresholds, and occupancy.
 
 ## Installation
 
 ### Prerequisites
 - Python 3.x
 - `paho-mqtt` library
-- `cherrypy` library
 - `requests` library
 
 ## Usage
 
 ### Service Registration
 The service registers itself at startup by calling the `register_service` function.
-
-### Interacting with the REST API
-You can interact with the service's REST API at `http://localhost:8084/hvac` to retrieve the current HVAC status, thresholds, and occupancy.
 
 ## MQTT Topics
 
@@ -57,13 +51,12 @@ You can interact with the service's REST API at `http://localhost:8084/hvac` to 
   }
   \```
 
-### Threshold Update (`gym/threshold`)
-- Allows updates to the upper and lower temperature thresholds.
+### Threshold Update (`gym/desired_temperature`)
+- Allows updates to the desired temperature, and the service calculates the upper and lower thresholds.
 - Example payload:
   \```json
   {
-    "upper": 28,
-    "lower": 22
+    "v": 26
   }
   \```
 
@@ -85,22 +78,21 @@ You can interact with the service's REST API at `http://localhost:8084/hvac` to 
   }
   \```
 
-## REST API
-The service provides a REST API to retrieve the current status of the HVAC system.
-
-- **Endpoint**: `/hvac`
-- **Method**: GET
-- **Response**:
+### HVAC On/Off Control by Administrator (`gym/hvac/on_of`)
+- Allows the administrator to manually enable or disable HVAC control.
+- Example payload:
   \```json
   {
-    "status": "success",
-    "time": "YYYY-MM-DD HH:MM:SS",
-    "hvac_state": "off",
-    "thresholds": {
-      "upper": 28,
-      "lower": 24
-    },
-    "occupancy": 0
+    "state": "OFF"
+  }
+  \```
+
+### Alert Messages (`gym/environment/alert`)
+- The service publishes alerts when temperature or humidity exceeds alert thresholds.
+- Example payload:
+  \```json
+  {
+     "alert": "ALERT: Temperature too high! Current temperature: 36°C"
   }
   \```
 
@@ -116,5 +108,5 @@ The service configuration includes MQTT broker details, gym schedule, and defaul
   - Lower Threshold: 24°C
 
 ## Shutdown and Cleanup
-When the service is stopped the signal handler will ensure that the MQTT client disconnects cleanly and the service is properly stopped.
+When the service is stopped the signal handler will ensure that the MQTT client disconnects cleanly, the microservice delete its registration calling the `delete_service` function, and the service is properly stopped.
 
