@@ -12,6 +12,7 @@ RESOURCE_CATALOG_URL = 'http://localhost:8081/devices'
 mqtt_broker = "test.mosquitto.org"
 mqtt_topic_entry = "gym/occupancy/entry"
 mqtt_topic_exit = "gym/occupancy/exit"
+mqtt_topic_environment = "gym/environment"
 
 class DeviceConnector:
     exposed = True
@@ -34,6 +35,20 @@ class DeviceConnector:
         body = cherrypy.request.body.read().decode('utf-8')
         input_data = json.loads(body)
 
+        # Check if the POST request is from the DHT11 sensor
+        if "device_id" in input_data and "event_type" in input_data and input_data.get("event_type") == "environment":
+            # Register the device if not already registered
+            registration_response = self.register_device(input_data)
+            registration_data = json.loads(registration_response)
+
+            # If registration is successful, proceed with handling the MQTT event
+            if registration_data["status"] == "success":
+                return self.publish_environment_data(input_data)
+            else:
+                # Return the error response from the device registration
+                return self.publish_environment_data(input_data) if registration_data["message"] == "Device already exists" else 500
+
+        # Check if the POST request is from the entry/exit button
         if "device_id" in input_data and "event_type" in input_data and input_data["event_type"] in ["entry", "exit"]:
             # Call to register a new device
             registration_response = self.register_device(input_data)
@@ -41,10 +56,10 @@ class DeviceConnector:
 
             # If registration is successful, proceed with handling the MQTT event
             if registration_data["status"] == "success":
-                return self.handle_mqtt_event(input_data)
+                return self.publish_entry_exit_data(input_data)
             else:
                 # Return the error response from the device registration
-                return self.handle_mqtt_event(input_data) if registration_data["message"] == "Device already exists" else 500
+                return self.publish_entry_exit_data(input_data) if registration_data["message"] == "Device already exists" else 500
 
         else:
             raise cherrypy.HTTPError(400, "Invalid data format")
@@ -68,8 +83,21 @@ class DeviceConnector:
         except Exception as e:
             cherrypy.response.status = 500
             return json.dumps({"status": "error", "message": str(e)})
+    
+    def publish_environment_data(self, input_data):
+        """Publish temperature and humidity data to MQTT"""
+        try:
+            senml_record = input_data.get("senml_record", {})
+            
+            # Convert the record to JSON and publish it to the MQTT topic
+            self.client.publish(mqtt_topic_environment, json.dumps(senml_record))
+            return json.dumps({"status": "success", "message": "Environment data published to MQTT"})
+        
+        except Exception as e:
+            print(f"Error in publishing environment data: {e}")
+            return json.dumps({"status": "error", "message": str(e)})
 
-    def handle_mqtt_event(self, input_data):
+    def publish_entry_exit_data(self, input_data):
         """Handles entry/exit events by publishing them on MQTT"""
         event_type = input_data["event_type"]
         senml_record = input_data.get("senml_record", {})
