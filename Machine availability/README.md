@@ -50,7 +50,7 @@ The service will connect to the MQTT broker and begin listening for machine avai
           "t": current_time,
           "v": 0
         }  
-  }
+    }
     \```
 
 ### Published Topics
@@ -63,7 +63,7 @@ The service will connect to the MQTT broker and begin listening for machine avai
       "topic": "gym/group_availability/treadmill",
       "message": {
         "device_id": "Machine availability block",
-        "timestamp": "2023-01-01 12:00:00",
+        "timestamp": "YYYY-MM-DD HH:MM:SS",
         "data": {
           "available": 3,
           "busy": 2,

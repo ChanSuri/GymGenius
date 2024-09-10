@@ -1,12 +1,11 @@
-import cherrypy
 import paho.mqtt.client as mqtt
 import time
 import json
 import datetime
 import numpy as np
-import signal
 from sklearn.linear_model import LinearRegression
 from registration_functions import register_service
+import signal
 
 # Global variable to track the current occupancy
 current_occupancy = 0
@@ -26,12 +25,13 @@ min_training_samples = 2 * 9 * 7  # At least 2 data points for each slot-hour/da
 mqtt_broker = "test.mosquitto.org"
 mqtt_topic_entry = "gym/occupancy/entry"
 mqtt_topic_exit = "gym/occupancy/exit"
+mqtt_topic_current = "gym/occupancy/current"
+mqtt_topic_prediction = "gym/occupancy/prediction"  # Topic for publishing predictions
 
 # Model for regression
 model = LinearRegression()
 
 class OccupancyService:
-    exposed = True
 
     def __init__(self):
         # MQTT client configuration
@@ -63,6 +63,9 @@ class OccupancyService:
         if self.can_train_model():
             self.train_model()
             self.update_prediction()
+        
+        # Publish current occupancy to gym/occupancy/current
+        self.publish_current_occupancy()
 
     # Function to increment occupancy with validation
     def increment_occupancy(self):
@@ -139,34 +142,47 @@ class OccupancyService:
                 # Predict occupancy for each slot-hour/day combination
                 prediction_matrix[hour_slot, day] = model.predict([[hour_slot, day]])
         print(f"Prediction matrix updated: \n{prediction_matrix}")
-        self.save_prediction_to_file()
 
-    # Function to save the prediction matrix to a file (prediction.json) at the end of the day
-    def save_prediction_to_file(self):
-        try:
-            with open('prediction.json', 'w') as f:
-                json.dump(prediction_matrix.tolist(), f)
-            print("Prediction matrix saved to prediction.json")
-        except Exception as e:
-            print(f"Error saving prediction data to file: {e}")
+        # Publish the updated prediction matrix to the corresponding MQTT topic
+        self.publish_prediction()
 
-    # REST API to retrieve the current occupancy and prediction matrix
-    def GET(self, *uri, **params):
-        try:
-            with open('prediction.json', 'r') as f:
-                prediction_data = json.load(f)
-            response = {
-                "status": "success",
-                "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "current_occupancy": current_occupancy,
-                "prediction_matrix": prediction_data
+    # Function to publish the current occupancy to the gym/occupancy/current topic
+    def publish_current_occupancy(self):
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        message = {
+            "topic": mqtt_topic_current,
+            "message": {
+                "device_id": "DeviceConnector",
+                "timestamp": now,
+                "data": {
+                    "current_occupancy": current_occupancy,
+                    "unit": "count"
+                }
             }
-        except FileNotFoundError:
-            response = {
-                "status": "error",
-                "message": "Prediction data not found."
+        }
+        self.client.publish(mqtt_topic_current, json.dumps(message))
+        print(f"Published current occupancy: {current_occupancy}")
+
+    # Function to publish the prediction matrix to the gym/occupancy/prediction topic
+    def publish_prediction(self):
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        message = {
+            "topic": mqtt_topic_prediction,
+            "message": {
+                "device_id": "Occupancy_block",
+                "timestamp": now,
+                "data": {
+                    "prediction_matrix": prediction_matrix.tolist()
+                }
             }
-        return json.dumps(response)
+        }
+        self.client.publish(mqtt_topic_prediction, json.dumps(message))
+        print(f"Published prediction matrix to {mqtt_topic_prediction}")
+
+    def stop(self):
+        self.client.loop_stop()  # Stop MQTT loop
+        self.client.disconnect()  # Disconnect from MQTT broker
+        print("Service stopped")
 
 def initialize_service():
     # Register the service at startup
@@ -178,24 +194,19 @@ def initialize_service():
 
 def stop_service(signum, frame):
     print("Stopping service...")
-    cherrypy.engine.exit()
+    occupancy_service.stop()
 
-# CherryPy server configuration to expose the REST service
+# Main program to initialize the service
 if __name__ == '__main__':
     initialize_service()
 
     # Configure the handler for graceful shutdown
     signal.signal(signal.SIGINT, stop_service)
 
-    cherrypy.config.update({'server.socket_port': 8083, 'server.socket_host': '0.0.0.0'})
-
-    conf = {
-        '/': {
-            'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-        }
-    }
-
-    # Start the microservice
-    cherrypy.tree.mount(OccupancyService(), '/', conf)
-    cherrypy.engine.start()
-    cherrypy.engine.block()
+    try:
+        # Start MQTT loop (no REST server here)
+        occupancy_service = OccupancyService()
+        occupancy_service.client.loop_forever()
+    finally:
+        # Ensure that stop_service is called on exit
+        occupancy_service.stop()

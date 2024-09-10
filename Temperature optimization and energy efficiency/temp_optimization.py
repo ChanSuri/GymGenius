@@ -204,8 +204,9 @@ class TempOptimizationService:
         print(f"Sent alert: {message}")
 
     def stop(self):
-        self.client.loop_stop()
-        print("MQTT client stopped.")
+        self.client.loop_stop()  # Stop the MQTT loop
+        self.client.disconnect()  # Cleanly disconnect from the broker
+        print("MQTT client stopped and disconnected.")
 
 def initialize_service():
     # Register the service at startup
@@ -213,7 +214,8 @@ def initialize_service():
     description = "HVAC management and control"
     status = "active"
     endpoint = "http://localhost:8084/hvac"
-    register_service(service_id, description, status, endpoint)
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    register_service(service_id, description, status, endpoint, timestamp)
     print("Temperature Optimization Service Initialized and Registered")
 
 def stop_service(signum, frame):
@@ -234,5 +236,9 @@ if __name__ == "__main__":
     # Signal handler for clean shutdown
     signal.signal(signal.SIGINT, stop_service)
 
-    # Start MQTT loop (no REST server here)
-    service.client.loop_forever()
+    try:
+        # Start MQTT loop (no REST server here)
+        service.client.loop_forever()
+    finally:
+        # Ensure that stop_service is called on exit
+        service.stop()

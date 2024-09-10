@@ -29,9 +29,15 @@ The **Temperature Optimization Service** is a microservice designed to manage an
 ### Service Registration
 The service registers itself at startup by calling the `register_service` function.
 
+he service will connect to the MQTT broker and begin monitoring temperature, humidity, and gym occupancy. It will also respond to HVAC control commands from administrators. The service also publishes actuation command based on its data analysis.
+
+
+
+
 ## MQTT Topics
 
-### Environment Data (`gym/environment`)
+### Subscribed Topics
+- **Environment Data (`gym/environment`)**:
 - Device connector publishes temperature and humidity data in JSON format.
 - Example payload:
   \```json
@@ -51,7 +57,7 @@ The service registers itself at startup by calling the `register_service` functi
   }
   \```
 
-### Threshold Update (`gym/desired_temperature`)
+- **Threshold Update (`gym/desired_temperature`)**:
 - Allows updates to the desired temperature, and the service calculates the upper and lower thresholds.
 - Example payload:
   \```json
@@ -68,15 +74,15 @@ The service registers itself at startup by calling the `register_service` functi
   }  
   \```
 
-### Occupancy Data (`gym/occupancy/current`)
-- Device connector publishes the current occupancy of the gym.
+- **Occupancy Data (`gym/occupancy/current`)**:
+- Occupancy publishes the current occupancy of the gym.
 - Example payload:
   \```json
   {
     "topic": "gym/occupancy/current",
     "message": {
       "device_id": "DviceConnector",
-      "timestamp": ""YYYY-MM-DD HH:MM:SS"",
+      "timestamp": "YYYY-MM-DD HH:MM:SS",
       "data": {
         "current_occupancy": value,
         "unit": count
@@ -85,7 +91,24 @@ The service registers itself at startup by calling the `register_service` functi
   }  
   \```
 
-### HVAC Control (`gym/hvac/control`)
+- **HVAC On/Off Control by Administrator (`gym/hvac/on_of`)**:
+- Allows the administrator to manually enable or disable HVAC control.
+- Example payload:
+  \```json
+  {
+    "topic": "gym/desired_temperature",
+    "message": {
+      "device_id": "admin_id",
+      "timestamp": ""YYYY-MM-DD HH:MM:SS"",
+      "data": {
+        "state": "OFF"
+      }
+    }
+  } 
+  \``
+
+### Published Topics
+- **HVAC Control (`gym/hvac/control`)**:
 - The service publishes commands to this topic to turn the HVAC system on or off.
 - Example payload:
   \```json
@@ -100,24 +123,8 @@ The service registers itself at startup by calling the `register_service` functi
     }
   }  
   \```
-
-### HVAC On/Off Control by Administrator (`gym/hvac/on_of`)
-- Allows the administrator to manually enable or disable HVAC control.
-- Example payload:
-  \```json
-  {
-    "topic": "gym/desired_temperature",
-    "message": {
-      "device_id": "admin_id",
-      "timestamp": ""YYYY-MM-DD HH:MM:SS"",
-      "data": {
-        "state": "OFF"
-      }
-    }
-  } 
-  \```
-
-### Alert Messages (`gym/environment/alert`)
+`
+- **Alert Messages (`gym/environment/alert`)**:
 - The service publishes alerts when temperature or humidity exceeds alert thresholds.
 - Example payload:
   \```json
