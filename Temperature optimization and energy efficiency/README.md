@@ -145,5 +145,7 @@ The service configuration includes MQTT broker details, gym schedule, and defaul
   - Lower Threshold: 24°C
 
 ## Shutdown and Cleanup
-When the service is stopped the signal handler will ensure that the MQTT client disconnects cleanly, the microservice delete its registration calling the `delete_service` function, and the service is properly stopped.
+To stop the service gracefully, press `Ctrl+C`. The signal handler will:
+- Deregister the service from the service catalog using `delete_service()`.
+- Stop the MQTT client loop cleanly.
 
