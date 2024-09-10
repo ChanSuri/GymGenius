@@ -56,8 +56,16 @@ The service registers itself at startup by calling the `register_service` functi
 - Example payload:
   \```json
   {
-    "v": 26
-  }
+    "topic": "gym/desired_temperature",
+    "message": {
+      "device_id": "admin_id",
+      "timestamp": ""YYYY-MM-DD HH:MM:SS"",
+      "data": {
+        "desired_temperature": value,
+        "unit": Celsius
+      }
+    }
+  }  
   \```
 
 ### Occupancy Data (`gym/occupancy/current`)
@@ -65,8 +73,16 @@ The service registers itself at startup by calling the `register_service` functi
 - Example payload:
   \```json
   {
-    "occupancy": 10
-  }
+    "topic": "gym/occupancy/current",
+    "message": {
+      "device_id": "DviceConnector",
+      "timestamp": ""YYYY-MM-DD HH:MM:SS"",
+      "data": {
+        "current_occupancy": value,
+        "unit": count
+      }
+    }
+  }  
   \```
 
 ### HVAC Control (`gym/hvac/control`)
@@ -74,8 +90,15 @@ The service registers itself at startup by calling the `register_service` functi
 - Example payload:
   \```json
   {
-    "command": "turn_on"
-  }
+    "topic": "gym/hvac/control",
+    "message": {
+      "device_id": "Temperature optiimization and energy efficiency block",
+      "timestamp": ""YYYY-MM-DD HH:MM:SS"",
+      "data": {
+        "control_command": "turn_on",
+      }
+    }
+  }  
   \```
 
 ### HVAC On/Off Control by Administrator (`gym/hvac/on_of`)
@@ -83,8 +106,15 @@ The service registers itself at startup by calling the `register_service` functi
 - Example payload:
   \```json
   {
-    "state": "OFF"
-  }
+    "topic": "gym/desired_temperature",
+    "message": {
+      "device_id": "admin_id",
+      "timestamp": ""YYYY-MM-DD HH:MM:SS"",
+      "data": {
+        "state": "OFF"
+      }
+    }
+  } 
   \```
 
 ### Alert Messages (`gym/environment/alert`)
@@ -92,8 +122,15 @@ The service registers itself at startup by calling the `register_service` functi
 - Example payload:
   \```json
   {
-     "alert": "ALERT: Temperature too high! Current temperature: 36°C"
-  }
+    "topic": "gym/environment/alert",
+    "message": {
+      "device_id": "Temperature optiimization and energy efficiency block",
+      "timestamp": ""YYYY-MM-DD HH:MM:SS"",
+      "data": {
+        "alert": "ALERT: Temperature too high! Current temperature: 36°C"
+      }
+    }
+  }  
   \```
 
 ## Service Configuration
