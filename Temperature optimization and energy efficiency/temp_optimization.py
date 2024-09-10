@@ -1,8 +1,6 @@
-import cherrypy
 import paho.mqtt.client as mqtt
 import json
 import time
-import requests
 from datetime import datetime, timedelta
 import signal
 from registration_functions import *
@@ -17,7 +15,6 @@ mqtt_topic_HVAC_on_off = "gym/hvac/on_off"  # Topic for administrator control (O
 mqtt_topic_alert = "gym/environment/alert"  # Topic for publishing alerts
 
 class TempOptimizationService:
-    exposed = True
 
     def __init__(self, gym_schedule):
         self.client = mqtt.Client()
@@ -186,16 +183,6 @@ class TempOptimizationService:
         self.client.publish(mqtt_topic_alert, payload)
         print(f"Sent alert: {message}")
 
-    # REST API to retrieve current HVAC status
-    def GET(self, *uri, **params):
-        return json.dumps({
-            "status": "success",
-            "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "hvac_state": self.hvac_state,
-            "thresholds": self.thresholds,
-            "occupancy": self.current_occupancy
-        })
-
     def stop(self):
         self.client.loop_stop()
         print("MQTT client stopped.")
@@ -212,7 +199,6 @@ def initialize_service():
 def stop_service(signum, frame):
     print("Stopping service...")
     delete_service("hvac_control")
-    cherrypy.engine.exit()
     # Clean stop of the MQTT client
     service.stop()
 
@@ -225,18 +211,8 @@ if __name__ == "__main__":
     service = TempOptimizationService(gym_schedule)
     initialize_service()
 
-    # Signal handler for clean shutdown with CTRL+C
+    # Signal handler for clean shutdown
     signal.signal(signal.SIGINT, stop_service)
-    
-    # CherryPy configuration to expose REST API
-    cherrypy.config.update({'server.socket_port': 8084, 'server.socket_host': '0.0.0.0'})
-    conf = {
-        '/': {
-            'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-        }
-    }
 
-    # Start the service
-    cherrypy.tree.mount(service, '/', conf)
-    cherrypy.engine.start()
-    cherrypy.engine.block()
+    # Start MQTT loop (no REST server here)
+    service.client.loop_forever()
