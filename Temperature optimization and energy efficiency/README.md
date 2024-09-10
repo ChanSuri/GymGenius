@@ -38,12 +38,22 @@ You can interact with the service's REST API at `http://localhost:8084/hvac` to 
 ## MQTT Topics
 
 ### Environment Data (`gym/environment`)
-- Publishes temperature and humidity data in JSON format.
+- Device connector publishes temperature and humidity data in JSON format.
 - Example payload:
   \```json
   {
-    "temperature": 26.5,
-    "humidity": 60
+    "bn": "gym/environment"
+    "e":[
+      {"n": "temperature",
+       "u": "Cel",
+       "t":current_time,
+       "v": temperature_value},
+      {"n": "humidity",
+       "u": "%",
+       "t" :current_time,
+       "v": humidity_value
+      } 
+    ]
   }
   \```
 
@@ -58,7 +68,7 @@ You can interact with the service's REST API at `http://localhost:8084/hvac` to 
   \```
 
 ### Occupancy Data (`gym/occupancy/current`)
-- Publishes the current occupancy of the gym.
+- Device connector publishes the current occupancy of the gym.
 - Example payload:
   \```json
   {

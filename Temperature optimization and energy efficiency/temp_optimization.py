@@ -5,14 +5,16 @@ import time
 import requests
 from datetime import datetime, timedelta
 import signal
-from registration_functions import register_service
+from registration_functions import *
 
 # MQTT Configuration
 mqtt_broker = "test.mosquitto.org"
 mqtt_topic_env = "gym/environment"
 mqtt_topic_control = "gym/hvac/control"
-mqtt_topic_threshold = "gym/threshold"  # Topic for thresholds update
+mqtt_topic_desired_temperature = "gym/desired_temperature"  # Topic for desired temperature update
 mqtt_topic_occupancy = "gym/occupancy/current"  # Topic for current occupancy
+mqtt_topic_HVAC_on_off = "gym/hvac/on_off"  # Topic for administrator control (ON/OFF)
+mqtt_topic_alert = "gym/environment/alert"  # Topic for publishing alerts
 
 class TempOptimizationService:
     exposed = True
@@ -25,13 +27,17 @@ class TempOptimizationService:
         self.connect_mqtt()
 
         self.client.subscribe(mqtt_topic_env)
-        self.client.subscribe(mqtt_topic_threshold)  # Subscribing to threshold topic
+        self.client.subscribe(mqtt_topic_desired_temperature)  # Subscribing to desired temperature topic
         self.client.subscribe(mqtt_topic_occupancy)  # Subscribing to occupancy topic
+        self.client.subscribe(mqtt_topic_HVAC_on_off)  # Subscribing to HVAC on/off control topic
 
         self.gym_schedule = gym_schedule
         self.thresholds = {'upper': 28, 'lower': 24}  # Default thresholds
+        self.alert_temperature = {'upper': 35, 'lower': 15}  # Alert thresholds for temperature
+        self.alert_humidity = {'upper': 70, 'lower': 20}  # Alert thresholds for humidity
         self.hvac_state = 'off'
         self.current_occupancy = 0  # Initialize the occupancy to 0
+        self.current_command = "ON"  # Default command state is ON
 
     def connect_mqtt(self):
         try:
@@ -54,19 +60,33 @@ class TempOptimizationService:
 
     def on_message(self, client, userdata, message):
         if message.topic == mqtt_topic_env:
-            data = json.loads(message.payload.decode())
-            temperature = data.get('temperature')
-            humidity = data.get('humidity')
+            try:
+                data = json.loads(message.payload.decode())
+                events = data.get('e', [])
 
-            if temperature is not None and humidity is not None:
-                print(f"Received temperature: {temperature}°C, humidity: {humidity}%")
-                self.control_hvac(temperature, humidity)
+                temperature = None
+                humidity = None
+
+                # Parse the JSON to extract temperature and humidity values
+                for event in events:
+                    if event.get('n') == 'temperature':
+                        temperature = event.get('v')
+                    elif event.get('n') == 'humidity':
+                        humidity = event.get('v')
+
+                if temperature is not None and humidity is not None:
+                    print(f"Received temperature: {temperature}°C, humidity: {humidity}%")
+                    self.control_hvac(temperature, humidity)
+                    self.check_alerts(temperature, humidity)  # Check for temperature and humidity alerts
+            except (json.JSONDecodeError, TypeError) as e:
+                print(f"Failed to decode environment data: {e}")
         
-        elif message.topic == mqtt_topic_threshold:  # Handle threshold updates via MQTT
+        elif message.topic == mqtt_topic_desired_temperature:  # Handle threshold updates via MQTT
             try:
                 threshold_data = json.loads(message.payload.decode())
-                upper = threshold_data.get('upper')
-                lower = threshold_data.get('lower')
+                self.desired_temperature = threshold_data.get('v')
+                upper = self.desired_temperature + 1
+                lower = self.desired_temperature - 1
 
                 # Validate and set the thresholds with bounds
                 if upper is not None and isinstance(upper, (int, float)):
@@ -74,7 +94,7 @@ class TempOptimizationService:
                 if lower is not None and isinstance(lower, (int, float)):
                     self.thresholds['lower'] = max(15, min(lower, 35))
 
-                print(f"Updated thresholds: upper = {self.thresholds['upper']}°C, lower = {self.thresholds['lower']}°C")
+                print(f"Updated desired temperature and thresholds: temperature = {self.desired_temperature}°C, upper = {self.thresholds['upper']}°C, lower = {self.thresholds['lower']}°C")
             except (json.JSONDecodeError, TypeError) as e:
                 print(f"Failed to decode threshold data: {e}")
 
@@ -86,7 +106,20 @@ class TempOptimizationService:
             except (json.JSONDecodeError, TypeError) as e:
                 print(f"Failed to decode occupancy data: {e}")
 
+        elif message.topic == mqtt_topic_HVAC_on_off:  # Handle HVAC controls command
+            try:
+                command_data = json.loads(message.payload.decode())
+                self.current_command = command_data.get('state', "ON").upper()  # Retrieve from the "state" field, default to "ON"
+                print(f"Received administrator command: {self.current_command}.")
+            except (json.JSONDecodeError, TypeError) as e:
+                print(f"Failed to decode command data: {e}")
+
     def control_hvac(self, temperature, humidity):
+        # If the command is OFF, do not proceed with controlling the HVAC
+        if self.current_command == "OFF":
+            print("HVAC control disabled by administrator.")
+            return
+
         current_time = datetime.now()
         is_open = self.gym_schedule['open'] <= current_time.time() <= self.gym_schedule['close']
 
@@ -108,7 +141,7 @@ class TempOptimizationService:
             return
 
         # Control based on temperature and gym hours
-        if is_open and self.hvac_state == 'off' and temperature > self.thresholds['upper']:
+        if is_open and self.hvac_state == 'off' and (temperature > self.thresholds['upper'] or temperature < self.thresholds['lower']):
             self.hvac_state = 'on'
             self.send_hvac_command('turn_on')
         elif not is_open and self.hvac_state == 'on':
@@ -119,6 +152,39 @@ class TempOptimizationService:
         payload = json.dumps({"command": command})
         self.client.publish(mqtt_topic_control, payload)
         print(f"Sent HVAC command: {command}")
+
+    # Function to check if the temperature or humidity exceeds alert thresholds
+    def check_alerts(self, temperature, humidity):
+        alert_triggered = False
+
+        # Check temperature alerts
+        if temperature > self.alert_temperature['upper']:
+            alert_message = f"ALERT: Temperature too high! Current temperature: {temperature}°C"
+            self.send_alert(alert_message)
+            alert_triggered = True
+        elif temperature < self.alert_temperature['lower']:
+            alert_message = f"ALERT: Temperature too low! Current temperature: {temperature}°C"
+            self.send_alert(alert_message)
+            alert_triggered = True
+
+        # Check humidity alerts
+        if humidity > self.alert_humidity['upper']:
+            alert_message = f"ALERT: Humidity too high! Current humidity: {humidity}%"
+            self.send_alert(alert_message)
+            alert_triggered = True
+        elif humidity < self.alert_humidity['lower']:
+            alert_message = f"ALERT: Humidity too low! Current humidity: {humidity}%"
+            self.send_alert(alert_message)
+            alert_triggered = True
+
+        if not alert_triggered:
+            print("No alerts triggered for temperature or humidity.")
+
+    # Function to publish an alert message to the MQTT topic
+    def send_alert(self, message):
+        payload = json.dumps({"alert": message})
+        self.client.publish(mqtt_topic_alert, payload)
+        print(f"Sent alert: {message}")
 
     # REST API to retrieve current HVAC status
     def GET(self, *uri, **params):
@@ -134,11 +200,10 @@ class TempOptimizationService:
         self.client.loop_stop()
         print("MQTT client stopped.")
 
-
 def initialize_service():
     # Register the service at startup
     service_id = "hvac_control"
-    description = "Gestione e controllo HVAC"
+    description = "HVAC management and control"
     status = "active"
     endpoint = "http://localhost:8084/hvac"
     register_service(service_id, description, status, endpoint)
@@ -146,8 +211,8 @@ def initialize_service():
 
 def stop_service(signum, frame):
     print("Stopping service...")
+    delete_service("hvac_control")
     cherrypy.engine.exit()
-
     # Clean stop of the MQTT client
     service.stop()
 
@@ -156,14 +221,14 @@ if __name__ == "__main__":
     gym_schedule = {'open': datetime.strptime('08:00', '%H:%M').time(),
                     'close': datetime.strptime('24:00', '%H:%M').time()}
 
-    # Inizializzazione del servizio
+    # Initialize the service
     service = TempOptimizationService(gym_schedule)
     initialize_service()
 
-    # Gestore di segnale per arresto pulito
+    # Signal handler for clean shutdown with CTRL+C
     signal.signal(signal.SIGINT, stop_service)
     
-    # Configurazione di CherryPy per esporre l'API REST
+    # CherryPy configuration to expose REST API
     cherrypy.config.update({'server.socket_port': 8084, 'server.socket_host': '0.0.0.0'})
     conf = {
         '/': {
@@ -171,7 +236,7 @@ if __name__ == "__main__":
         }
     }
 
-    # Avvio del servizio
+    # Start the service
     cherrypy.tree.mount(service, '/', conf)
     cherrypy.engine.start()
     cherrypy.engine.block()
