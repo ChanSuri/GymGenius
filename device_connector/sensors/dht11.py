@@ -1,6 +1,7 @@
 import time
 import board
 import adafruit_dht
+import json
 import requests
 from datetime import datetime, timezone
 
@@ -31,8 +32,8 @@ def send_data_to_device_connector(temperature, humidity):
             "senml_record": {
                 "bn": "gym/environment",
                 "e": [
-                    {"n": "temperature", "u": "Cel", "t": time.time(), "v": temperature},
-                    {"n": "humidity", "u": "%", "t": time.time(), "v": humidity}
+                    {"n": "temperature", "u": "Cel", "t": current_time, "v": temperature},
+                    {"n": "humidity", "u": "%", "t": current_time, "v": humidity}
                 ]
             }
         }
@@ -58,6 +59,27 @@ try:
             # Send data to the device connector
             send_data_to_device_connector(temperature, humidity)
             
+            # Create the SenML payload and save locally (optional)
+            data = [
+                {"bn": sensor_name, 
+                 "bt": current_time,
+                 "n": "temperature",
+                 "u": "Cel",
+                 "v": temperature},
+
+                {"bn": sensor_name,
+                 "bt": current_time,
+                 "n": "humidity",
+                 "u": "%",
+                 "v": humidity}
+            ]
+            
+            # Convert to JSON and write to file
+            json_data = json.dumps(data)
+            with open(file_name, 'w') as file:
+                file.write(json_data)
+
+            print(f"Data written to {file_name}")
         else:
             print("Failed to retrieve data from humidity sensor")
 
