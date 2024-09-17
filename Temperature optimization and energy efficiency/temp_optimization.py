@@ -138,14 +138,18 @@ class TempOptimizationService:
             return
 
         # Control based on temperature and gym hours
-        if is_open and self.hvac_state == 'off' and (temperature > self.thresholds['upper'] or temperature < self.thresholds['lower']):
-            self.hvac_state = 'on'
-            self.send_hvac_command('turn_on')
+        if is_open and self.hvac_state == 'off':
+            if temperature > self.thresholds['upper']:
+                self.hvac_state = 'on'
+                self.send_hvac_command('turn_on','cool')
+            elif temperature < self.thresholds['lower']:
+                self.hvac_state = 'on'
+                self.send_hvac_command('turn_on','heat')
         elif not is_open and self.hvac_state == 'on':
             self.hvac_state = 'off'
             self.send_hvac_command('turn_off')
 
-    def send_hvac_command(self, command):
+    def send_hvac_command(self, command, mode = None):
         # Publish the command in the required JSON structure
         payload = json.dumps({
             "topic": mqtt_topic_control,
@@ -153,7 +157,8 @@ class TempOptimizationService:
                 "device_id": "Temperature optimization and energy efficiency block",
                 "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "data": {
-                    "control_command": command
+                    "control_command": command,
+                    "mode": mode
                 }
             }
         })

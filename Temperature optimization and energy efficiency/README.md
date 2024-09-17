@@ -109,7 +109,7 @@ he service will connect to the MQTT broker and begin monitoring temperature, hum
 
 ### Published Topics
 - **HVAC Control (`gym/hvac/control`)**:
-- The service publishes commands to this topic to turn the HVAC system on or off.
+- The service publishes commands to this topic to turn the HVAC system on or off and its set the mode (cool/heat).
 - Example payload:
   \```json
   {
@@ -119,6 +119,7 @@ he service will connect to the MQTT broker and begin monitoring temperature, hum
       "timestamp": ""YYYY-MM-DD HH:MM:SS"",
       "data": {
         "control_command": "turn_on",
+        "mode": "cool"
       }
     }
   }  
