@@ -91,21 +91,23 @@ he service will connect to the MQTT broker and begin monitoring temperature, hum
   }  
   \```
 
-- **HVAC On/Off Control by Administrator (`gym/hvac/on_of`)**:
-- Allows the administrator to manually enable or disable HVAC control.
+- **HVAC On/Off Control by Administrator (`gym/hvac/on_off`)**:
+- Allows the administrator to manually turn ON/OFF the HVAC (setting the mode cool/heat) or use the AUTOMATIC HVAC control.
 - Example payload:
   \```json
   {
-    "topic": "gym/desired_temperature",
+    "topic": "gym/hvac/on_off",
     "message": {
       "device_id": "admin_id",
       "timestamp": ""YYYY-MM-DD HH:MM:SS"",
       "data": {
-        "state": "OFF"
+        "state": "ON"
+        "mode": "cool"
       }
     }
   } 
-  \``
+  \```
+- The state can be ON/OFF/AUTOMATIC and the mode can be cool/heat/None (None is used when OFF or AUTOMATIC)
 
 ### Published Topics
 - **HVAC Control (`gym/hvac/control`)**:

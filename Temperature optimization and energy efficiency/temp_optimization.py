@@ -112,11 +112,12 @@ class TempOptimizationService:
                 print(f"Failed to decode command data: {e}")
 
     def control_hvac(self, temperature, humidity):
-        # If the command is OFF, do not proceed with controlling the HVAC
-        if self.current_command == "OFF":
-            print("HVAC control disabled by administrator.")
+        # If the command is OFF or ON, do not proceed with controlling the HVAC
+        if self.current_command == "OFF" or self.current_command == "ON" :
+            print("Automatic HVAC control disabled by administrator.")
             return
-
+        
+        # If the command is AUTOMATIC, proceed with controlling the HVAC
         current_time = datetime.now()
         is_open = self.gym_schedule['open'] <= current_time.time() <= self.gym_schedule['close']
 

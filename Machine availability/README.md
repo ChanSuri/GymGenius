@@ -52,6 +52,7 @@ The service will connect to the MQTT broker and begin listening for machine avai
         }  
     }
     \```
+  - if the "v" field is 0 the machine is available, if it is 1 the mchine is occupied
 
 ### Published Topics
 - **Aggregated Machine Availability (`gym/group_availability/<machine_type>`)**: 
