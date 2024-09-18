@@ -3,6 +3,8 @@ import time
 import json
 import datetime
 import numpy as np
+import pandas as pd
+import requests
 from sklearn.linear_model import LinearRegression
 from registration_functions import register_service
 import signal
@@ -12,7 +14,6 @@ current_occupancy = 0
 
 # Matrices 9x7: 9 time slots (from 8:00 to 24:00 with 2-hour intervals), 7 days of the week
 prediction_matrix = np.zeros((9, 7))
-historical_data = np.zeros((9, 7))  # Matrix to store historical data
 
 # List to store the training data for regression
 X_train = []
@@ -30,6 +31,9 @@ mqtt_topic_prediction = "gym/occupancy/prediction"  # Topic for publishing predi
 
 # Model for regression
 model = LinearRegression()
+
+# URL di ThingSpeak per il file CSV
+thingspeak_url = "https://api.thingspeak.com/channels/YOUR_CHANNEL_ID/feeds.csv"
 
 class OccupancyService:
 
@@ -50,7 +54,6 @@ class OccupancyService:
     # Function triggered when a message is received
     def on_message(self, client, userdata, msg):
         global current_occupancy
-        message = json.loads(msg.payload.decode())
 
         # Validate entry and exit messages
         if msg.topic == mqtt_topic_entry:
@@ -58,8 +61,10 @@ class OccupancyService:
         elif msg.topic == mqtt_topic_exit:
             self.decrement_occupancy()
 
+        # Fetch historical data from ThingSpeak
+        self.fetch_historical_data()
+
         # Record historical data and check for model training condition
-        self.record_historical_data(current_occupancy)
         if self.can_train_model():
             self.train_model()
             self.update_prediction()
@@ -85,19 +90,28 @@ class OccupancyService:
         else:
             print("Occupancy is already zero, cannot decrement.")
 
-    # Function to record historical data associated with time slot and day
-    def record_historical_data(self, occupancy):
-        now = datetime.datetime.now()
-        hour_slot = self.get_time_slot(now.hour)
-        day_of_week = now.weekday()  # Monday = 0, Sunday = 6
+    # Function to fetch historical data from ThingSpeak
+    def fetch_historical_data(self):
+        response = requests.get(thingspeak_url)
+        if response.status_code == 200:
+            data = response.content.decode('utf-8')
 
-        # Update historical data matrix with current occupancy
-        historical_data[hour_slot, day_of_week] += occupancy
-        print(f"Historical data updated: Slot {hour_slot}, Day {day_of_week}, Occupancy: {occupancy}")
+            # Load CSV into pandas DataFrame
+            df = pd.read_csv(pd.compat.StringIO(data))
 
-        # Collect data for training: input (hour_slot, day_of_week), output (average occupancy)
-        X_train.append([hour_slot, day_of_week])
-        Y_train.append(historical_data[hour_slot, day_of_week] / max(1, historical_data[hour_slot, day_of_week]))
+            # Process the data
+            for index, row in df.iterrows():
+                timestamp = pd.to_datetime(row['created_at'])
+                hour_slot = self.get_time_slot(timestamp.hour)
+                day_of_week = timestamp.weekday()  # Monday = 0, Sunday = 6
+                occupancy = row['current_occupancy']
+
+                # Update training data
+                X_train.append([hour_slot, day_of_week])
+                Y_train.append(occupancy)
+                print(f"Loaded data from ThingSpeak: Slot {hour_slot}, Day {day_of_week}, Occupancy: {occupancy}")
+        else:
+            print(f"Failed to fetch data from ThingSpeak, status code: {response.status_code}")
 
     # Function to determine the current time slot
     def get_time_slot(self, hour):

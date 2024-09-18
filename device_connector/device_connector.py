@@ -75,6 +75,19 @@ class DeviceConnector:
             else:
                 # Return the error response from the device registration
                 return json.dumps({"status": "error", "message": "Device registration failed"})
+            
+        # Check if the POST request is from the IR sensor
+        if "device_id" in input_data and "event_type" in input_data and input_data["event_type"] == "availability":
+            # Call to register a new device
+            registration_response = self.register_device(input_data)
+            registration_data = json.loads(registration_response)
+
+            # If registration is successful, proceed with handling the MQTT event
+            if registration_data["status"] == "success" or registration_data["message"] == "Device registered/updated successfully":
+                return self.publish_availability_data(input_data)
+            else:
+                # Return the error response from the device registration
+                return json.dumps({"status": "error", "message": "Device registration failed"})
 
         else:
             raise cherrypy.HTTPError(400, "Invalid data format")
@@ -98,6 +111,41 @@ class DeviceConnector:
         except Exception as e:
             cherrypy.response.status = 500
             return json.dumps({"status": "error", "message": str(e)})
+        
+    def publish_environment_data(self, input_data):
+        """Publish environment data to MQTT, modifying the SenML record with dynamic machine names."""
+        try:
+            # Extract SenML record and other necessary data from input_data
+            senml_record = input_data.get("senml_record", {})
+            current_time = input_data.get("time")
+
+            # Dynamically determine the machine name from the 'bn' field or input_data
+            base_name = senml_record.get("bn", "")  # e.g., "gym/availability/treadmill/1"
+            # Extract machine name (e.g., "treadmill") from the basename
+            machine_name = base_name.split('/')[-2] if base_name else "machine"
+
+            # Create the modified SenML record with the dynamic machine name
+            modified_senml_record = {
+                "bn": base_name,
+                "e": [
+                    {
+                        "n": f"{machine_name}_availability",  # Dynamically set machine availability name
+                        "u": "binary",
+                        "t": current_time,
+                        "v": senml_record.get("e", {}).get("v", 0)  # Preserve the availability value
+                    }
+                ]
+            }
+
+            # Convert the modified SenML record to JSON and publish it to MQTT
+            self.client.publish(mqtt_topic_environment, json.dumps(modified_senml_record))
+            return json.dumps({"status": "success", "message": f"Availability data for {machine_name} published to MQTT"})
+
+        except Exception as e:
+            print(f"Error in publishing availability data: {e}")
+            return json.dumps({"status": "error", "message": str(e)})
+
+
 
     def publish_environment_data(self, input_data):
         """Publish temperature and humidity data to MQTT, considering HVAC state and residual effects."""
