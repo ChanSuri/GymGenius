@@ -72,12 +72,34 @@ In addition, **TA_reader** processes this real-time data and generates files tha
 
 ## ThingSpeak Configuration
 
-The service is configured to upload data to specific **ThingSpeak** channels, each corresponding to a different room or aspect of the gym. The data is uploaded via REST API calls to the ThingSpeak platform, using the configured **write API keys**.
+The service is configured to upload data to specific **ThingSpeak** channels for different rooms and aspects of the gym. Data is sent to ThingSpeak via REST API using write API keys for each room. Below is the configuration for each room and the corresponding data types:
 
-For example:
-- *Cardio Room*: Temperature, humidity, treadmill availability, etc.
-- *Lifting Room*: Temperature, humidity, and availability of machines like the cable machine and leg press machine.
-- *Entrance*: Tracks the current occupancy of the gym.
+### *Cardio Room*
+- **Temperature**: Field 1 in ThingSpeak.
+- **Humidity**: Field 2 in ThingSpeak.
+- **Machine Availability**:
+  - **Treadmill**: Field 3.
+  - **Elliptical Trainer**: Field 4.
+  - **Stationary Bike**: Field 5.
+  - **Rowing Machine**: Field 6.
+
+This setup allows monitoring the environmental conditions in the *Cardio Room* as well as the availability of cardio machines.
+
+### *Lifting Room*
+- **Temperature**: Field 1 in ThingSpeak.
+- **Humidity**: Field 2 in ThingSpeak.
+- **Machine Availability**:
+  - **Cable Machine**: Field 3.
+  - **Leg Press Machine**: Field 4.
+  - **Smith Machine**: Field 5.
+  - **Lat Pulldown Machine**: Field 6.
+
+This setup provides insights into the availability of lifting machines as well as environmental factors in the *Lifting Room*.
+
+### *Entrance*
+- **Current Occupancy**: Field 1 in ThingSpeak.
+
+This allows the gym to track how many clients are currently present in the gym through the *Entrance* data.
 
 Each **ThingSpeak** channel must have a unique **write API key** and corresponding fields, which are defined in the `settings.json` file.
 
@@ -115,4 +137,5 @@ The service ensures that the MQTT client disconnects properly and that the Thing
 ---
 
 This README provides an overview of the **Thingspeak Adaptor** service and its integration with **ThingSpeak**. The service efficiently bridges the gap between MQTT-based real-time data and the visualization capabilities of ThingSpeak, using REST API calls. It also provides a system for generating and storing room-specific historical data through **TA_reader**.
+
 
