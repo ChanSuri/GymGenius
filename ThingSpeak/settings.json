@@ -1,0 +1,52 @@
+{
+    "catalogURL": "",
+    "ThingspeakURL": "https://api.thingspeak.com/update?",
+    "brokerIP": "mqtt.eclipseprojects.io",
+    "brokerPort": 1883,
+    "mqttTopics": {
+        "current_occupancy": "gym/occupancy/current",
+        "cardio_room": "gym/environment/cardio_room",
+        "lifting_room": "gym/environment/lifting_room",
+        "changing_room": "gym/environment/changing_room",
+        "machine_availability": "gym/group_availability/#"
+    },
+    "ServiceInfo": {
+        "serviceName": "Thingspeak Adaptor"
+    },
+    "channels": {
+        "Entrance": {
+            "writeAPIkey": "ATZ8HIS29W2XUSZU",
+            "fields": {
+                "current_occupancy": 1
+            }
+        },
+        "Changing Room": {
+            "writeAPIkey": "FACTC4ABRZWURCVE",
+            "fields": {
+                "temperature": 1
+            }
+        },
+        "Cardio Room": {
+            "writeAPIkey": "T6471GETYN84WHXJ",
+            "fields": {
+                "temperature": 1,
+                "humidity": 2,
+                "treadmill": 3,
+                "elliptical_trainer": 4,
+                "stationary_bike": 5,
+                "rowing_machine": 6
+            }
+        },
+        "Lifting Room": {
+            "writeAPIkey": "D2FRMVBWV1Q3SJ3R",
+            "fields": {
+                "temperature": 1,
+                "humidity": 2,
+                "cable_machine": 3,
+                "leg_press_machine": 4,
+                "smith_machine": 5,
+                "lat_pulldown_machine": 6
+            }
+        }
+    }
+}
