@@ -25,7 +25,7 @@ Additionally, **TA_reader** generates historical data files based on the data fr
 - **ThingSpeak Data Upload (via REST)**: Automatically uploads real-time data to configured ThingSpeak channels using RESTful HTTP requests.
 - **Rate-Limited Updates**: Ensures that data is uploaded no more than once every 30 seconds to avoid overloading ThingSpeak.
 - **Service Registration and Deregistration**: Registers the service with a service catalog on startup and deregisters it on shutdown.
-- **Historical Data Generation (Room-Specific)**: The system saves historical information for each room (e.g., Cardio Room, Lifting Room) using **TA_reader**, generating separate files for tracking data from individual rooms.
+- **Historical Data Generation (Room-Specific)**: The system saves historical information for each room (e.g., Cardio Room, Lifting Room, Changing Room) using **TA_reader**, generating separate files for tracking data from individual rooms.
 
 ---
 
@@ -42,13 +42,13 @@ Additionally, **TA_reader** generates historical data files based on the data fr
 
 ### Data Collection
 The service collects data from MQTT topics and processes them in real time. Supported data types include:
-- **Temperature and Humidity** for the *Cardio Room* and *Lifting Room*.
+- **Temperature and Humidity** for the *Cardio Room*, *Lifting Room*, and *Changing Room*.
 - **Occupancy Status** for the entire gym.
 - **Aggregated Machine Availability** for various gym machines (e.g., treadmills, elliptical trainers).
 
 Once data is collected, it is uploaded to ThingSpeak via REST API calls, where it can be visualized and analyzed.
 
-In addition, **TA_reader** processes this real-time data and generates files that store historical information for each room separately. These historical records provide insights into the availability, usage, and environmental conditions in the *Cardio Room*, *Lifting Room*, and other gym spaces.
+In addition, **TA_reader** processes this real-time data and generates files that store historical information for each room separately. These historical records provide insights into the availability, usage, and environmental conditions in the *Cardio Room*, *Lifting Room*, *Changing Room*, and other gym spaces.
 
 ---
 
@@ -56,7 +56,7 @@ In addition, **TA_reader** processes this real-time data and generates files tha
 
 ### Subscribed Topics
 - **Temperature & Humidity**:
-  - `gym/environment/cardio_room` and `gym/environment/lifting_room` for monitoring room conditions.
+  - `gym/environment/cardio_room`, `gym/environment/lifting_room`, and `gym/environment/changing_room` for monitoring room conditions.
 - **Current Occupancy**:
   - `gym/occupancy/current` for tracking the current number of clients in the gym.
 - **Aggregated Machine Availability**:
@@ -96,6 +96,12 @@ This setup allows monitoring the environmental conditions in the *Cardio Room* a
 
 This setup provides insights into the availability of lifting machines as well as environmental factors in the *Lifting Room*.
 
+### *Changing Room*
+- **Temperature**: Field 1 in ThingSpeak.
+- **Humidity**: Field 2 in ThingSpeak.
+
+The *Changing Room* is monitored for temperature and humidity, helping maintain comfort levels and proper ventilation.
+
 ### *Entrance*
 - **Current Occupancy**: Field 1 in ThingSpeak.
 
@@ -120,7 +126,7 @@ At startup, the Thingspeak Adaptor registers itself with the service catalog usi
 **TA_reader** processes the real-time data collected by the Thingspeak Adaptor and generates historical data files for each individual room. This allows the gym to maintain detailed historical records, which can be used for analysis, reporting, or predictive maintenance.
 
 - **Room-Specific Data Files**: Historical data is saved separately for each room, ensuring that machine availability, occupancy, and environmental conditions (temperature, humidity) are tracked at a granular level.
-- **File Structure**: Separate files are generated for rooms such as the *Cardio Room* and *Lifting Room*, allowing detailed analysis of machine usage, environmental conditions, and occupancy trends over time.
+- **File Structure**: Separate files are generated for rooms such as the *Cardio Room*, *Lifting Room*, and *Changing Room*, allowing detailed analysis of machine usage, environmental conditions, and occupancy trends over time.
 
 This room-specific data can be used to analyze gym usage patterns, machine availability, or environmental factors, helping to optimize operations and improve the gym experience.
 
@@ -137,5 +143,6 @@ The service ensures that the MQTT client disconnects properly and that the Thing
 ---
 
 This README provides an overview of the **Thingspeak Adaptor** service and its integration with **ThingSpeak**. The service efficiently bridges the gap between MQTT-based real-time data and the visualization capabilities of ThingSpeak, using REST API calls. It also provides a system for generating and storing room-specific historical data through **TA_reader**.
+
 
 
