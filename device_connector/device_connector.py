@@ -13,6 +13,7 @@ mqtt_broker = "test.mosquitto.org"
 mqtt_topic_entry = "gym/occupancy/entry"
 mqtt_topic_exit = "gym/occupancy/exit"
 mqtt_topic_environment = "gym/environment"
+mqtt_topic_availability =  "gym/availability"
 mqtt_topic_hvac_control = "gym/hvac/control"  # Topic for HVAC control commands
 mqtt_topic_hvac_on_off = "gym/hvac/on_off"  # Topic for HVAC on/off commands
 
@@ -112,8 +113,8 @@ class DeviceConnector:
             cherrypy.response.status = 500
             return json.dumps({"status": "error", "message": str(e)})
         
-    def publish_environment_data(self, input_data):
-        """Publish environment data to MQTT, modifying the SenML record with dynamic machine names."""
+    def publish_availability_data(self, input_data):
+        """Publish availability data to MQTT, modifying the SenML record with dynamic machine names."""
         try:
             # Extract SenML record and other necessary data from input_data
             senml_record = input_data.get("senml_record", {})
@@ -138,7 +139,7 @@ class DeviceConnector:
             }
 
             # Convert the modified SenML record to JSON and publish it to MQTT
-            self.client.publish(mqtt_topic_environment, json.dumps(modified_senml_record))
+            self.client.publish(mqtt_topic_availability + "/" + machine_name, json.dumps(modified_senml_record))
             return json.dumps({"status": "success", "message": f"Availability data for {machine_name} published to MQTT"})
 
         except Exception as e:

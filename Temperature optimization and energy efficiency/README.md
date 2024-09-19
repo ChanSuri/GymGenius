@@ -37,12 +37,12 @@ he service will connect to the MQTT broker and begin monitoring temperature, hum
 ## MQTT Topics
 
 ### Subscribed Topics
-- **Environment Data (`gym/environment`)**:
-- Device connector publishes temperature and humidity data in JSON format.
+- **Environment Data (`gym/environment/#`)**:
+- Device connector publishes temperature and humidity data of a specific room in JSON format.
 - Example payload:
   \```json
   {
-    "bn": "gym/environment",
+    "bn": "gym/environment/{room_name}",
     "e":[
       {"n": "temperature",
        "u": "Cel",
@@ -57,12 +57,12 @@ he service will connect to the MQTT broker and begin monitoring temperature, hum
   }
   \```
 
-- **Threshold Update (`gym/desired_temperature`)**:
-- Allows updates to the desired temperature, and the service calculates the upper and lower thresholds.
+- **Threshold Update (`gym/desired_temperature/#`)**:
+- Allows updates to the desired temperature of a specific room, and the service calculates the upper and lower thresholds.
 - Example payload:
   \```json
   {
-    "topic": "gym/desired_temperature",
+    "topic": "gym/desired_temperature/{room_name}",
     "message": {
       "device_id": "admin_id",
       "timestamp": ""YYYY-MM-DD HH:MM:SS"",
@@ -91,12 +91,12 @@ he service will connect to the MQTT broker and begin monitoring temperature, hum
   }  
   \```
 
-- **HVAC On/Off Control by Administrator (`gym/hvac/on_off`)**:
+- **HVAC On/Off Control by Administrator (`gym/hvac/on_off/#`)**:
 - Allows the administrator to manually turn ON/OFF the HVAC (setting the mode cool/heat) or use the AUTOMATIC HVAC control.
 - Example payload:
   \```json
   {
-    "topic": "gym/hvac/on_off",
+    "topic": "gym/hvac/on_off/{room_name}",
     "message": {
       "device_id": "admin_id",
       "timestamp": ""YYYY-MM-DD HH:MM:SS"",
@@ -110,12 +110,12 @@ he service will connect to the MQTT broker and begin monitoring temperature, hum
 - The state can be ON/OFF/AUTOMATIC and the mode can be cool/heat/None (None is used when OFF or AUTOMATIC)
 
 ### Published Topics
-- **HVAC Control (`gym/hvac/control`)**:
-- The service publishes commands to this topic to turn the HVAC system on or off and its set the mode (cool/heat).
+- **HVAC Control (`gym/hvac/control/{room_name}`)**:
+- The service publishes commands to this topic to turn the HVAC system of a specific room on or off and its set the mode (cool/heat).
 - Example payload:
   \```json
   {
-    "topic": "gym/hvac/control",
+    "topic": "gym/hvac/control/{room_name}",
     "message": {
       "device_id": "Temperature optiimization and energy efficiency block",
       "timestamp": ""YYYY-MM-DD HH:MM:SS"",
@@ -127,12 +127,12 @@ he service will connect to the MQTT broker and begin monitoring temperature, hum
   }  
   \```
 `
-- **Alert Messages (`gym/environment/alert`)**:
-- The service publishes alerts when temperature or humidity exceeds alert thresholds.
+- **Alert Messages (`gym/environment/alert/{room_name}`)**:
+- The service publishes alerts when temperature or humidity of a specific room exceeds alert thresholds.
 - Example payload:
   \```json
   {
-    "topic": "gym/environment/alert",
+    "topic": "gym/environment/alert/{room_name}",
     "message": {
       "device_id": "Temperature optiimization and energy efficiency block",
       "timestamp": ""YYYY-MM-DD HH:MM:SS"",

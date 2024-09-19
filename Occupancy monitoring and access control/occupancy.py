@@ -64,8 +64,8 @@ class OccupancyService:
         # Fetch historical data from ThingSpeak
         self.fetch_historical_data()
 
-        # Record historical data and check for model training condition
-        if self.can_train_model():
+        #Check if we can train the model (requires at least two data points per slot-hour/day)
+        if len(X_train) >= min_training_samples:
             self.train_model()
             self.update_prediction()
         
@@ -133,11 +133,7 @@ class OccupancyService:
             return 7
         else:
             return 8  # Night slot for 24:00-8:00
-
-    # Check if we can train the model (requires at least two data points per slot-hour/day)
-    def can_train_model(self):
-        return len(X_train) >= min_training_samples
-
+        
     # Train the regression model with the historical data
     def train_model(self):
         global model
