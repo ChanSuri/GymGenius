@@ -33,7 +33,7 @@ mqtt_topic_prediction = "gym/occupancy/prediction"  # Topic for publishing predi
 model = LinearRegression()
 
 # URL di ThingSpeak per il file CSV
-thingspeak_url = "https://api.thingspeak.com/channels/YOUR_CHANNEL_ID/feeds.csv"
+thingspeak_url = "https://localhost:8080/?channel=entrance"
 
 class OccupancyService:
 
