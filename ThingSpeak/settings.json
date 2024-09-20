@@ -8,6 +8,7 @@
         "cardio_room": "gym/environment/cardio_room",
         "lifting_room": "gym/environment/lifting_room",
         "changing_room": "gym/environment/changing_room",
+        "entrance_room": "gym/environment/entrance_room",
         "machine_availability": "gym/group_availability/#"
     },
     "ServiceInfo": {
@@ -17,13 +18,16 @@
         "Entrance": {
             "writeAPIkey": "ATZ8HIS29W2XUSZU",
             "fields": {
-                "current_occupancy": 1
+                "current_occupancy": 1,
+                "temperature": 2,  
+                "humidity": 3      
             }
         },
         "Changing Room": {
             "writeAPIkey": "FACTC4ABRZWURCVE",
             "fields": {
-                "temperature": 1
+                "temperature": 1,
+                "humidity": 2      
             }
         },
         "Cardio Room": {
@@ -50,3 +54,4 @@
         }
     }
 }
+
