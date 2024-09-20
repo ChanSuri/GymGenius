@@ -286,12 +286,12 @@ class Telegrambot():
                 ])
                 for chat_ID in self.chatIDs:
                     self.bot.sendMessage(chat_ID, text=tosend, reply_markup=keyboard)
-        elif message["n"]=="occupancy":
+        elif message["n"]=="occupancy": #entrance
             if message["v"]>self.crowdthreshold:
                 tosend=f"Our clients is reaching {message['v']}, we suggest you to come another time!"
                 for chat_ID in self.chatIDs:
                     self.bot.sendMessage(chat_ID, text=tosend)
-        elif message["n"]=="availability":
+        elif message["n"]=="availability": #machines
             if message["v"]== 'full':
                 tosend=f"The machine {message['n']} is {message['v']}, we suggest you to train something else and come later!"
                 for chat_ID in self.chatIDs:
@@ -307,7 +307,7 @@ class Telegrambot():
                 response = requests.post(self.availbilaity, json={"machine": query_data})
                 if response.status_code == 200:
                     data = response.json()
-                    self.bot.answerCallbackQuery(query_id, text='Available machine:'+ data["n"]+'number:'+ data["v"] +'Time:'+ data["time"])
+                    self.bot.answerCallbackQuery(query_id, text='Available machine:'+ data["n"]+'number:'+ data["v"] +'Time:'+ data["time"]) #data["message"]
                 else:
                     self.bot.answerCallbackQuery(query_id, text=f"Failed to retrieve data. Status code: {response.status_code}")
             except requests.exceptions.RequestException as e:
