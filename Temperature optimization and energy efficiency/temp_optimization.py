@@ -26,10 +26,9 @@ class TempOptimizationService:
         self.connect_mqtt()
 
         # Subscribe to topics for all rooms
-        for room in rooms:
-            self.client.subscribe(mqtt_topic_env_base + room)
-            self.client.subscribe(mqtt_topic_desired_temperature_base + room)
-            self.client.subscribe(mqtt_topic_HVAC_on_off_base + room)
+        self.client.subscribe(mqtt_topic_env_base + '#')
+        self.client.subscribe(mqtt_topic_desired_temperature_base + '#')
+        self.client.subscribe(mqtt_topic_HVAC_on_off_base + '#')
 
         self.client.subscribe(mqtt_topic_occupancy)
 
