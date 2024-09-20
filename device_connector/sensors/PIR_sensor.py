@@ -14,12 +14,13 @@ GPIO.setup(PIR_PIN, GPIO.IN)
 
 # Definition of data to be sent for treadmill 1 (sensore reale)
 device_id_real = "PIR_treadmill_1"  # Unique device ID for the real sensor
+device_number_real = 1  # Number associated with the treadmill
 
 # Funzione per inviare dati al device connector
-def send_data_to_device_connector(value, device_name, room, device_id):
+def send_data_to_device_connector(value, device_name, room, device_id, device_number):
     """Send PIR sensor or simulated data to the device connector."""
     record = {
-        "bn": f"GymGenius/Occupancy/Availability/{device_name}/1",
+        "bn": f"GymGenius/Occupancy/Availability/{device_name}/{device_number}",
         "bt": 0,
         "n": device_name,
         "u": "binary",
@@ -40,9 +41,9 @@ def send_data_to_device_connector(value, device_name, room, device_id):
     try:
         response = requests.post(device_connector_url, json=data)
         if response.status_code == 200:
-            print(f"Data for {device_name} successfully sent to the device connector.")
+            print(f"Data for {device_name} {device_number} successfully sent to the device connector.")
         else:
-            print(f"Error sending data for {device_name}: {response.status_code}, {response.text}")
+            print(f"Error sending data for {device_name} {device_number}: {response.status_code}, {response.text}")
     except Exception as e:
         print(f"Error sending the request: {e}")
 
@@ -50,10 +51,10 @@ def send_data_to_device_connector(value, device_name, room, device_id):
 def simulate_machine_usage(machine_list, room):
     """Simulates occupancy for the machines in a room."""
     while True:
-        for machine in machine_list:
+        for machine_index, machine in enumerate(machine_list, start=1):
             # Randomly simulate occupancy (1 = occupied, 0 = available)
             simulated_value = random.choice([0, 1])
-            send_data_to_device_connector(simulated_value, machine, room, f"simulated_{machine}")
+            send_data_to_device_connector(simulated_value, machine, room, f"simulated_{machine}_{machine_index}", machine_index)
             time.sleep(random.randint(5, 10))  # Simulate random intervals between state changes
 
 # Funzione per gestire il sensore PIR reale
@@ -61,7 +62,7 @@ def handle_real_pir_sensor():
     """Handles the real PIR sensor for treadmill 1."""
     try:
         time.sleep(2)  # Wait for the sensor to stabilize
-        print("Ready to detect movement on treadmill 1...")
+        print(f"Ready to detect movement on treadmill {device_number_real}...")
 
         previous_state = GPIO.input(PIR_PIN)  # Read the initial state of the sensor
 
@@ -70,7 +71,7 @@ def handle_real_pir_sensor():
 
             if current_state != previous_state:  # Send request only when there's a state change
                 print(f"Sensor state changed: {current_state}")
-                send_data_to_device_connector(current_state, "treadmill", "cardio room", device_id_real)
+                send_data_to_device_connector(current_state, "treadmill", "cardio room", device_id_real, device_number_real)
                 previous_state = current_state  # Update previous state
 
             time.sleep(1)
@@ -82,7 +83,7 @@ def handle_real_pir_sensor():
         GPIO.cleanup()
 
 # Lista delle macchine simulate
-cardio_machines = ["elliptical_trainer", "stationary_bike"]
+cardio_machines = ["treadmill", "elliptical_trainer", "stationary_bike"]
 lifting_machines = ["rowing_machine", "cable_machine", "leg_press_machine", "smith_machine", "lat_pulldown_machine"]
 
 print("Starting simulation and real sensor monitoring... (CTRL+C to stop)")
@@ -102,6 +103,7 @@ except KeyboardInterrupt:
     print("Simulation interrupted by user.")
 finally:
     GPIO.cleanup()
+
 
 
 
