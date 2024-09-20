@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN pip install cherrypy requests
+RUN pip install cherrypy requests paho-mqtt
 
 EXPOSE 8082
 

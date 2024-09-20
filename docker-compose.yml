@@ -1,3 +1,5 @@
+version: '3'
+
 services:
   service_catalog:
     build:
@@ -29,6 +31,70 @@ services:
     networks:
       - gym-genius-network
 
+  temperature_optimization:
+    build:
+      context: ./temp_optimization
+    volumes:
+      - ./temp_optimization:/app
+    networks:
+      - gym-genius-network
+    depends_on:
+      - device_connector
+      - service_catalog
+      - resource_catalog
+
+  occupancy:
+    build:
+      context: ./occupancy
+    volumes:
+      - ./occupancy:/app
+    networks:
+      - gym-genius-network
+    depends_on:
+      - device_connector
+      - service_catalog
+      - resource_catalog
+
+  machine_availability:
+    build:
+      context: ./machine_availability
+    volumes:
+      - ./machine_availability:/app
+    networks:
+      - gym-genius-network
+    depends_on:
+      - device_connector
+      - service_catalog
+      - resource_catalog
+
+  thingspeak_adaptor:
+    build:
+      context: ./thingspeak
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./thingspeak:/app
+    networks:
+      - gym-genius-network
+    depends_on:
+      - device_connector
+      - service_catalog
+      - resource_catalog
+
+  telegram_bot:
+    build:
+      context: ./telegramBot
+    ports:
+      - "8086:8086"
+    volumes:
+      - ./telegramBot:/app
+    networks:
+      - gym-genius-network
+    depends_on:
+      - device_connector
+      - service_catalog
+      - resource_catalog
+
   entry_sensor:
     build:
       context: ./sensors
@@ -45,7 +111,7 @@ services:
   exit_sensor:
     build:
       context: ./sensors
-    command: python simulate_button.py 
+    command: python simulate_button.py
     volumes:
       - ./sensors:/app
     networks:
