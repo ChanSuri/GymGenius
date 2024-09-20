@@ -154,6 +154,8 @@ class DeviceConnector:
             # Extract temperature and humidity from the sensor data
             senml_record = input_data.get("senml_record", {})
             temperature = next((e["v"] for e in senml_record["e"] if e["n"] == "temperature"), None)
+            room = input_data.get("location")
+
 
             if temperature is not None:
                 self.real_temperature = temperature  # Update the actual temperature from the sensor
@@ -167,7 +169,7 @@ class DeviceConnector:
                         entry["v"] = modified_temperature
 
             # Convert the record to JSON and publish it to the MQTT topic
-            self.client.publish(mqtt_topic_environment, json.dumps(senml_record))
+            self.client.publish(mqtt_topic_environment + '/' + room, json.dumps(senml_record))
             return json.dumps({"status": "success", "message": "Environment data published to MQTT"})
 
         except Exception as e:
