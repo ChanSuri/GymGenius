@@ -1,8 +1,3 @@
-# Raspberry Pi Connector
-The Raspberry Pi Connector is a Device Connector that integrates into the platform Raspberry Pi boards. The Raspberry has temperature and humidity sensors to provide environmental information about the building's condition, InfraReds to also detect the occupancy of a specific machine, and push buttons to monitor the entrance and exits of the gym as well. It offers Rest Web Services for obtaining all that information. On top of that, it is equipped with two relays to switch on and off the connected appliances and provides Rest Web Services to retrieve and change the status of the connected appliances (on/off).
-Furthermore, it functions both as an MQTT publisher and subscriber. The first function is used to transmit environmental data every five minutes as well as user presence information (when detected), while the second one is integrated to receive actuation commands from other actors that also exploit the MQTT protocol (e.g. Control Strategies). In particular, many RPIs as many rooms can be used to make the platform scalable. The standard design of the gym is made of the entrance, the changing rooms, and activities rooms, where different sensors are used based on different needs (temperature/humidity sensors
-and push buttons, temperature sensors, temperature/humidity sensors, and InfraReds respectively)
-
 # Device Connector for Gym Management
 
 ## Table of Contents
@@ -31,18 +26,6 @@ The **Device Connector Service** is a microservice designed to manage and integr
 - `cherrypy` library
 - `requests` library
 
-### Steps
-1. Clone the repository:
-   \```bash
-   git clone https://your-repository-url.git
-   cd your-repository
-   \```
-
-2. Install the required Python packages:
-   \```bash
-   pip install paho-mqtt cherrypy requests
-   \```
-
 ## Usage
 
 ### Service Registration
@@ -53,7 +36,7 @@ The service will connect to the MQTT broker and the Resource Catalog, handle HVA
 ## MQTT Topics
 
 ### Subscribed Topics
-- **HVAC Control (`gym/hvac/control`)**: Receives commands to control HVAC (e.g., turn on, turn off, set mode).
+- **HVAC Control (`gym/hvac/control/#`)**: Receives commands to control HVAC (e.g., turn on, turn off, set mode).
   Example payload:
   \```json
   {
@@ -66,7 +49,7 @@ The service will connect to the MQTT broker and the Resource Catalog, handle HVA
   }
   \```
 
-- **HVAC On/Off (`gym/hvac/on_off`)**: Receives administrator commands to turn the HVAC on or off.
+- **HVAC On/Off (`gym/hvac/on_off/#`)**: Receives administrator commands to turn the HVAC on or off.
   Example payload:
   \```json
   {
@@ -103,11 +86,11 @@ The service will connect to the MQTT broker and the Resource Catalog, handle HVA
   }
   \```
 
-- **Environment Data (`gym/environment`)**: Publishes temperature and humidity data from the environment sensor.
+- **Environment Data (`gym/environment/{room_name}`)**: Publishes temperature and humidity data from the environment sensor.
   Example payload:
   \```json
   {
-    "bn": "gym/environment",
+    "bn": "gym/environment/{room_name}",
     "e": [
       {"n": "temperature", "v": 22.5},
       {"n": "humidity", "v": 60}
@@ -130,18 +113,7 @@ The service is configured to interact with an MQTT broker (`test.mosquitto.org` 
 - **MQTT Broker**: The broker can be configured by updating the `mqtt_broker` variable in the code.
 - **Resource Catalog URL**: The URL for the Resource Catalog can be updated by modifying the `RESOURCE_CATALOG_URL` variable.
 
-To change the port and host for the CherryPy server, modify these settings in the script:
-\```python
-cherrypy.config.update({'server.socket_port': 8082, 'server.socket_host': '0.0.0.0'})
-\```
-
 ## Shutdown and Cleanup
 To stop the service gracefully, press `Ctrl+C`. The signal handler will:
 - Stop the MQTT client loop cleanly.
 - Ensure all processes are properly terminated.
-
-## Contributing
-If you want to contribute to this project, feel free to fork the repository, make your changes, and submit a pull request. Contributions are welcome!
-
-## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

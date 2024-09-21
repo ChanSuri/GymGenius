@@ -14,8 +14,11 @@ mqtt_topic_entry = "gym/occupancy/entry"
 mqtt_topic_exit = "gym/occupancy/exit"
 mqtt_topic_environment = "gym/environment"
 mqtt_topic_availability =  "gym/availability"
-mqtt_topic_hvac_control = "gym/hvac/control"  # Topic for HVAC control commands
-mqtt_topic_hvac_on_off = "gym/hvac/on_off"  # Topic for HVAC on/off commands
+mqtt_topic_hvac_control = "gym/hvac/control/#"  # Subscribe to all rooms
+mqtt_topic_hvac_on_off = "gym/hvac/on_off/#"  # Subscribe to all rooms
+
+# List of rooms
+rooms = ["entrance", "cardio_room", "lifting_room", "changing_room"]
 
 class DeviceConnector:
     exposed = True
@@ -27,17 +30,17 @@ class DeviceConnector:
         self.client.connect(mqtt_broker, 1883, 60)
         self.client.loop_start()
 
-        # Subscribe to the HVAC control topics
+        # Subscribe to the HVAC control topics for all rooms
         self.client.subscribe(mqtt_topic_hvac_control)
         self.client.subscribe(mqtt_topic_hvac_on_off)
 
-        # Initialize HVAC status and temperature simulation
-        self.hvac_state = 'off'  # HVAC is initially off
-        self.hvac_mode = None    # No mode when HVAC is off
-        self.hvac_last_turned_on = None  # Track when HVAC was last turned on
+        # Initialize HVAC status and mode for each room
+        self.hvac_state = {room: 'off' for room in rooms}  # HVAC is initially off for all rooms
+        self.hvac_mode = {room: None for room in rooms}  # No mode when HVAC is off
+        self.hvac_last_turned_on = {room: None for room in rooms}  # Track when HVAC was last turned on per room
 
-        self.real_temperature = None  # Actual temperature reported by the sensor
-        self.simulated_temperature = None  # Simulated temperature (adjusted by HVAC)
+        self.real_temperature = {room: None for room in rooms}  # Actual temperature per room
+        self.simulated_temperature = {room: None for room in rooms}  # Simulated temperature per room
 
         # Perform device checks at initialization
         self.check_and_delete_inactive_devices()
@@ -146,8 +149,6 @@ class DeviceConnector:
             print(f"Error in publishing availability data: {e}")
             return json.dumps({"status": "error", "message": str(e)})
 
-
-
     def publish_environment_data(self, input_data):
         """Publish temperature and humidity data to MQTT, considering HVAC state and residual effects."""
         try:
@@ -156,12 +157,11 @@ class DeviceConnector:
             temperature = next((e["v"] for e in senml_record["e"] if e["n"] == "temperature"), None)
             room = input_data.get("location")
 
-
             if temperature is not None:
-                self.real_temperature = temperature  # Update the actual temperature from the sensor
+                self.real_temperature[room] = temperature  # Update the actual temperature from the sensor
 
                 # Modify temperature based on HVAC status and residual effect
-                modified_temperature = self.update_simulated_temperature()
+                modified_temperature = self.update_simulated_temperature(room)
 
                 # Update the SenML record with the modified temperature
                 for entry in senml_record["e"]:
@@ -176,36 +176,36 @@ class DeviceConnector:
             print(f"Error in publishing environment data: {e}")
             return json.dumps({"status": "error", "message": str(e)})
 
-    def update_simulated_temperature(self):
-        """Update the simulated temperature, considering HVAC state and residual effect."""
-        if self.simulated_temperature is None:
+    def update_simulated_temperature(self, room):
+        """Update the simulated temperature, considering HVAC state and residual effect for a specific room."""
+        if self.simulated_temperature[room] is None:
             # Initialize the simulated temperature to the real temperature
-            self.simulated_temperature = self.real_temperature
+            self.simulated_temperature[room] = self.real_temperature[room]
 
         # If HVAC is on, apply its effect on the temperature
-        if self.hvac_state == 'on' and self.hvac_last_turned_on:
-            elapsed_time = datetime.now() - self.hvac_last_turned_on
+        if self.hvac_state[room] == 'on' and self.hvac_last_turned_on[room]:
+            elapsed_time = datetime.now() - self.hvac_last_turned_on[room]
             minutes_running = elapsed_time.total_seconds() / 60
 
             # Apply the temperature change: 0.5 degrees per 15 minutes
             temp_change = (minutes_running // 15) * 0.5
 
-            if self.hvac_mode == 'cool':
+            if self.hvac_mode[room] == 'cool':
                 # Decrease temperature for cooling
-                self.simulated_temperature -= temp_change
-            elif self.hvac_mode == 'heat':
+                self.simulated_temperature[room] -= temp_change
+            elif self.hvac_mode[room] == 'heat':
                 # Increase temperature for heating
-                self.simulated_temperature += temp_change
+                self.simulated_temperature[room] += temp_change
         else:
             # HVAC is off: gradually bring the simulated temperature back to the real temperature
-            if self.simulated_temperature < self.real_temperature:
-                self.simulated_temperature += 0.1  # Gradually increase to real temp
-            elif self.simulated_temperature > self.real_temperature:
-                self.simulated_temperature -= 0.1  # Gradually decrease to real temp
+            if self.simulated_temperature[room] < self.real_temperature[room]:
+                self.simulated_temperature[room] += 0.1  # Gradually increase to real temp
+            elif self.simulated_temperature[room] > self.real_temperature[room]:
+                self.simulated_temperature[room] -= 0.1  # Gradually decrease to real temp
 
         # Ensure the temperature stays within realistic bounds (e.g., 15°C to 35°C)
-        self.simulated_temperature = max(min(self.simulated_temperature, 35), 15)
-        return round(self.simulated_temperature, 2)
+        self.simulated_temperature[room] = max(min(self.simulated_temperature[room], 35), 15)
+        return round(self.simulated_temperature[room], 2)
 
     def publish_entry_exit_data(self, input_data):
         """Handles entry/exit events by publishing them on MQTT"""
@@ -226,48 +226,56 @@ class DeviceConnector:
         try:
             payload = json.loads(message.payload.decode())
             topic = message.topic
+            room = topic.split('/')[-1]  # Extract the room name from the topic
 
-            if topic == mqtt_topic_hvac_control:
+            if f"gym/hvac/control/{room}" in topic:
                 control_command = payload['message']['data'].get('control_command')
-                mode = payload['message']['data'].get('mode', self.hvac_mode)  # Use current mode if not specified
+                mode = payload['message']['data'].get('mode', self.hvac_mode[room])  # Use current mode if not specified
 
                 if control_command == 'turn_on':
-                    if self.hvac_state == 'off':
-                        self.hvac_state = 'on'
-                        self.hvac_last_turned_on = datetime.now()
-                        self.hvac_mode = mode
-                        print(f"HVAC is turning ON in {self.hvac_mode} mode.")
+                    if self.hvac_state[room] == 'off':
+                        self.hvac_state[room] = 'on'
+                        self.hvac_last_turned_on[room] = datetime.now()
+                        self.hvac_mode[room] = mode
+                        print(f"HVAC is turning ON in {self.hvac_mode[room]} mode for {room}.")
                     else:
-                        print("HVAC is already ON.")
+                        print(f"HVAC is already ON for {room}.")
                 elif control_command == 'turn_off':
-                    if self.hvac_state == 'on':
-                        self.hvac_state = 'off'
-                        self.hvac_last_turned_on = None  # Reset the timer
-                        self.hvac_mode = None  # No mode when HVAC is off
-                        print("HVAC is turning OFF.")
+                    if self.hvac_state[room] == 'on':
+                        self.hvac_state[room] = 'off'
+                        self.hvac_last_turned_on[room] = None  # Reset the timer
+                        self.hvac_mode[room] = None  # No mode when HVAC is off
+                        print(f"HVAC is turning OFF for {room}.")
                     else:
-                        print("HVAC is already OFF.")
+                        print(f"HVAC is already OFF for {room}.")
                 else:
-                    print(f"Unknown HVAC command: {control_command}")
+                    print(f"Unknown HVAC command: {control_command} for {room}")
 
-            # Handle on/off command from the admin via the gym/hvac/on_off topic
-            elif topic == mqtt_topic_hvac_on_off:
+            # Handle on/off command from the admin via the gym/hvac/on_off/{room} topic
+            elif f"gym/hvac/on_off/{room}" in topic:
                 state = payload['message']['data'].get('state', "").upper()
+                mode = payload['message']['data'].get('mode', None)
 
                 if state == "OFF":
                     # Turn off HVAC if the state is OFF
-                    if self.hvac_state == 'on':
-                        self.hvac_state = 'off'
-                        self.hvac_last_turned_on = None
-                        self.hvac_mode = None
-                        print("HVAC is turning OFF based on admin command.")
+                    if self.hvac_state[room] == 'on':
+                        self.hvac_state[room] = 'off'
+                        self.hvac_last_turned_on[room] = None
+                        self.hvac_mode[room] = None
+                        print(f"HVAC is turning OFF based on admin command for {room}.")
                     else:
-                        print("HVAC is already OFF based on admin command.")
+                        print(f"HVAC is already OFF based on admin command for {room}.")
                 elif state == "ON":
-                    # Optionally, you can turn it on (if needed)
-                    print("Admin command received: HVAC should be ON, but no action taken.")
+                    # Turn on HVAC and apply the mode if available
+                    if self.hvac_state[room] == 'off':
+                        self.hvac_state[room] = 'on'
+                        self.hvac_last_turned_on[room] = datetime.now()
+                        self.hvac_mode[room] = mode if mode else self.hvac_mode[room]
+                        print(f"HVAC is turning ON in {self.hvac_mode[room]} mode based on admin command for {room}.")
+                    else:
+                        print(f"HVAC is already ON based on admin command for {room}.")
                 else:
-                    print(f"Unknown state received: {state}")
+                    print(f"Unknown state received: {state} for {room}")
 
         except Exception as e:
             print(f"Error in processing the message from topic {message.topic}: {e}")
