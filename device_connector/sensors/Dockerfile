@@ -1,11 +1,15 @@
+# Use a slim Python image as the base
 FROM python:3.9-slim
 
+# Set the working directory in the container
 WORKDIR /app
 
+# Copy all files to the working directory in the container
 COPY . .
 
-RUN pip install requests
+# Install necessary dependencies
+RUN apt-get update && apt-get install -y python3-rpi.gpio python3-pip libgpiod-dev \
+    && pip install adafruit-circuitpython-dht RPi.GPIO requests
 
-EXPOSE 8082
-
-CMD ["python", "simulate_button.py"]
+# Define the default command (this will be overwritten for each container in docker-compose.yml)
+CMD ["python", "button.py"]
