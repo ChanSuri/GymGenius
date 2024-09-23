@@ -25,7 +25,8 @@ Additionally, **TA_reader** generates historical data files based on the data fr
 - **ThingSpeak Data Upload (via REST)**: Automatically uploads real-time data to configured ThingSpeak channels using RESTful HTTP requests.
 - **Rate-Limited Updates**: Ensures that data is uploaded no more than once every 30 seconds to avoid overloading ThingSpeak.
 - **Service Registration and Deregistration**: Registers the service with a service catalog on startup and deregisters it on shutdown.
-- **Historical Data Generation (Room-Specific)**: The system saves historical information for each room (Entrance Room, Cardio Room, Lifting Room and Changing Room) using **TA_reader**, generating separate files for tracking data from individual rooms.
+- **Historical Data Generation (Room-Specific)**: The system saves historical information for each room (Entrance Room, Cardio Room, Lifting Room, and Changing Room) using **TA_reader**, generating separate files for tracking data from individual rooms.
+- **GET Requests for Historical Data**: Retrieve historical data files for each room via an HTTP GET request, allowing easy access to historical records.
 
 ---
 
@@ -35,6 +36,7 @@ Additionally, **TA_reader** generates historical data files based on the data fr
 - Python 3.x
 - `paho-mqtt` library
 - `requests` library (for HTTP communication with ThingSpeak)
+- `cherrypy` library (for handling GET requests for historical data)
 
 ---
 
@@ -42,7 +44,7 @@ Additionally, **TA_reader** generates historical data files based on the data fr
 
 ### Data Collection
 The service collects data from MQTT topics and processes them in real time. Supported data types include:
-- **Temperature and Humidity** for the *Cardio Room*, *Lifting Room*, and *Changing Room*.
+- **Temperature and Humidity** for the *Cardio Room*, *Lifting Room*, *Changing Room*, and *Entrance Room*.
 - **Occupancy Status** for the entire gym in the *Entrance Room*.
 - **Aggregated Machine Availability** for various gym machines (e.g., treadmills, elliptical trainers).
 
@@ -50,13 +52,23 @@ Once data is collected, it is uploaded to ThingSpeak via REST API calls, where i
 
 In addition, **TA_reader** processes this real-time data and generates files that store historical information for each room separately. These historical records provide insights into the occupancy, availability, usage, and environmental conditions in the *Cardio Room*, *Lifting Room*, *Changing Room*, and *Entrance Room*.
 
+### GET Requests for Historical Data
+You can retrieve historical data files for each room by making a GET request to the `TA_reader` endpoint. For example, to retrieve the data for the **Entrance Room**, use the following URL format: [http://localhost:8080/thingspeak_adaptor?channel=Entrance](http://localhost:8080/thingspeak_adaptor?channel=Entrance)
+
+
+Replace `Entrance` with the name of the room you want to retrieve the data for. The available channels are:
+- Entrance
+- Changing Room
+- Cardio Room
+- Lifting Room
+
 ---
 
 ## MQTT Topics
 
 ### Subscribed Topics
 - **Temperature & Humidity**:
-  - `gym/environment/cardio_room`, `gym/environment/lifting_room`, and `gym/environment/changing_room` for monitoring room conditions.
+  - `gym/environment/cardio_room`, `gym/environment/lifting_room`, `gym/environment/changing_room`, and `gym/environment/entrance_room` for monitoring room conditions.
 - **Current Occupancy**:
   - `gym/occupancy/current` for tracking the current number of clients in the gym.
 - **Aggregated Machine Availability**:
@@ -104,8 +116,10 @@ The *Changing Room* is monitored for temperature and humidity, helping maintain 
 
 ### *Entrance*
 - **Current Occupancy**: Field 1 in ThingSpeak.
+- **Temperature**: Field 2 in ThingSpeak.
+- **Humidity**: Field 3 in ThingSpeak.
 
-This allows the gym to track how many clients are currently present in the gym through the *Entrance* data.
+This allows the gym to track how many clients are currently present in the gym, along with the environmental conditions in the *Entrance Room*.
 
 Each **ThingSpeak** channel must have a unique **write API key** and corresponding fields, which are defined in the `settings.json` file.
 
@@ -127,8 +141,7 @@ At startup, the Thingspeak Adaptor registers itself with the service catalog usi
 
 - **Room-Specific Data Files**: Historical data is saved separately for each room, ensuring that machine availability, occupancy, and environmental conditions (temperature, humidity) are tracked at a granular level.
 - **File Structure**: Separate files are generated for rooms such as the *Entrance Room*, *Cardio Room*, *Lifting Room*, and *Changing Room*, allowing detailed analysis of machine usage, environmental conditions, and occupancy trends over time.
-
-This room-specific data can be used to analyze gym usage patterns, machine availability, or environmental factors, helping to optimize operations and improve the gym experience.
+- **GET Requests**: Access historical data files via HTTP requests to easily retrieve room-specific data for further analysis.
 
 ---
 
@@ -139,10 +152,3 @@ To stop the service gracefully, press `Ctrl+C`. This triggers the signal handler
 - Stop the MQTT client and cleanly shut down all processes.
 
 The service ensures that the MQTT client disconnects properly and that the ThingSpeak data stream is closed without any interruptions.
-
----
-
-This README provides an overview of the **Thingspeak Adaptor** service and its integration with **ThingSpeak**. The service efficiently bridges the gap between MQTT-based real-time data and the visualization capabilities of ThingSpeak, using REST API calls. It also provides a system for generating and storing room-specific historical data through **TA_reader**.
-
-
-
