@@ -23,7 +23,6 @@ Additionally, **TA_reader** generates historical data files based on the data fr
 ## Features
 - **MQTT Integration**: Subscribes to MQTT topics for aggregated machine availability, temperature, humidity, and occupancy.
 - **ThingSpeak Data Upload (via REST)**: Automatically uploads real-time data to configured ThingSpeak channels using RESTful HTTP requests.
-- **Rate-Limited Updates**: Ensures that data is uploaded no more than once every 30 seconds to avoid overloading ThingSpeak.
 - **Service Registration and Deregistration**: Registers the service with a service catalog on startup and deregisters it on shutdown.
 - **Historical Data Generation (Room-Specific)**: The system saves historical information for each room (Entrance Room, Cardio Room, Lifting Room, and Changing Room) using **TA_reader**, generating separate files for tracking data from individual rooms.
 - **GET Requests for Historical Data**: Retrieve historical data files for each room via an HTTP GET request, allowing easy access to historical records.
@@ -90,10 +89,10 @@ The service is configured to upload data to specific **ThingSpeak** channels for
 - **Temperature**: Field 1 in ThingSpeak.
 - **Humidity**: Field 2 in ThingSpeak.
 - **Machine Availability**:
-  - **Treadmill**: Field 3.
-  - **Elliptical Trainer**: Field 4.
-  - **Stationary Bike**: Field 5.
-  - **Rowing Machine**: Field 6.
+  - **Treadmill**: Field 3 in ThingSpeak.
+  - **Elliptical Trainer**: Field 4 in ThingSpeak.
+  - **Stationary Bike**: Field 5 in ThingSpeak.
+  - **Rowing Machine**: Field 6 in ThingSpeak.
 
 This setup allows monitoring the environmental conditions in the *Cardio Room* as well as the availability of cardio machines.
 
@@ -101,10 +100,10 @@ This setup allows monitoring the environmental conditions in the *Cardio Room* a
 - **Temperature**: Field 1 in ThingSpeak.
 - **Humidity**: Field 2 in ThingSpeak.
 - **Machine Availability**:
-  - **Cable Machine**: Field 3.
-  - **Leg Press Machine**: Field 4.
-  - **Smith Machine**: Field 5.
-  - **Lat Pulldown Machine**: Field 6.
+  - **Cable Machine**: Field 3 in ThingSpeak.
+  - **Leg Press Machine**: Field 4 in ThingSpeak.
+  - **Smith Machine**: Field 5 in ThingSpeak.
+  - **Lat Pulldown Machine**: Field 6 in ThingSpeak.
 
 This setup provides insights into the availability of lifting machines as well as environmental factors in the *Lifting Room*.
 
