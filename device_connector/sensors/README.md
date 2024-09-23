@@ -5,11 +5,12 @@
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
+- [REST API](#rest-api)
 - [Service Configuration](#service-configuration)
 - [Shutdown and Cleanup](#shutdown-and-cleanup)
 
 ## Overview
-The **Gym Device Management Services** consist of three main components designed to monitor occupancy, environmental conditions, and machine availability in a gym environment. These services interact with a device connector to send and receive data from various sensors, including PIR sensors, DHT11 temperature and humidity sensors, and entrance/exit buttons. The services manage both real and simulated devices and can be deployed in a gym for real-time monitoring and data management.
+The files **buutton.py**, **dht11.py**, and **PIR_sensor.py** consist of three main components designed to monitor occupancy, environmental conditions, and machine availability in a gym environment. They interact with a device connector to send and receive data from various sensors, including PIR sensors, DHT11 temperature and humidity sensors, and entrance/exit buttons. Moreover, they manage both real and simulated devices and can be deployed in a gym for real-time monitoring and data management. Hence, the measuraments are sent to the device connector through the employment of REST APIs. 
 
 ### Components
 - **PIR_sensor.py**: Monitors machine availability using a real PIR sensor and simulates occupancy for other machines.
@@ -18,7 +19,6 @@ The **Gym Device Management Services** consist of three main components designed
 
 ## Features
 - **Real and Simulated Sensor Management**: Each script handles real sensors (PIR, DHT11, entrance button) while also simulating data for other machines or rooms.
-- **Device Registration**: Automatically registers devices with the device connector and updates their status.
 - **Data Sending**: Publishes data, including occupancy, availability, temperature, and humidity, to the device connector.
 - **Simulated Machine Usage**: The scripts simulate machine usage for cardio and lifting rooms with realistic intervals and state changes.
 
@@ -31,45 +31,15 @@ The **Gym Device Management Services** consist of three main components designed
 - `adafruit_dht` (for DHT11 sensor)
 - `board` library (for DHT11 sensor)
 
-### Steps
-1. Clone the repository:
-   \```bash
-   git clone https://your-repository-url.git
-   cd your-repository
-   \```
-
-2. Install the required Python packages:
-   \```bash
-   pip install RPi.GPIO requests adafruit-circuitpython-dht board
-   \```
-
-3. Set up the hardware:
-   - **PIR_sensor.py**: Connect the PIR sensor to the Raspberry Pi using GPIO 17 (Pin 11).
-   - **dht11.py**: Connect the DHT11 sensor to the Raspberry Pi using GPIO 15 (Pin 10).
-   - **button.py**: Connect the entrance button to GPIO 23 (Pin 16).
+### Set up the hardware:
+- **PIR_sensor.py**: Connect the PIR sensor to the Raspberry Pi using GPIO 17 (Pin 11).
+- **dht11.py**: Connect the DHT11 sensor to the Raspberry Pi using GPIO 15 (Pin 10).
+- **button.py**: Connect the entrance button to GPIO 23 (Pin 16).
 
 ## Usage
 
 ### Running the Services
 You can run each service individually or in parallel.
-
-- **PIR Sensor and Machine Simulation** (`PIR_sensor.py`):
-  \```bash
-  python PIR_sensor.py
-  \```
-  This script monitors a real PIR sensor for the treadmill in the cardio room and simulates machine usage for other cardio and lifting room machines.
-
-- **DHT11 Sensor and Environment Monitoring** (`dht11.py`):
-  \```bash
-  python dht11.py
-  \```
-  This script collects real-time temperature and humidity data from the entrance and simulates data for other rooms (e.g., cardio room, lifting room, changing room).
-
-- **Entrance Button Monitoring** (`button.py`):
-  \```bash
-  python button.py
-  \```
-  This script tracks real-time button presses for gym entry and simulates exit events after random intervals.
 
 ## Service Configuration
 Each script is configured to send data to a device connector located at `http://localhost:8082`. The configuration includes device IDs, sensor types, and room names, which can be modified based on your setup.
@@ -98,9 +68,99 @@ Each script is configured to send data to a device connector located at `http://
   \```
 - Simulated machines in cardio and lifting rooms:
   \```python
-  cardio_machines = ["treadmill", "elliptical_trainer", "stationary_bike"]
-  lifting_machines = ["rowing_machine", "cable_machine", "leg_press_machine", "smith_machine", "lat_pulldown_machine"]
+  cardio_machines = ["treadmill_2", ... , "elliptical_trainer_1", ... ,  "stationary_bike_1", ... , "rowing_machine_1", ...]
+  lifting_machines = ["cable_machine_1", ... , "leg_press_machine_1", ... ,"smith_machine_1", ... , "lat_pulldown_machine_1", ...]
   \```
+
+### Example Configuration for `button.py`
+- Real entrance button for gym occupancy: 
+  \```python
+  entrance_simulation = { "type": "real", "entry_count": 0} 
+- Simulated exit button events: 
+  \```python
+  exit_simulation = { "type": "simulated", "exit_count": 0 } 
+  \```
+
+## REST API
+
+Each script sends data to a device connector via HTTP POST requests. Below is an overview of the REST API endpoints used by the system:
+
+### POST `/`
+This endpoint is used to send sensor data to the device connector.
+
+#### Example of request from `dht11.py`:
+- URL: `http://localhost:8082`
+- Method: `POST`
+- Payload:
+  ```json
+  {
+    "device_id": "DHT11_Sensor_entrance",
+    "event_type": "environment",
+    "type": "DHT11",
+    "location": "entrance",
+    "status": "active",
+    "endpoint": "gym/environment/entrance",
+    "time": "2024-09-23T12:34:56Z",
+    "senml_record": {
+      "bn": "gym/environment/entrance",
+      "e": [
+        {"n": "temperature", "u": "Cel", "t": "2024-09-23T12:34:56Z", "v": 22.5},
+        {"n": "humidity", "u": "%", "t": "2024-09-23T12:34:56Z", "v": 50.0}
+      ]
+    }
+  }
+
+#### Example of request from`PIR_sensor.py`:
+- URL: `http://localhost:8082`
+- Method: `POST`
+- Payload:
+  ```json
+  {
+    "device_id": "PIR_treadmill_1",
+    "event_type": "availability",
+    "type": "PIR",
+    "location": "cardio_room",
+    "status": "active",
+    "endpoint": "gym/occupancy/treadmill_1",
+    "time": "2024-09-23T12:34:56Z",
+    "senml_record": {
+      "bn": "gym/occupancy/treadmill_1",
+      "n": "treadmill_1",
+      "u": "binary",
+      "v": 1
+    }
+  }
+
+#### Example of request from `button.py`:
+- URL: `http://localhost:8082`
+- Method: `POST`
+- Example of payload for entrance:
+  ```json
+  {
+    "device_id": "EntranceSensor001",
+    "event_type": "entry",
+    "type": "push-button-enter",
+    "location": "entrance",
+    "status": "active",
+    "endpoint": "GymGenius/Occupancy/Entrance",
+    "time": "2024-09-23T12:34:56Z",
+    "senml_record": {
+      "bn": "GymGenius/Occupancy/Entrance",
+      "bt": 1695478496,
+      "n": "push-button-enter",
+      "u": "count",
+      "v": 1
+    }
+  }
+
+### Response:
+For each request, a succesful response will give back:
+```json
+{
+  "message": "Data received successfully",
+  "status_code": 200
+}
+```
 
 ## Shutdown and Cleanup
 To stop any of the scripts gracefully, press `Ctrl+C`. The services will:
