@@ -199,8 +199,8 @@ def initialize_service():
     service_id = "occupancy_service"
     description = "Occupancy monitoring and prediction"
     status = "active"
-    endpoint = "http://localhost:8083/occupancy"
-    register_service(service_id, description, status, endpoint)
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    register_service(service_id, description, status, endpoint, timestamp)
 
 def stop_service(signum, frame):
     print("Stopping service...")

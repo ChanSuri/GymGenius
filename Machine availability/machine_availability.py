@@ -105,7 +105,7 @@ def initialize_service():
     service_id = "machine_availability"
     description = "Manages machine availability"
     status = "active"
-    register_service(service_id, description, status, None)
+    register_service(service_id, description, status, None, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     print("Machine Availability Service Initialized and Registered")
 
 def stop_service(signum, frame):

@@ -243,7 +243,7 @@ def stop_service(signum, frame):
 
 if __name__ == "__main__":
     gym_schedule = {'open': datetime.strptime('08:00', '%H:%M').time(),
-                    'close': datetime.strptime('24:00', '%H:%M').time()}
+                    'close': datetime.strptime('23:59', '%H:%M').time()}
 
     # Initialize the service
     service = TempOptimizationService(gym_schedule)
