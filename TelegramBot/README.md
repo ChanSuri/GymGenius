@@ -33,18 +33,19 @@ You will find it at t.me/GeniusGymBot.
 * /suggestion - Everyone can give any suggestions
 
 > **roles**:
-- Client: Suggestions, env data
-+ Admin: Availability, Suggestions checking, Operation:AC temperature setting...
-* All: Forecast, Enviroment, Occupancy,
+- Client: Suggestions, Occupancy, Availability, Forecast
++ Admin: Env data, Suggestions checking, Operation:AC, entrance, machines...
 
 > **functions**:
-1. Environment data
+1. Environment data in ThingSpeak
 2. Occupancy situation
 3. Available machine: choose a machine to check available number
 4. Predict the future using: Choose day or timeslot way to see the forecast
 5. Suggest us for a better performance and admin can check it
-6. Check history data
+6. Operate AC,Entrance,Machines by administrator
+7. Service registration
 
 ## Shutdown and Cleanup
 When the service is stopped, the signal handler will ensure that the MQTT client disconnects cleanly and the service is properly stopped.
+enter 'q' to stop script
 

@@ -9,4 +9,4 @@ docker pull nodered/node-red #image
 docker run -it -p 1880:1880 --name GGnodered nodered/node-red #run the container
 
 store in local:
-docker run -it -p 1880:1880 -v node_red_data:/data --name GGnodered nodered/node-red
+docker run -it -p 1880:1880 -v node_red_data:/data --name GGnodered nodered/node-re

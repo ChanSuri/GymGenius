@@ -28,35 +28,43 @@ class Telegrambot():
 
         self.switchTopic = self.conf["switchTopic"] 
         self.availTopic = self.conf["availTopic"]
-        self.crowdTopic = self.conf["crowdTopic"]
+        self.crowdTopic = self.conf["crowdTopic"] #occupancy/current
         self.overtempTopic = self.conf["overtempTopic"]
-        self.tempthreshold=30
+        self.predictionTopic = self.conf["predictionTopic"]
+        self.mqtt_topic_control_base = self.conf["mqtt_topic_control_base"]
         self.crowdthreshold=60
         
-        self.machines = self.conf["machines"]
-        self.availbilaity = self.conf["machineAvailable"]
-        self.occupancy = self.conf["occupancy"]
-        
         #Predict occupancy for each slot-hour/day combination
-        self.timeslot=['8:00-10:00','10:00-12:00','12:00-14:00','14:00-16:00','16:00-18:00','18:00-20:00','20:00-22:00','22:00-24:00']
+        self.timeslot=['8:00-10:00','10:00-12:00','12:00-14:00','14:00-16:00','16:00-18:00','18:00-20:00','20:00-22:00','22:00-24:00','24:00-8:00']
         self.weekdays=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
+        self.current_occupancy = 0
         
-        self.user_states = {}
-        self.status = None
+        self.user_states = {} #suggestion
         self.suggestion = []
-        self.chat_auth = {}
-        self.chatIDs=[]
+        self.chat_auth = {} #auth id
+        self.chatIDs=[] #store users chatid
+        self.chat_ids = {} #map chatid for query
         self.switchMode = "None"
-        
+        self.prediction_matrix = [
+            [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
+            [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8],
+            [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+            [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+            [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1],
+            [0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2],
+            [0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3],
+            [0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4],
+            [0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5]
+        ] #example
         self.possibleSwitch =[]
+        self.machines = self.conf["machines"]
         self.zones = self.conf["zones"]
-        for zone in self.zones:
-            temp = [zone]
-            self.possibleSwitch.append(temp)
-        self.possibleSwitch.append(["ALL"])
-        self.possibleSwitch.append(["All AC"])
+        #self.current_command = {room: "ON" for room in self.rooms}  # Default command state is ON for each room
+        # for zone in self.zones:
+        #     temp = [zone]
+        #     self.possibleSwitch.append(temp)
+        self.possibleSwitch.append(["AC"])
         self.possibleSwitch.append(["Entrance"])
-        self.possibleSwitch.append(["All Machines"])
         self.possibleSwitch.append(["Machines"])
         
         
@@ -64,7 +72,8 @@ class Telegrambot():
         self.client.start()
         self.client.mySubscribe(self.crowdTopic) #occupancy alert
         # subscribe to topic according to available device...not sure to subscribe
-        #self.client.mySubscribe(self.availTopic)
+        self.client.mySubscribe(self.availTopic)
+        self.client.mySubscribe(self.overtempTopic)
         MessageLoop(self.bot,{'chat': self.on_chat_message,'callback_query': self.on_callback_query}).run_as_thread()
         
     def stop(self):
@@ -135,20 +144,14 @@ class Telegrambot():
             mark_up = ReplyKeyboardMarkup(keyboard=[['Occupancy'], ['Availability'],['Forecast']],one_time_keyboard=True)
             self.bot.sendMessage(chat_id, 'What would you like to know?', reply_markup=mark_up)
         elif message == "Occupancy":
-            try:
-                response = requests.get(self.occupancy)
-                if response.status_code == 200:
-                    data = response.json()
-                    print(f'The response of the post is {data}.')
-                    self.bot.sendMessage(chat_id, text='Currecnt occupancy is %'+ data["v"]+'Time:'+ data["bt"])
-            except requests.exceptions.RequestException as e:
-                print(f"Request failed: {e}") 
+            self.bot.sendMessage(chat_id, text=f"The current gym traffic is {self.current_occupancy}")
         elif message == "Availability":
             machines = self.machines
             keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=machine, callback_data=f"{machine}")] for machine in machines])
             self.bot.sendMessage(chat_id, parse_mode='Markdown',text='*Please select your machine to see the availability:*', reply_markup=keyboard)
         elif message == "Forecast":
             mark_up = ReplyKeyboardMarkup(keyboard=[['Day'], ['Timeslot'],['Return']],one_time_keyboard=True)
+            self.client.mySubscribe(self.predictionTopic)
             self.bot.sendMessage(chat_id, text='Which way would you like to forecast?', reply_markup=mark_up)
         elif message == "Day":    
             keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=day, callback_data=f"{day}")] for day in self.weekdays])
@@ -164,7 +167,7 @@ class Telegrambot():
                 if self.check_auth(chat_id) ==True:
                     for switch in self.possibleSwitch:
                         if switch[0] == message:
-                            self.admin_switch(chat_id,message,self.switchMode)
+                            self.admin_switch(chat_id,message,self.switchMode) #message: AC,Entrance,Machines
                             self.switchMode ="None"
                             self.bot.sendMessage(chat_id, "Command sent successfully!")
                             mark_up = ReplyKeyboardMarkup(keyboard=[['Operate'], ['Envdata'],['Suggestions'],['Logout']],one_time_keyboard=True)
@@ -242,112 +245,124 @@ class Telegrambot():
         self.bot.sendMessage(chat_id, text='Please select the zone or the devices you want to switch...', reply_markup=mark_up)
     
     def publish(self,target, switchTo):
-        if switchTo not in ["on", "off"]:
-            data = switchTo.split(':')  
-            switchTo = data[0] 
-            temp = data[1]
-            msg = {"target":target,"switchTo":switchTo,"value":temp,"timestamp":str(datetime.datetime.now())}
-        else: 
-            msg = {"target":target,"switchTo":switchTo,"timestamp":str(datetime.datetime.now())}
-        self.client.myPublish(self.switchTopic, msg)
+        msg = {"target":target,"switchTo":switchTo,"timestamp":str(datetime.datetime.now())}
+        self.client.myPublish(self.mqtt_topic_control_base + target, msg)
         print("Published: " + json.dumps(msg))
+                
+    def send_hvac_command(self, room, command, mode=None):
+        payload = json.dumps({
+            "topic": self.mqtt_topic_control_base + room,
+            "message": {
+                "device_id": "Temperature optimization and energy efficiency block",
+                "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "data": {
+                    "control_command": command,
+                    "mode": mode
+                }
+            }
+        })
+        self.client.myPublish(self.mqtt_topic_control_base + room, payload)
+        print(f"[{room}] Sent HVAC command: {command}")
+    
         
     def admin_switch(self,chat_id,message,switchMode):
-        if message == "ALL":
-            self.publish(target="ALL",switchTo=switchMode)
-        elif message == "All AC":
-            if switchMode == "on":
-                temp = list(map(str, range(16, 27)))
-                mark_up = ReplyKeyboardMarkup(keyboard=[temp],one_time_keyboard=True)
-                self.bot.sendMessage(chat_id, text='Please select your operation...', reply_markup=mark_up)
-                time.sleep(5)
-            else:
-                self.publish(target="AC",switchTo=switchMode)
-        elif message == "All machines": #infra
-            self.publish(target="machines",switchTo=switchMode)
+        if message == "AC":
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=room, callback_data=f"AC:{room}:{switchMode}")] for room in self.zones])
+            self.bot.sendMessage(chat_id, parse_mode='Markdown',text='*Please select the room to operate...*', reply_markup=keyboard)
         elif message == "Entrance": #button
             self.publish(target="entrance",switchTo=switchMode)
         elif message == "Machines":
             machines = self.machines
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=machine, callback_data=f"{machine}:{switchMode}")] for machine in machines])
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=machine, callback_data=f"Machines:{machine}:{switchMode}")] for machine in machines])
             self.bot.sendMessage(chat_id, parse_mode='Markdown',text='*Please select your machine to operate...*', reply_markup=keyboard)
-        else:
-            self.publish(target=message,switchTo=switchMode)
     
     def notify(self,topic,msg):
         print(msg)
-        message=json.loads(msg)
-        if message["n"]=="temperature":
-            if message["v"]>self.tempthreshold:
-                tosend=f"Temperature is reaching {message['v']}, do you want to turn on the AC?"                
-                keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                    [InlineKeyboardButton(text='Yes', callback_data='22'),
-                    InlineKeyboardButton(text='No', callback_data='off')]
-                ])
-                for chat_ID in self.chatIDs:
-                    self.bot.sendMessage(chat_ID, text=tosend, reply_markup=keyboard)
-        elif message["n"]=="occupancy": #entrance
-            if message["v"]>self.crowdthreshold:
-                tosend=f"Our clients is reaching {message['v']}, we suggest you to come another time!"
+        message=json.loads(msg.payload.decode('utf-8'))
+        if message["topic"].startswith(self.overtempTopic):
+            tosend=f"{message["message"]["data"]["alert"]}. Please check it and do some operations!"
+            for chat_ID in self.chat_auth:
+                keyboard = ReplyKeyboardMarkup(keyboard=[['Operate'], ['Envdata'],['Suggestions']],one_time_keyboard=True)
+                self.bot.sendMessage(chat_ID, text=tosend, reply_markup=keyboard)
+        elif message["topic"]==self.crowdTopic: #entrance
+            self.current_occupancy = message["message"]["data"]["current_occupancy"]
+            if self.current_occupancy > self.crowdthreshold:
+                tosend = f"Alert! Current occupancy is reaching {self.current_occupancy}. Please consider coming another time."
                 for chat_ID in self.chatIDs:
                     self.bot.sendMessage(chat_ID, text=tosend)
-        elif message["n"]=="availability": #machines
-            if message["v"]== 'full':
-                tosend=f"The machine {message['n']} is {message['v']}, we suggest you to train something else and come later!"
+        elif message["topic"]==self.predictionTopic: #prediction_matrix update
+            self.prediction_matrix = message["message"]["data"]["prediction_matrix"]
+        elif message["topic"].startswith(self.availTopic):
+            machine=message["topic"].split('/')[-1]
+            data=message["message"]["data"]
+            if data["available"] == 0:
+                tosend=f"The machine {machine} is full, we suggest you to train something else and come later!"
                 for chat_ID in self.chatIDs:
                     self.bot.sendMessage(chat_ID, text=tosend)
-                    
+            else:
+                chat_id = self.chat_ids.get(machine)
+                if chat_id:
+                    tosend = f"Situation for {machine}:\n Available num: {data["available"]}\n Occupied num: {data["busy"]}\n Total num: {data["total"]}\n"
+                    self.bot.sendMessage(chat_id, tosend)
         
-       
+
 
     def on_callback_query(self,msg):
         query_id, chat_id, query_data = telepot.glance(msg, flavor='callback_query')
-        if query_data in self.machines:    
+        if query_data in self.machines:
             try: #choose machine
-                response = requests.post(self.availbilaity, json={"machine": query_data})
-                if response.status_code == 200:
-                    data = response.json()
-                    self.bot.answerCallbackQuery(query_id, text='Available machine:'+ data["n"]+'number:'+ data["v"] +'Time:'+ data["time"]) #data["message"]
-                else:
-                    self.bot.answerCallbackQuery(query_id, text=f"Failed to retrieve data. Status code: {response.status_code}")
-            except requests.exceptions.RequestException as e:
-                print(f"Request failed: {e}") 
-                self.bot.answerCallbackQuery(query_id, text="An error occurred while retrieving machine availability.")
+                topic = f"{self.availTopic}/{query_data}"
+                self.client.mySubscribe(topic)
+                # update chat_ids dict for sending users msg by query data
+                self.chat_ids[query_data] = chat_id
+                self.bot.sendMessage(chat_id, f"Subscribed to {query_data}!")
+            except Exception as e:
+                self.bot.sendMessage(chat_id, f"Failed to subscribe to {query_data}: {str(e)}")
         elif query_data in self.weekdays:
-            try:# need to choose a day
-                response = requests.post(self.occupancy,json={"day": query_data})
-                if response.status_code == 200:
-                    data = response.json()
-                    self.bot.sendMessage(chat_id, text='Predict occupancy:'+ data["n"]+ data["v"])
-                else:
-                    self.bot.answerCallbackQuery(query_id, text=f"Failed to retrieve data. Status code: {response.status_code}")
-            except requests.exceptions.RequestException as e:
-                print(f"Request failed: {e}") 
-                self.bot.answerCallbackQuery(query_id, text="An error occurred while retrieving machine availability.")
+            try:
+                day_index = self.weekdays.index(query_data)  # index of selected weekdays
+                day_prediction = [row[day_index] for row in self.prediction_matrix]
+                #self.bot.sendMessage(chat_id, f"Forecasted traffic on {query_data} is {day_prediction}!")
+                tosend = f"Forecasted traffic for {query_data}:\n"
+                for i, prediction in enumerate(day_prediction):
+                    slot = self.timeslot[i]
+                    tosend += f"{slot}: {prediction}\n"
+                self.bot.sendMessage(chat_id, tosend)
+            except Exception as e:
+                self.bot.sendMessage(chat_id, f"Failed")
         elif query_data in self.timeslot:
-            try:# need to choose a day
-                response = requests.post(self.occupancy,json={"timeslot": query_data})
-                if response.status_code == 200:
-                    data = response.json()
-                    self.bot.sendMessage(chat_id, text='Predict occupancy:'+ data["n"]+ data["v"])
-                else:
-                    self.bot.answerCallbackQuery(query_id, text=f"Failed to retrieve data. Status code: {response.status_code}")
-            except requests.exceptions.RequestException as e:
-                print(f"Request failed: {e}") 
-                self.bot.answerCallbackQuery(query_id, text="An error occurred while retrieving machine availability.")
-        elif query_data == 'on':
-            self.publish(target="AC",switchTo="on:22")
-            self.bot.sendMessage(chat_id, text=f"AC switched on and set 22°C")
-        elif query_data == 'off':
-            pass
+            try:
+                time_index = self.timeslot.index(query_data)  # index of selected timeslot
+                time_prediction = self.prediction_matrix[time_index]
+                #self.bot.sendMessage(chat_id, f"Forecasted traffic from Monday to Sunday during {query_data} is {time_prediction}!")
+                tosend = f"Forecasted traffic for {query_data} across the week:\n"
+                for i, prediction in enumerate(time_prediction):
+                    day = self.weekdays[i]
+                    tosend += f"{day}: {prediction}\n"
+
+                self.bot.sendMessage(chat_id, tosend)
+            except Exception as e:
+                self.bot.sendMessage(chat_id, f"Failed")
+        elif query_data.startswith('AC'):
+            print(query_data)
+            data = query_data.split(':')  
+            room = data[1] 
+            switchMode = data[2]
+            if switchMode == 'on':
+                switchMode = 'turn_on'
+            else:
+                switchMode = 'turn_off'
+            if room in self.zones:
+                self.bot.answerCallbackQuery(query_id, text= f"AC in {room} switched to {switchMode}")
+                self.send_hvac_command(room,switchMode) #publish on/off
         else:
             print(query_data)
             data = query_data.split(':')  
-            machine = data[0] 
-            switchMode = data[1]
+            machine = data[1] 
+            switchMode = data[2]
             if machine in self.machines:
                 self.bot.answerCallbackQuery(query_id, text= machine + " is " + switchMode)
-                self.publish(target=machine, switchTo=switchMode)
+                self.publish(target=machine, switchTo=switchMode) #publish on/off
 
 def start_cherrypy(service):
     cherrypy.config.update({'server.socket_port': 8086, 'server.socket_host': '0.0.0.0'})
@@ -374,7 +389,8 @@ if __name__ == "__main__":
     description = "Telegram Bot"
     status = "active"
     endpoint = "http://localhost:8086/TelegramBot"
-    register_service(service_id, description, status, endpoint)
+    register_time = time.time()  # Use the current time as the 'time' argument
+    register_service(service_id, description, status, endpoint,register_time)
     print("Telegram Service Initialized and Registered")
     
     # Start CherryPy in a separate thread

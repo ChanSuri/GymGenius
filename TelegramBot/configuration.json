@@ -8,12 +8,12 @@
     "serviceId": "GeniusGym",
     "broker": "test.mosquitto.org",
     "port": 1883,
-    "webServerAddress":"http://localhost:8081/devices",
-    "machineAvailable":"http://localhost:8085/machine_availability",
-    "occupancy":"http://localhost:8082/occupancy",
+    "webServerAddress":"https://api.thingspeak.com/channels/",
     
     "switchTopic":"gym/mainswitch",
-    "crowdTopic":"gym/occupancy",
-    "availTopic":"gym/availability",
-    "overtempTopic":"gym/overtemp"
+    "crowdTopic":"gym/occupancy/current",
+    "availTopic":"gym/group_availability",
+    "overtempTopic":"gym/environment/alert/",
+    "predictionTopic": "gym/occupancy/prediction",
+    "mqtt_topic_control_base": "gym/hvac/control/"
 }

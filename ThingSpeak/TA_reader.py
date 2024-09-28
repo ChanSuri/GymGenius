@@ -58,7 +58,7 @@ class ThingspeakReader:
 
     @cherrypy.expose
     def GET(self, *uri, **params):
-        """Handle GET requests to serve CSV files based on the requested channel."""s
+        """Handle GET requests to serve CSV files based on the requested channel."""
         # Check if 'channel' parameter is provided
         channel = params.get('channel')
         
