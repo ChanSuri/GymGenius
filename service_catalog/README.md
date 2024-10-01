@@ -34,42 +34,77 @@ You can interact with the service's REST API at `http://localhost:8080/` to perf
 
 ## REST API
 
-### Get All Services
+# Service Catalog API Documentation
+
+## Get All Services
 - **Endpoint**: `/`
 - **Method**: GET
+- **Description**: Retrieves a list of all registered services in the service registry.
 - **Response**:
-  \```json
-  {
-    "status": "success",
-    "services": [
-        {
-            "service_id": "example_service",
-            "description": "Example service description",
-            "status": "active",
-            "endpoint": "http://localhost:8081/example"
-            "last_update": "YYYY-MM-DD HH:MM:SS"
-        },
-        ...
-    ]
-  }
-  \```
+    ```json
+    {
+      "status": "success",
+      "services": [
+          {
+              "service_id": "example_service",
+              "description": "Example service description",
+              "status": "active",
+              "endpoint": "http://localhost:8081/example",
+              "last_update": "YYYY-MM-DD HH:MM:SS"
+          },
+          ...
+      ]
+    }
+    ```
 
-### Get a Specific Service
+## Get a Specific Service
 - **Endpoint**: `/<service_id>`
 - **Method**: GET
+- **Description**: Retrieves details about a specific service by `service_id`.
 - **Response**:
-  \```json
-  {
-    "status": "success",
-    "service": {
-        "service_id": "example_service",
-        "description": "Example service description",
-        "status": "active",
-        "endpoint": "http://localhost:8081/example"
-        "last_update": "YYYY-MM-DD HH:MM:SS"
+    ```json
+    {
+      "status": "success",
+      "service": {
+          "service_id": "example_service",
+          "description": "Example service description",
+          "status": "active",
+          "endpoint": "http://localhost:8081/example",
+          "last_update": "YYYY-MM-DD HH:MM:SS"
+      }
     }
-  }
-  \```
+    ```
+
+## Get All Endpoints of a Specific Service
+- **Endpoint**: `/<service_id>/endpoints`
+- **Method**: GET
+- **Description**: Retrieves a list of all endpoints for the specified service.
+- **Response**:
+    ```json
+    {
+      "status": "success",
+      "endpoints": [
+          "http://localhost:8081/example/task1",
+          "http://localhost:8081/example/task2",
+          ...
+      ]
+    }
+    ```
+
+## Get Specific Task Endpoint of a Service
+- **Endpoint**: `/<service_id>/tasks/<task_id>`
+- **Method**: GET
+- **Description**: Retrieves the endpoint of a specific task within a service by `task_id`.
+- **Response**:
+    ```json
+    {
+      "status": "success",
+      "task_endpoint": {
+          "task_id": "task1",
+          "endpoint": "http://localhost:8081/example/task1"
+      }
+    }
+    ```
 
 ### Register a New Service
 - **Endpoint**: `/`
