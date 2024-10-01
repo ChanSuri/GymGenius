@@ -29,13 +29,31 @@ class ServiceCatalog:
         if len(uri) > 0:
             service_id = uri[0]
             service = service_registry.get(service_id, None)
-            if service:
-                return json.dumps({"status": "success", "service": service})
-            else:
+            if not service:
                 raise cherrypy.HTTPError(404, "Service not found")
+            
+            # If additional parameters are provided, return specific information
+            if len(uri) > 1:
+                if uri[1] == "endpoints":
+                    # Return all endpoints of the service
+                    return json.dumps({"status": "success", "endpoints": service.get("endpoints", [])})
+                elif uri[1] == "tasks" and len(uri) > 2:
+                    task_id = uri[2]
+                    # Return the specific task endpoint
+                    task_endpoint = next((task for task in service.get("tasks", []) if task["task_id"] == task_id), None)
+                    if task_endpoint:
+                        return json.dumps({"status": "success", "task_endpoint": task_endpoint})
+                    else:
+                        raise cherrypy.HTTPError(404, "Task not found")
+                else:
+                    raise cherrypy.HTTPError(400, "Invalid request format")
+            else:
+                # Return the specific service details
+                return json.dumps({"status": "success", "service": service})
         else:
             # Return all services if no service_id is provided
             return json.dumps({"status": "success", "services": list(service_registry.values())})
+
 
     def POST(self, *uri, **params):
         # Read and decode the request body
