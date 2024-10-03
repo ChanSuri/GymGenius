@@ -226,12 +226,9 @@ class TempOptimizationService:
 
 def initialize_service():
     # Register the service at startup
-    service_id = "hvac_control"
-    description = "HVAC management and control"
-    status = "active"
-    endpoint = "http://localhost:8084/hvac"
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    register_service(service_id, description, status, endpoint, timestamp)
+    with open('config.json') as f:
+        config_dict = json.load(f)
+    register_service(config_dict)
     print("Temperature Optimization Service Initialized and Registered")
 
 def stop_service(signum, frame):

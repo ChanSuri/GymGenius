@@ -25,46 +25,16 @@ class ServiceCatalog:
     exposed = True
 
     def GET(self, *uri, **params):
-        # If a service_id is provided in the URI, return the specific service
+    # Se viene fornito un service_id nell'URI, restituisci il servizio specifico
         if len(uri) > 0:
             service_id = uri[0]
             service = service_registry.get(service_id, None)
             if not service:
                 raise cherrypy.HTTPError(404, "Service not found")
-            
-            # If additional parameters are provided, return specific information
-            if len(uri) > 1:
-                if uri[1] == "endpoints":
-                    # Return all endpoints of the service
-                    return json.dumps({"status": "success", "endpoints": service.get("endpoints", {})})
-                elif uri[1] == "mqtt_topics":
-                    # Return all MQTT topics of the service
-                    return json.dumps({"status": "success", "mqtt_published_topics": service.get("mqtt_published_topics", {})})
-                elif uri[1] == "tasks" and len(uri) > 2:
-                    task_id = uri[2]
-                    if len(uri) == 3:
-                        # Return the specific task endpoint
-                        task_endpoint = service.get("endpoints", {}).get(task_id, None)
-                        if task_endpoint:
-                            return json.dumps({"status": "success", "task_endpoint": {"task_id": task_id, "endpoint": task_endpoint}})
-                        else:
-                            raise cherrypy.HTTPError(404, "Task not found")
-                    elif len(uri) == 4 and uri[3] == "mqtt_topic":
-                        # Return the specific task MQTT topic
-                        mqtt_topic = service.get("mqtt_published_topics", {}).get(task_id, None)
-                        if mqtt_topic:
-                            return json.dumps({"status": "success", "mqtt_topic": {"task_id": task_id, "mqtt_topic": mqtt_topic}})
-                        else:
-                            raise cherrypy.HTTPError(404, "MQTT topic for task not found")
-                    else:
-                        raise cherrypy.HTTPError(400, "Invalid request format")
-                else:
-                    raise cherrypy.HTTPError(400, "Invalid request format")
-            else:
-                # Return the specific service details
-                return json.dumps({"status": "success", "service": service})
+            # Restituisci i dettagli del servizio specifico
+            return json.dumps({"status": "success", "service": service})
         else:
-            # Return all services if no service_id is provided
+            # Restituisci tutti i servizi se non viene fornito nessun service_id
             return json.dumps({"status": "success", "services": list(service_registry.values())})
 
 

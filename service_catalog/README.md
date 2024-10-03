@@ -30,125 +30,43 @@ The **Service Catalog Management** system is a microservice designed to manage a
 ## Usage
 
 ### Interacting with the REST API
-You can interact with the service's REST API at `http://localhost:8080/` to perform GET, POST and DELETE operations on the service catalog.
+You can interact with the service's REST API at `http://localhost:8080/` to perform GET, POST, and DELETE operations on the service catalog.
 
 ## REST API
 
 # Service Catalog API Documentation
 
-## Get All Services
-- **Endpoint**: `/`
+## Get All Services or a Specific Service
+- **Endpoint**: `/` or `/<service_id>`
 - **Method**: GET
-- **Description**: Retrieves a list of all registered services in the service registry.
-- **Response**:
+- **Description**: 
+  - Retrieves a list of all registered services in the service registry if no `service_id` is provided.
+  - Retrieves details about a specific service by `service_id` if provided.
+  
+- **Response for All Services**:
     ```json
     {
       "status": "success",
       "services": [
           {
-              "service_id": "example_service",
-              "description": "Example service description",
-              "status": "active",
-              "endpoints": {
-                  "task1": "http://localhost:8081/example/task1",
-                  "task2": "http://localhost:8081/example/task2"
-              },
-              "mqtt_published_topics": {
-                  "task1": "gym/occupancy/example1",
-                  "task2": "gym/occupancy/example2"
-              },
-              "last_update": "YYYY-MM-DD HH:MM:SS"
+              "service_id": "example_service1",
+              ...
           },
           ...
       ]
     }
     ```
-
-## Get a Specific Service
-- **Endpoint**: `/<service_id>`
-- **Method**: GET
-- **Description**: Retrieves details about a specific service by `service_id`.
-- **Response**:
+  
+- **Response for a Specific Service**:
     ```json
     {
       "status": "success",
       "service": {
-          "service_id": "example_service",
-          "description": "Example service description",
-          "status": "active",
-          "endpoints": {
-              "task1": "http://localhost:8081/example/task1",
-              "task2": "http://localhost:8081/example/task2"
-          },
-          "mqtt_published_topics": {
-              "task1": "gym/occupancy/example1",
-              "task2": "gym/occupancy/example2"
-          },
-          "last_update": "YYYY-MM-DD HH:MM:SS"
+          "service_id": "example_service1",
+          ...
       }
     }
     ```
-
-## Get All Endpoints of a Specific Service
-- **Endpoint**: `/<service_id>/endpoints`
-- **Method**: GET
-- **Description**: Retrieves a list of all endpoints for the specified service.
-- **Response**:
-    ```json
-    {
-      "status": "success",
-      "endpoints": {
-          "task1": "http://localhost:8081/example/task1",
-          "task2": "http://localhost:8081/example/task2"
-      }
-    }
-    ```
-
-## Get All MQTT Topics of a Specific Service
-- **Endpoint**: `/<service_id>/mqtt_topics`
-- **Method**: GET
-- **Description**: Retrieves a list of all MQTT published topics for the specified service.
-- **Response**:
-    ```json
-    {
-      "status": "success",
-      "mqtt_published_topics": {
-          "task1": "gym/occupancy/example1",
-          "task2": "gym/occupancy/example2"
-      }
-    }
-    ```
-
-## Get Specific Task Endpoint of a Service
-- **Endpoint**: `/<service_id>/tasks/<task_id>`
-- **Method**: GET
-- **Description**: Retrieves the endpoint of a specific task within a service by `task_id`.
-- **Response**:
-    ```json
-    {
-      "status": "success",
-      "task_endpoint": {
-          "task_id": "task1",
-          "endpoint": "http://localhost:8081/example/task1"
-      }
-    }
-    ```
-
-## Get Specific Task MQTT Topic of a Service
-- **Endpoint**: `/<service_id>/tasks/<task_id>/mqtt_topic`
-- **Method**: GET
-- **Description**: Retrieves the MQTT published topic for a specific task within a service by `task_id`.
-- **Response**:
-    ```json
-    {
-      "status": "success",
-      "mqtt_topic": {
-          "task_id": "task1",
-          "mqtt_topic": "gym/occupancy/example1"
-      }
-    }
-    ```
-
 
 ### Register a New Service
 - **Endpoint**: `/`
@@ -157,10 +75,7 @@ You can interact with the service's REST API at `http://localhost:8080/` to perf
   \```json
   {
     "service_id": "new_service",
-    "description": "New service description",
-    "status": "active",
-    "endpoint": "http://localhost:8082/new_service"
-    "last_update": "YYYY-MM-DD HH:MM:SS"
+    ...
   }
   \```
 - **Response**:

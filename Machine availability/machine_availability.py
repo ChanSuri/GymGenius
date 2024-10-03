@@ -9,6 +9,7 @@ from registration_functions import *
 mqtt_broker = "test.mosquitto.org"
 mqtt_topic_availability = "gym/availability/#"  # Subscribe to all machine availability topics
 
+
 class MachineAvailabilityService:
     def __init__(self, machine_types):
         self.client = mqtt.Client()
@@ -102,10 +103,9 @@ class MachineAvailabilityService:
 
 def initialize_service():
     # Register the service at startup
-    service_id = "machine_availability"
-    description = "Manages machine availability"
-    status = "active"
-    register_service(service_id, description, status, None, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    with open('config.json') as f:
+        config_dict = json.load(f)
+    register_service(config_dict)
     print("Machine Availability Service Initialized and Registered")
 
 def stop_service(signum, frame):

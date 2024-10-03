@@ -1,18 +1,12 @@
 import requests
-
+from datetime import datetime
 SERVICE_CATALOG_URL = "http://localhost:8080/services"
 RESOURCE_CATALOG_URL = "http://localhost:8081/devices"
 
 # Function to register services
-def register_service(service_id, description, status, endpoints, mqtt_published_topics, time):
-    service = {
-        "service_id": service_id,
-        "description": description,
-        "status": status,
-        "endpoints": endpoints,  # Dictionary with task and endpoint pairs
-        "mqtt_published_topics": mqtt_published_topics,  # Dictionary with task and MQTT topic pairs
-        "last_update": time
-    }
+def register_service(config_dict):
+    service = config_dict
+    service["last_update"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
     try:
         response = requests.post(SERVICE_CATALOG_URL, json=service)

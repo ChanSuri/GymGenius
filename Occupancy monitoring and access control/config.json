@@ -1,0 +1,16 @@
+{
+    "service_id": "occupancy",
+    "description": "Handles the occupancy count of the gym and makes prediction about it",
+    "status": "active",
+    "endpoint": null,
+    "REST_endpoints": null,
+    "subscribed_topics": {
+        "entries": "gym/occupancy/entry",
+        "exits": "gym/occupancy/exit"
+    },
+    "published_topics": {
+        "current_occupancy": "gym/occupancy/current",
+        "prediction": "gym/occupancy/prediction"
+    },
+    "last_update": null
+}
