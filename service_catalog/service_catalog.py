@@ -36,15 +36,28 @@ class ServiceCatalog:
             if len(uri) > 1:
                 if uri[1] == "endpoints":
                     # Return all endpoints of the service
-                    return json.dumps({"status": "success", "endpoints": service.get("endpoints", [])})
+                    return json.dumps({"status": "success", "endpoints": service.get("endpoints", {})})
+                elif uri[1] == "mqtt_topics":
+                    # Return all MQTT topics of the service
+                    return json.dumps({"status": "success", "mqtt_published_topics": service.get("mqtt_published_topics", {})})
                 elif uri[1] == "tasks" and len(uri) > 2:
                     task_id = uri[2]
-                    # Return the specific task endpoint
-                    task_endpoint = next((task for task in service.get("tasks", []) if task["task_id"] == task_id), None)
-                    if task_endpoint:
-                        return json.dumps({"status": "success", "task_endpoint": task_endpoint})
+                    if len(uri) == 3:
+                        # Return the specific task endpoint
+                        task_endpoint = service.get("endpoints", {}).get(task_id, None)
+                        if task_endpoint:
+                            return json.dumps({"status": "success", "task_endpoint": {"task_id": task_id, "endpoint": task_endpoint}})
+                        else:
+                            raise cherrypy.HTTPError(404, "Task not found")
+                    elif len(uri) == 4 and uri[3] == "mqtt_topic":
+                        # Return the specific task MQTT topic
+                        mqtt_topic = service.get("mqtt_published_topics", {}).get(task_id, None)
+                        if mqtt_topic:
+                            return json.dumps({"status": "success", "mqtt_topic": {"task_id": task_id, "mqtt_topic": mqtt_topic}})
+                        else:
+                            raise cherrypy.HTTPError(404, "MQTT topic for task not found")
                     else:
-                        raise cherrypy.HTTPError(404, "Task not found")
+                        raise cherrypy.HTTPError(400, "Invalid request format")
                 else:
                     raise cherrypy.HTTPError(400, "Invalid request format")
             else:
