@@ -4,12 +4,13 @@ SERVICE_CATALOG_URL = "http://localhost:8080/services"
 RESOURCE_CATALOG_URL = "http://localhost:8081/devices"
 
 # Function to register services
-def register_service(service_id, description, status, endpoint, time):
+def register_service(service_id, description, status, endpoints, mqtt_published_topics, time):
     service = {
         "service_id": service_id,
         "description": description,
         "status": status,
-        "endpoint": endpoint,
+        "endpoints": endpoints,  # Dictionary with task and endpoint pairs
+        "mqtt_published_topics": mqtt_published_topics,  # Dictionary with task and MQTT topic pairs
         "last_update": time
     }
     
@@ -63,4 +64,5 @@ def register_device(device_id, type, location, status, endpoint, time):
             print(f"Error registering/updating the device: {response.status_code} - {response.text}")
     except requests.exceptions.RequestException as e:
         print(f"Connection error during device registration: {e}")
+  
   
