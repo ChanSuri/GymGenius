@@ -6,13 +6,13 @@ from MyMQTT import MyMQTT
 from registration_functions import register_service, delete_service
 
 # Load settings from settings.json
-with open('settings.json') as f:
+with open('config_thingspeak.json') as f:
     settings = json.load(f)
 
 # MQTT Configuration
 broker_ip = settings['brokerIP']
 broker_port = settings['brokerPort']
-thingspeak_url = settings['ThingspeakURL']
+thingspeak_url = settings['ThingspeakURL_write']
 
 # MQTT topics from settings
 mqtt_topics = settings['mqttTopics']
@@ -156,8 +156,7 @@ class ThingspeakAdaptor:
         service_id = "thingspeak_adaptor"
         description = "Handles ThingSpeak data uploads and CSV generation"
         status = "active"
-        #endpoint = "http://localhost:8080/thingspeak_adaptor"
-        endpoint = "http://service_catalog:8080/thingspeak_adaptor"
+        endpoint = "http://localhost:8080/thingspeak_adaptor"
         register_time = time.time()  # Use the current time as the 'time' argument
         
         # Pass the 'register_time' as the time argument to the register_service function
@@ -180,4 +179,3 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         adaptor.stop()
         print("Thingspeak Adaptor stopped.")
-
