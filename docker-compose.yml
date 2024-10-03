@@ -2,11 +2,11 @@ services:
   # Device Connector Service
   device_connector:
     build:
-      context: C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\device_connector
+      context: C:\Users\feder\OneDrive\Desktop\GymGenius\device_connector
     ports:
       - "8082:8082"
     volumes:
-      - C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\device_connector:/app
+      - C:\Users\feder\OneDrive\Desktop\GymGenius\device_connector:/app
     networks:
       - gym-genius-network
     depends_on:
@@ -16,25 +16,25 @@ services:
   # Resource Catalog
   resource_catalog:
     build:
-      context: C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\resource_catalog
+      context: C:\Users\feder\OneDrive\Desktop\GymGenius\resource_catalog
     ports:
       - "8081:8081"
     volumes:
-      - C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\resource_catalog:/app
+      - C:\Users\feder\OneDrive\Desktop\GymGenius\resource_catalog:/app
     networks:
       - gym-genius-network
 
   # Service Catalog
   service_catalog:
     build:
-      context: C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\service_catalog
+      context: C:\Users\feder\OneDrive\Desktop\GymGenius\service_catalog
     ports:
       - "8080:8080"
     volumes:
-      - C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\service_catalog:/app
+      - C:\Users\feder\OneDrive\Desktop\GymGenius\service_catalog:/app
     networks:
       - gym-genius-network
-    healthcheck:
+    healthcheck: #in this version it is useless, it is a control because some service started before the start of service_catalog container
       test: ["CMD-SHELL", "curl -f http://service_catalog:8080/ || exit 1"]
       interval: 10s
       timeout: 5s
@@ -44,9 +44,9 @@ services:
   # Temperature Optimization Service
   temperature_optimization:
     build:
-      context: C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\Temperature optimization and energy efficiency
+      context: C:\Users\feder\OneDrive\Desktop\GymGenius\Temperature optimization and energy efficiency
     volumes:
-      - C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\Temperature optimization and energy efficiency:/app
+      - C:\Users\feder\OneDrive\Desktop\GymGenius\Temperature optimization and energy efficiency:/app
     networks:
       - gym-genius-network
     depends_on:
@@ -59,9 +59,9 @@ services:
   # Occupancy Monitoring Service
   occupancy:
     build:
-      context: C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\Occupancy monitoring and access control
+      context: C:\Users\feder\OneDrive\Desktop\GymGenius\Occupancy monitoring and access control
     volumes:
-      - C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\Occupancy monitoring and access control:/app
+      - C:\Users\feder\OneDrive\Desktop\GymGenius\Occupancy monitoring and access control:/app
     networks:
       - gym-genius-network
     depends_on:
@@ -75,9 +75,9 @@ services:
   # Machine Availability Service
   machine_availability:
     build:
-      context: C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\Machine availability
+      context: C:\Users\feder\OneDrive\Desktop\GymGenius\Machine availability
     volumes:
-      - C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\Machine availability:/app
+      - C:\Users\feder\OneDrive\Desktop\GymGenius\Machine availability:/app
     networks:
       - gym-genius-network
     depends_on:
@@ -90,10 +90,10 @@ services:
   # Button Sensor (real and simulated)
   button_sensor:
     build:
-      context: C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\device_connector\sensors
-    command: python button.py
+      context: C:\Users\feder\OneDrive\Desktop\GymGenius\device_connector\sensors
+    command: python simulate_button.py
     volumes:
-      - C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\device_connector\sensors:/app
+      - C:\Users\feder\OneDrive\Desktop\GymGenius\device_connector\sensors:/app
     networks:
       - gym-genius-network
     depends_on:
@@ -102,10 +102,10 @@ services:
   # DHT11 Sensor (real and simulated)
   dht11_sensor:
     build:
-      context: C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\device_connector\sensors
-    command: python dht11.py
+      context: C:\Users\feder\OneDrive\Desktop\GymGenius\device_connector\sensors
+    command: python simulate_dht11.py
     volumes:
-      - C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\device_connector\sensors:/app
+      - C:\Users\feder\OneDrive\Desktop\GymGenius\device_connector\sensors:/app
     networks:
       - gym-genius-network
     depends_on:
@@ -114,10 +114,10 @@ services:
   # PIR Sensor (real and simulated)
   pir_sensor:
     build:
-      context: C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\device_connector\sensors
-    command: python PIR_sensor.py
+      context: C:\Users\feder\OneDrive\Desktop\GymGenius\device_connector\sensors
+    command: python simulate_PIR_sensor.py
     volumes:
-      - C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\device_connector\sensors:/app
+      - C:\Users\feder\OneDrive\Desktop\GymGenius\device_connector\sensors:/app
     networks:
       - gym-genius-network
     depends_on:
@@ -126,7 +126,7 @@ services:
   # Thingspeak Adaptor Service
   thingspeak_adaptor:
     build:
-      context: C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\thingspeak  # Path to the Dockerfile in thingspeak directory
+      context: C:\Users\feder\OneDrive\Desktop\GymGenius\thingspeak  
     ports:
       - "8089:8089" 
     networks:
@@ -136,8 +136,6 @@ services:
     environment:
       - SERVICE_CATALOG_URL=http://service_catalog:8080
 
-
-  
 
   # Telegram Bot Service
   # telegram_bot:
