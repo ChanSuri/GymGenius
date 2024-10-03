@@ -1,3 +1,5 @@
+#This is script is used only to test the service without the raspberry
+
 import time
 import json
 import requests

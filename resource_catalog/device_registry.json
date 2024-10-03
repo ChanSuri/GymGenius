@@ -1,13 +1,53 @@
 {
     "devices": [
-      {
-        "device_id": "temperature_sensor_01",
-        "type": "temperature_sensor",
-        "location": "Main Room",
-        "status": "active",
-        "last_update": "2024-08-20T12:00:00",
-        "endpoint": "http://localhost:8081/sensors/temperature"
-      }
-    ]
-  }
-  
+        {
+            "device_id": "EntranceSensor001",
+            "type": "push-button-enter",
+            "location": "entrance",
+            "status": "active",
+            "endpoint": "GymGenius/Occupancy/Entrance",
+            "last_update": "2024-10-03 16:44:58"
+        },
+        {
+            "device_id": "DHT11_Sensor_entrance",
+            "type": "DHT11",
+            "location": "entrance",
+            "status": "active",
+            "endpoint": "gym/environment/entrance",
+            "last_update": "2024-10-03T16:44:48.845930+00:00"
+        },
+        {
+            "device_id": "DHT11_Sensor_cardio_room",
+            "type": "DHT11",
+            "location": "cardio_room",
+            "status": "active",
+            "endpoint": "gym/environment/cardio_room",
+            "last_update": "2024-10-03T16:44:48.864760+00:00"
+        },
+        {
+            "device_id": "DHT11_Sensor_lifting_room",
+            "type": "DHT11",
+            "location": "lifting_room",
+            "status": "active",
+            "endpoint": "gym/environment/lifting_room",
+            "last_update": "2024-10-03T16:44:48.885751+00:00"
+        },
+        {
+            "device_id": "DHT11_Sensor_changing_room",
+            "type": "DHT11",
+            "location": "changing_room",
+            "status": "active",
+            "endpoint": "gym/environment/changing_room",
+            "last_update": "2024-10-03T16:44:48.903505+00:00"
+        },
+        {
+            "device_id": "ExitSensor001",
+            "type": "push-button-exit",
+            "location": "entrance",
+            "status": "active",
+            "endpoint": "GymGenius/Occupancy/Exit",
+            "last_update": "2024-10-03 16:45:02"
+        }
+    ],
+    "lastUpdate": "2024-10-03 16:45:02"
+}

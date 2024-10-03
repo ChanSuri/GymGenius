@@ -86,7 +86,7 @@ if __name__ == "__main__":
     # CherryPy configuration
     cherrypy.config.update({
         'server.socket_host': '0.0.0.0',  # Listen on all interfaces
-        'server.socket_port': 8080,       # Listen on port 8080
+        'server.socket_port': 8089,       # Listen on port 8080
     })
 
     # Start the CherryPy server

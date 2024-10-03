@@ -3,19 +3,6 @@
   "projectName": "GymGenius",
   "lastUpdate": "2024-09-03 11:10:36",
   "services": [
-      {
-          "service_id": "hvac_control",
-          "description": "Manage energy optimization and control hvac",
-          "status": "active",
-          "endpoint": "http://localhost:8081/hvac",
-          "lastUpdate": "2023-11-30 10:20:47"
-      },
-      {
-          "service_id": "service2",
-          "description": "Service description",
-          "status": "active",
-          "endpoint": "http://localhost:8081/hvac",
-          "lastUpdate": "2023-11-30 10:25:47"
-      }
+    
   ]
 }
