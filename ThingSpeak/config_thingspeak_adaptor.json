@@ -1,0 +1,14 @@
+{
+    "service_id": "thingspeak_adaptor",
+    "description": "Handles ThingSpeak data uploads and CSV generation",
+    "status": "active",
+    "endpoint": null,
+    "REST_endpoints": null,
+    "subscribed_topics": {
+        "current_occupancy": "gym/occupancy/current",
+        "enviroments": "gym/environment/{room_name}",
+        "machine_availability": "gym/group_availability/#"
+    },
+    "published_topics": null,
+    "last_update": null
+}
