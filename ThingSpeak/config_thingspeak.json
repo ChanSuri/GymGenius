@@ -1,7 +1,7 @@
 {
-    "catalogURL": "",
-    "ThingspeakURL": "https://api.thingspeak.com/update?",
-    "brokerIP": "mqtt.eclipseprojects.io",
+    "ThingspeakURL_write": "https://api.thingspeak.com/update?",
+    "ThingspeakURL_read": "https://api.thingspeak.com/channels/",
+    "brokerIP":  "test.mosquitto.org",
     "brokerPort": 1883,
     "mqttTopics": {
         "current_occupancy": "gym/occupancy/current",
@@ -12,10 +12,12 @@
         "machine_availability": "gym/group_availability/#"
     },
     "ServiceInfo": {
-        "serviceName": "Thingspeak Adaptor"
+        "serviceName": "Thingspeak"
     },
     "channels": {
         "Entrance": {
+            "channel_id": "2636342",
+            "read_api_key": "2H9M0VEEDRZL1AD6",
             "writeAPIkey": "ATZ8HIS29W2XUSZU",
             "fields": {
                 "current_occupancy": 1,
@@ -24,6 +26,8 @@
             }
         },
         "Changing Room": {
+            "channel_id": "2636345",
+            "read_api_key": "UQW0ZL69P60NYQHR",
             "writeAPIkey": "FACTC4ABRZWURCVE",
             "fields": {
                 "temperature": 1,
@@ -31,6 +35,8 @@
             }
         },
         "Cardio Room": {
+            "channel_id": "2636348",
+            "read_api_key": "IIZQCXQPG1NW8MWS",
             "writeAPIkey": "T6471GETYN84WHXJ",
             "fields": {
                 "temperature": 1,
@@ -42,6 +48,8 @@
             }
         },
         "Lifting Room": {
+            "channel_id": "2636351",
+            "read_api_key": "7I1GDLMWZFNI9VLT",
             "writeAPIkey": "D2FRMVBWV1Q3SJ3R",
             "fields": {
                 "temperature": 1,
@@ -54,4 +62,3 @@
         }
     }
 }
-

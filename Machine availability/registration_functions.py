@@ -1,7 +1,8 @@
 import requests
 from datetime import datetime
-SERVICE_CATALOG_URL = "http://localhost:8080/services"
-RESOURCE_CATALOG_URL = "http://localhost:8081/devices"
+
+SERVICE_CATALOG_URL = "http://service_catalog:8080/services"
+RESOURCE_CATALOG_URL = "http://resource_catalog:8081/devices"
 
 # Function to register services
 def register_service(config_dict):
