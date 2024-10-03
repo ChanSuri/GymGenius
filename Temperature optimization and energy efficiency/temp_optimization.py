@@ -229,7 +229,8 @@ def initialize_service():
     service_id = "hvac_control"
     description = "HVAC management and control"
     status = "active"
-    endpoint = "http://localhost:8084/hvac"
+    # endpoint = "http://localhost:8084/hvac"
+    endpoint = "http://temperature_optimization:8084/hvac"
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     register_service(service_id, description, status, endpoint, timestamp)
     print("Temperature Optimization Service Initialized and Registered")

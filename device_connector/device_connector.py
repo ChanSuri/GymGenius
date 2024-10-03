@@ -6,7 +6,8 @@ from datetime import datetime, timedelta
 from registration_functions import register_device
 
 # URL of the Resource Catalog
-RESOURCE_CATALOG_URL = 'http://localhost:8081/devices'
+#RESOURCE_CATALOG_URL = 'http://localhost:8081/devices'
+RESOURCE_CATALOG_URL = 'http://resource_catalog:8081/devices'
 
 # MQTT Configuration
 mqtt_broker = "test.mosquitto.org"

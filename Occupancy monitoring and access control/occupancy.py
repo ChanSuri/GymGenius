@@ -33,7 +33,8 @@ mqtt_topic_prediction = "gym/occupancy/prediction"  # Topic for publishing predi
 model = LinearRegression()
 
 # URL di ThingSpeak per il file CSV
-thingspeak_url = "https://localhost:8080/?channel=entrance"
+#thingspeak_url = "https://localhost:8080/?channel=entrance"
+thingspeak_url = "http://thingspeak_adaptor:8089/?channel=entrance"
 
 class OccupancyService:
 
@@ -199,6 +200,7 @@ def initialize_service():
     service_id = "occupancy_service"
     description = "Occupancy monitoring and prediction"
     status = "active"
+    endpoint = "http://occupancy:8083/occupancy"
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     register_service(service_id, description, status, endpoint, timestamp)
 

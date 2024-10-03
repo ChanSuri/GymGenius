@@ -1,156 +1,203 @@
-version: '3'
-
 services:
   # Device Connector Service
   device_connector:
     build:
-      context: ./device_connector  # Path to the Dockerfile in the device_connector directory
+      context: C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\device_connector
     ports:
       - "8082:8082"
     volumes:
-      - ./device_connector:/app  # Mount the local folder to the container
+      - C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\device_connector:/app
     networks:
       - gym-genius-network
+    depends_on:
+      - service_catalog
+      - resource_catalog
+
+  # Resource Catalog
+  resource_catalog:
+    build:
+      context: C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\resource_catalog
+    ports:
+      - "8081:8081"
+    volumes:
+      - C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\resource_catalog:/app
+    networks:
+      - gym-genius-network
+
+  # Service Catalog
+  service_catalog:
+    build:
+      context: C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\service_catalog
+    ports:
+      - "8080:8080"
+    volumes:
+      - C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\service_catalog:/app
+    networks:
+      - gym-genius-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://service_catalog:8080/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # Temperature Optimization Service
   temperature_optimization:
     build:
-      context: ./temp_optimization  # Path to the Dockerfile in temp_optimization directory
+      context: C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\Temperature optimization and energy efficiency
     volumes:
-      - ./temp_optimization:/app
+      - C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\Temperature optimization and energy efficiency:/app
     networks:
       - gym-genius-network
     depends_on:
       - device_connector
       - service_catalog
       - resource_catalog
+    environment:
+      - SERVICE_CATALOG_URL=http://service_catalog:8080
 
   # Occupancy Monitoring Service
   occupancy:
     build:
-      context: ./occupancy  # Path to the Dockerfile in occupancy directory
+      context: C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\Occupancy monitoring and access control
     volumes:
-      - ./occupancy:/app
+      - C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\Occupancy monitoring and access control:/app
     networks:
       - gym-genius-network
     depends_on:
       - device_connector
       - service_catalog
       - resource_catalog
+      - thingspeak_adaptor 
+    environment:
+      - SERVICE_CATALOG_URL=http://service_catalog:8080
 
   # Machine Availability Service
   machine_availability:
     build:
-      context: ./machine_availability  # Path to the Dockerfile in machine_availability directory
+      context: C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\Machine availability
     volumes:
-      - ./machine_availability:/app
+      - C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\Machine availability:/app
     networks:
       - gym-genius-network
     depends_on:
       - device_connector
       - service_catalog
       - resource_catalog
-
-  # Thingspeak Adaptor Service
-  thingspeak_adaptor:
-    build:
-      context: ./thingspeak  # Path to the Dockerfile in thingspeak directory
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./thingspeak:/app
-    networks:
-      - gym-genius-network
-    depends_on:
-      - device_connector
-      - service_catalog
-      - resource_catalog
-
-  # Telegram Bot Service
-  telegram_bot:
-    build:
-      context: ./telegramBot  # Path to the Dockerfile in telegramBot directory
-    ports:
-      - "8086:8086"
-    volumes:
-      - ./telegramBot:/app
-    networks:
-      - gym-genius-network
-    depends_on:
-      - device_connector
-      - service_catalog
-      - resource_catalog
+    environment:
+      - SERVICE_CATALOG_URL=http://service_catalog:8080
 
   # Button Sensor (real and simulated)
   button_sensor:
     build:
-      context: ./sensors  # Path to the Dockerfile in sensors directory
-    command: python button.py  # Command to run the button.py script
+      context: C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\device_connector\sensors
+    command: python button.py
     volumes:
-      - ./sensors:/app  # Mount the local sensors folder to the container
+      - C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\device_connector\sensors:/app
     networks:
       - gym-genius-network
     depends_on:
       - device_connector
-    devices:
-      - "/dev/mem:/dev/mem"  # Needed for GPIO access on Raspberry Pi
 
   # DHT11 Sensor (real and simulated)
   dht11_sensor:
     build:
-      context: ./sensors  # Path to the Dockerfile in sensors directory
-    command: python dht11.py  # Command to run the dht11.py script
+      context: C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\device_connector\sensors
+    command: python dht11.py
     volumes:
-      - ./sensors:/app  # Mount the local sensors folder to the container
+      - C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\device_connector\sensors:/app
     networks:
       - gym-genius-network
     depends_on:
       - device_connector
-    devices:
-      - "/dev/mem:/dev/mem"  # Needed for GPIO access on Raspberry Pi
 
   # PIR Sensor (real and simulated)
   pir_sensor:
     build:
-      context: ./sensors  # Path to the Dockerfile in sensors directory
-    command: python PIR_sensor.py  # Command to run the PIR_sensor.py script
+      context: C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\device_connector\sensors
+    command: python PIR_sensor.py
     volumes:
-      - ./sensors:/app  # Mount the local sensors folder to the container
+      - C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\device_connector\sensors:/app
     networks:
       - gym-genius-network
     depends_on:
       - device_connector
-    devices:
-      - "/dev/mem:/dev/mem"  # Needed for GPIO access on Raspberry Pi
 
-  # Entry Sensor Simulation (part of occupancy)
-  entry_sensor:
+  # Thingspeak Adaptor Service
+  thingspeak_adaptor:
     build:
-      context: ./sensors  # Path to the Dockerfile in sensors directory
-    command: python button.py  # Command to run the button.py for entry simulation
-    volumes:
-      - ./sensors:/app
+      context: C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\thingspeak  # Path to the Dockerfile in thingspeak directory
+    ports:
+      - "8089:8089" 
     networks:
       - gym-genius-network
     depends_on:
       - device_connector
     environment:
-      - DEVICE_CONNECTOR_URL=http://device_connector:8082
+      - SERVICE_CATALOG_URL=http://service_catalog:8080
 
-  # Exit Sensor Simulation (part of occupancy)
-  exit_sensor:
-    build:
-      context: ./sensors  # Path to the Dockerfile in sensors directory
-    command: python simulate_button.py  # Command to run the simulate_button.py for exit simulation
-    volumes:
-      - ./sensors:/app
-    networks:
-      - gym-genius-network
-    depends_on:
-      - device_connector
-    environment:
-      - DEVICE_CONNECTOR_URL=http://device_connector:8082
+
+  
+
+  # Telegram Bot Service
+  # telegram_bot:
+  #   build:
+  #     context: ./telegramBot  # Path to the Dockerfile in telegramBot directory
+  #   ports:
+  #     - "8086:8086"
+  #   volumes:
+  #     - ./telegramBot:/app
+  #   networks:
+  #     - gym-genius-network
+  #   depends_on:
+  #     - device_connector
+
+  # # Button Sensor (real and simulated)
+  # button_sensor:
+  #   build:
+  #     context: C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\device_connector\sensors  # Path to the Dockerfile in sensors directory
+  #   command: python button.py  # Command to run the button.py script
+  #   volumes:
+  #     - ./sensors:/app  # Mount the local sensors folder to the container
+  #   networks:
+  #     - gym-genius-network
+  #   depends_on:
+  #     - device_connector
+  #   # Test with raspberry
+  #   # devices:
+  #   #   - "/dev/mem:/dev/mem"  # Needed for GPIO access on Raspberry Pi
+
+  # # DHT11 Sensor (real and simulated)
+  # dht11_sensor:
+  #   build:
+  #     context: C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\device_connector\sensors  # Path to the Dockerfile in sensors directory
+  #   command: python dht11.py  # Command to run the dht11.py script
+  #   volumes:
+  #     - ./sensors:/app  # Mount the local sensors folder to the container
+  #   networks:
+  #     - gym-genius-network
+  #   depends_on:
+  #     - device_connector
+  #   # Test with raspberry
+  #   # devices:
+  #   #   - "/dev/mem:/dev/mem"  # Needed for GPIO access on Raspberry Pi
+
+  # # PIR Sensor (real and simulated)
+  # pir_sensor:
+  #   build:
+  #     context: C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\device_connector\sensors  # Path to the Dockerfile in sensors directory
+  #   command: python PIR_sensor.py  # Command to run the PIR_sensor.py script
+  #   volumes:
+  #     - ./sensors:/app  # Mount the local sensors folder to the container
+  #   networks:
+  #     - gym-genius-network
+  #   depends_on:
+  #     - device_connector
+  #   # Test with raspberry
+  #   # devices:
+  #   #   - "/dev/mem:/dev/mem"  # Needed for GPIO access on Raspberry Pi
 
 networks:
   gym-genius-network:
+    name: gym-genius-network
     driver: bridge

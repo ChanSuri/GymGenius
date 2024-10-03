@@ -156,7 +156,8 @@ class ThingspeakAdaptor:
         service_id = "thingspeak_adaptor"
         description = "Handles ThingSpeak data uploads and CSV generation"
         status = "active"
-        endpoint = "http://localhost:8080/thingspeak_adaptor"
+        #endpoint = "http://localhost:8080/thingspeak_adaptor"
+        endpoint = "http://service_catalog:8080/thingspeak_adaptor"
         register_time = time.time()  # Use the current time as the 'time' argument
         
         # Pass the 'register_time' as the time argument to the register_service function
