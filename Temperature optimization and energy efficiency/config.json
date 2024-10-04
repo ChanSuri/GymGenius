@@ -3,7 +3,6 @@
     "description": "HVAC management and control",
     "status": "active",
     "endpoint": null,
-    "REST_endpoints": null,
     "subscribed_topics": {
         "enviroment": "gym/environment/<roomID>",
         "desired_temperature": "gym/desired_temperature/<roomID>",
