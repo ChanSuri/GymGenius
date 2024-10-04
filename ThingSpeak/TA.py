@@ -152,16 +152,11 @@ class ThingspeakAdaptor:
         return None
 
     def initialize_service(self):
-        """Register the service at startup."""
-        service_id = "thingspeak_adaptor"
-        description = "Handles ThingSpeak data uploads and CSV generation"
-        status = "active"
-        endpoint = "http://localhost:8080/thingspeak_adaptor"
-        register_time = time.time()  # Use the current time as the 'time' argument
-        
-        # Pass the 'register_time' as the time argument to the register_service function
-        register_service(service_id, description, status, endpoint, register_time)
-        print(f"Service {service_id} registered at {endpoint}")
+    # Register the service at startup
+     with open('config_thingspeak_adaptor.json') as f:
+        config_dict = json.load(f)
+     register_service(config_dict)
+     print("Thingspeak Adaptor Service Initialized and Registered")
 
     def stop(self):
         """Stop the MQTT client and unregister the service."""
