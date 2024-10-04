@@ -4,6 +4,7 @@
   "lastUpdate": "2024-09-03 11:10:36",
   "brokerIP": "test.moquitto.org",
   "brokerPort": 1883,
+  "base_name": "gym/",
   "roomsID":["entrance", "changing_room", "lifting_room", "cardio_room"],
   "machinesID": ["treadmill_1","treadmill_2","treadmill_3", "treadmill_4", "treadmill_5" ,
                  "elliptical_trainer_1", "elliptical_trainer_2", "elliptical_trainer_3","elliptical_trainer_4",
