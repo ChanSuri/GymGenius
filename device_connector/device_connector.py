@@ -3,7 +3,8 @@ import json
 import requests
 import paho.mqtt.client as mqtt
 from datetime import datetime, timedelta
-from registration_functions import register_device
+from registration_functions import *
+import signal
 
 # URL of the Resource Catalog
 #RESOURCE_CATALOG_URL = 'http://localhost:8081/devices'
@@ -317,19 +318,51 @@ class DeviceConnector:
         else:
             print("Invalid device_id for deletion.")
 
+    def stop(self):
+        self.client.loop_stop()
+        print("MQTT client stopped.")        
+
+def initialize_service():
+    # Register the service at startup
+    with open('config.json') as f:
+        config_dict = json.load(f)
+    register_service(config_dict)
+    print("Machine Availability Service Initialized and Registered")
+
+def stop_service(signum, frame):
+    print("Stopping service...")
+    delete_service("hvac_control")
+
+    # Clean stop of the MQTT client
+    service.stop()    
+
+
 if __name__ == '__main__':
-    # CherryPy configuration with port and host settings
-    cherrypy.config.update({'server.socket_port': 8082, 'server.socket_host': '0.0.0.0'})
+    try:
+        # Initialize the service
+        service = DeviceConnector()
+        initialize_service()
 
-    # Mount the DeviceConnector using MethodDispatcher
-    conf = {
-        '/': {
-            'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-            'tools.sessions.on': True
+        # Signal handler for clean stop
+        signal.signal(signal.SIGINT, stop_service)
+
+        # CherryPy configuration with port and host settings
+        cherrypy.config.update({'server.socket_port': 8082, 'server.socket_host': '0.0.0.0'})
+
+        # Mount the DeviceConnector using MethodDispatcher
+        conf = {
+            '/': {
+                'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+                'tools.sessions.on': True
+            }
         }
-    }
 
-    # Start the CherryPy server
-    cherrypy.tree.mount(DeviceConnector(), '/', conf)
-    cherrypy.engine.start()
-    cherrypy.engine.block()
+        # Start the CherryPy server
+        cherrypy.tree.mount(service, '/', conf)
+        cherrypy.engine.start()
+        cherrypy.engine.block()
+
+    except Exception as e:
+        print(f"Error in the main execution: {e}")
+    finally:
+        service.stop()

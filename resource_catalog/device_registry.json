@@ -1,4 +1,8 @@
 {
+    "projectOwner": "group 22",
+    "projectName": "GymGenius",
+    "brokerIP": "test.moquitto.org",
+    "brokerPort": 1883,
     "devices": [
         {
             "device_id": "EntranceSensor001",
