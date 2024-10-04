@@ -5,7 +5,7 @@
         "endpoint": null,
         "REST_endpoints": null,
         "subscribed_topics": {
-            "availability_machineID": "gym/availability/<machineID>"
+            "availability": "gym/availability/<machineID>"
         },
         "published_topics": {"group_availability_x_machine_type" : "gym/group_availability/<machine_type>"
         },
