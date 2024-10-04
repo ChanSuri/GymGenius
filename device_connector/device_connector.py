@@ -137,7 +137,7 @@ class DeviceConnector:
                         "n": f"{machine_name}_availability",  # Dynamically set machine availability name
                         "u": "binary",
                         "t": current_time,
-                        "v": senml_record.get("e", {}).get("v")  # Preserve the availability value
+                        "v": senml_record.get("v", None)
                     }
                 ]
             }

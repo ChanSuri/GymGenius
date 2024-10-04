@@ -1,5 +1,3 @@
-#This is script is used only to test the service without the raspberry
-
 import time
 import json
 import requests
@@ -16,6 +14,13 @@ lifting_machines = ["rowing_machine", "cable_machine", "leg_press_machine", "smi
 
 # Funzione per inviare i dati al Device Connector
 def send_data_to_device_connector(value, machine, room, machine_number):
+    # Controlla che il valore sia valido prima di inviare
+    if value is None:
+        print(f"Errore: valore 'v' è None per {machine} {machine_number} nel {room}")
+        return
+
+    print(f"Inviando dati: Valore {value} per {machine} {machine_number} nella {room}")
+
     record = {
         "bn": f"GymGenius/Occupancy/Availability/{machine}/{machine_number}",
         "bt": 0,
@@ -50,6 +55,10 @@ def simulate_machine_usage(machine_list, room):
         for machine_index, machine in enumerate(machine_list, start=1):
             # Simula casualmente l'occupazione (1 = occupata, 0 = disponibile)
             simulated_value = random.choice([0, 1])
+            
+            # Debug: Mostra il valore generato per ciascuna macchina
+            print(f"Generato valore {simulated_value} per {machine} {machine_index} nella {room}")
+            
             send_data_to_device_connector(simulated_value, machine, room, machine_index)
             time.sleep(random.randint(5, 10))  # Simula intervalli casuali tra i cambiamenti di stato
 

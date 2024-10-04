@@ -6,7 +6,7 @@
             "location": "entrance",
             "status": "active",
             "endpoint": "GymGenius/Occupancy/Entrance",
-            "last_update": "2024-10-03 16:44:58"
+            "last_update": "2024-10-03 16:58:03"
         },
         {
             "device_id": "DHT11_Sensor_entrance",
@@ -14,7 +14,7 @@
             "location": "entrance",
             "status": "active",
             "endpoint": "gym/environment/entrance",
-            "last_update": "2024-10-03T16:44:48.845930+00:00"
+            "last_update": "2024-10-03T16:57:53.397676+00:00"
         },
         {
             "device_id": "DHT11_Sensor_cardio_room",
@@ -22,7 +22,7 @@
             "location": "cardio_room",
             "status": "active",
             "endpoint": "gym/environment/cardio_room",
-            "last_update": "2024-10-03T16:44:48.864760+00:00"
+            "last_update": "2024-10-03T16:57:53.424795+00:00"
         },
         {
             "device_id": "DHT11_Sensor_lifting_room",
@@ -30,7 +30,7 @@
             "location": "lifting_room",
             "status": "active",
             "endpoint": "gym/environment/lifting_room",
-            "last_update": "2024-10-03T16:44:48.885751+00:00"
+            "last_update": "2024-10-03T16:57:53.449300+00:00"
         },
         {
             "device_id": "DHT11_Sensor_changing_room",
@@ -38,7 +38,7 @@
             "location": "changing_room",
             "status": "active",
             "endpoint": "gym/environment/changing_room",
-            "last_update": "2024-10-03T16:44:48.903505+00:00"
+            "last_update": "2024-10-03T16:57:53.470451+00:00"
         },
         {
             "device_id": "ExitSensor001",
@@ -46,8 +46,8 @@
             "location": "entrance",
             "status": "active",
             "endpoint": "GymGenius/Occupancy/Exit",
-            "last_update": "2024-10-03 16:45:02"
+            "last_update": "2024-10-03 16:58:04"
         }
     ],
-    "lastUpdate": "2024-10-03 16:45:02"
+    "lastUpdate": "2024-10-03 16:58:04"
 }
