@@ -8,7 +8,7 @@
         "enviroment": "gym/environment/<roomID>",
         "desired_temperature": "gym/desired_temperature/<roomID>",
         "current_occupancy":"gym/occupancy/current",
-        "control_commands":"gym/hvac/on_off/#"
+        "control_commands":"gym/hvac/on_off/<roomID>"
     },
     "published_topics": {
         "automatic_control": "gym/hvac/control/<roomID>",
