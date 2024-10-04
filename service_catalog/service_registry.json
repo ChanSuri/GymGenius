@@ -14,6 +14,21 @@
                  "smith_machine_1", "smith_machine_2", "smith_machine_3", "smith_machine_4", "smith_machine_4","smith_machine_5",
                  "lat_pulldown_machine_1", "lat_pulldown_machine_2","lat_pulldown_machine_3","lat_pulldown_machine_4","lat_pulldown_machine_5"
                 ],
+  "temperature_default_thresholds":{  "entrance": {"upper": 28, "lower": 24},
+                              "changing_room": {"upper": 28, "lower": 24},
+                              "lifting_room": {"upper": 28, "lower": 24}, 
+                              "cardio_room": {"upper": 28, "lower": 24}
+              },
+  "temperature_alert_thresholds":{"entrance": {"upper": 35, "lower": 15},
+                            "changing_room": {"upper": 35, "lower": 15},
+                            "lifting_room": {"upper": 35, "lower": 15}, 
+                            "cardio_room": {"upper": 35, "lower": 15}
+              },
+  "humidity_alert_thresholds":{ "entrance": {"upper": 70, "lower": 20},
+                          "changing_room": {"upper": 0, "lower": 100},
+                          "lifting_room": {"upper": 70, "lower": 20}, 
+                          "cardio_room": {"upper": 70, "lower": 20}
+              },            
   "services": {},
   "lastUpdate": "2024-09-03 11:10:36"
 }
