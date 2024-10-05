@@ -2,12 +2,13 @@
     "service_id": "hvac_control",
     "description": "HVAC management and control",
     "status": "active",
+    "service_catalog": "http://service_catalog:8080",
     "endpoint": null,
     "subscribed_topics": {
-        "enviroment": "gym/environment/<roomID>",
-        "desired_temperature": "gym/desired_temperature/<roomID>",
+        "enviroment": "gym/environment/#",
+        "desired_temperature": "gym/desired_temperature/#",
         "current_occupancy":"gym/occupancy/current",
-        "control_commands":"gym/hvac/on_off/<roomID>"
+        "control_commands":"gym/hvac/on_off/#"
     },
     "published_topics": {
         "automatic_control": "gym/hvac/control/<roomID>",

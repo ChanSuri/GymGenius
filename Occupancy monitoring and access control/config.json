@@ -2,6 +2,7 @@
     "service_id": "occupancy",
     "description": "Handles the occupancy count of the gym and makes prediction about it",
     "status": "active",
+    "service_catalog": "http://service_catalog:8080",
     "endpoint": null,
     "subscribed_topics": {
         "entries": "gym/occupancy/entry",

@@ -1,80 +1,122 @@
 import paho.mqtt.client as mqtt
 import json
 import time
+import requests
 from datetime import datetime, timedelta
 import signal
 from registration_functions import *
 
-# MQTT Configuration
-mqtt_broker = "test.mosquitto.org"
-mqtt_topic_env_base = "gym/environment/"
-mqtt_topic_control_base = "gym/hvac/control/"
-mqtt_topic_desired_temperature_base = "gym/desired_temperature/"
-mqtt_topic_occupancy = "gym/occupancy/current"
-mqtt_topic_HVAC_on_off_base = "gym/hvac/on_off/"
-mqtt_topic_alert_base = "gym/environment/alert/"
-
-rooms = ["entrance", "cardio_room", "lifting_room", "changing_room"]
-
 class TempOptimizationService:
+    def __init__(self, gym_schedule, config):
+        self.config = config
+        self.service_catalog_url = config['service_catalog']  # Get service catalog URL from config.json
+        self.mqtt_broker = self.get_mqtt_broker_from_service_catalog()
+        self.thresholds = self.get_thresholds_from_service_catalog()
+        self.alert_temperature = self.get_alert_thresholds_from_service_catalog('temperature_alert_thresholds')
+        self.alert_humidity = self.get_alert_thresholds_from_service_catalog('humidity_alert_thresholds')
 
-    def __init__(self, gym_schedule):
         self.client = mqtt.Client()
         self.client.on_connect = self.on_connect
         self.client.on_disconnect = self.on_disconnect
         self.client.on_message = self.on_message
         self.connect_mqtt()
 
-        # Subscribe to topics for all rooms
-        self.client.subscribe(mqtt_topic_env_base + '#')
-        self.client.subscribe(mqtt_topic_desired_temperature_base + '#')
-        self.client.subscribe(mqtt_topic_HVAC_on_off_base + '#')
-
-        self.client.subscribe(mqtt_topic_occupancy)
+        # Subscribe to topics from config.json
+        self.subscribe_to_topics()
 
         self.gym_schedule = gym_schedule
-        self.thresholds = {room: {'upper': 28, 'lower': 24} for room in rooms}  # Default thresholds for each room
-        self.alert_temperature = {'upper': 35, 'lower': 15}
-        self.alert_humidity = {room: {'upper': 70, 'lower': 20} for room in rooms} # Humidity alert thresholds for each room
-        self.alert_humidity['changing_room']['lower'] = 0
-        self.alert_humidity['changing_room']['upper'] = 100
-        self.hvac_state = {room: 'off' for room in rooms}
+        self.hvac_state = {room: 'off' for room in self.thresholds.keys()}
         self.current_occupancy = 0
-        self.current_command = {room: "ON" for room in rooms}  # Default command state is ON for each room
+        self.current_command = {room: "ON" for room in self.thresholds.keys()}  # Default command state is ON for each room
+
+    def get_mqtt_broker_from_service_catalog(self):
+        """Retrieve MQTT broker information from the service catalog."""
+        try:
+            response = requests.get(self.service_catalog_url)
+            if response.status_code == 200:
+                service_catalog = response.json()
+                return service_catalog['brokerIP']
+            else:
+                raise Exception(f"Failed to get broker information: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            print(f"Error retrieving MQTT broker from service catalog: {e}")
+            return None
+
+    def get_thresholds_from_service_catalog(self):
+        """Retrieve temperature thresholds for all rooms from the service catalog."""
+        try:
+            response = requests.get(self.service_catalog_url)
+            if response.status_code == 200:
+                service_catalog = response.json()
+                return service_catalog['temperature_default_thresholds']
+            else:
+                raise Exception(f"Failed to get temperature thresholds: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            print(f"Error retrieving thresholds from service catalog: {e}")
+            return {}
+
+    def get_alert_thresholds_from_service_catalog(self, threshold_type):
+        """Retrieve alert thresholds (temperature or humidity) from the service catalog."""
+        try:
+            response = requests.get(self.service_catalog_url)
+            if response.status_code == 200:
+                service_catalog = response.json()
+                return service_catalog[threshold_type]
+            else:
+                raise Exception(f"Failed to get alert thresholds: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            print(f"Error retrieving alert thresholds from service catalog: {e}")
+            return {}
 
     def connect_mqtt(self):
+        """Connect to the MQTT broker."""
         try:
-            self.client.connect(mqtt_broker, 1883, 60)
-            print("MQTT connected successfully.")
+            if self.mqtt_broker:
+                self.client.connect(self.mqtt_broker, 1883, 60)
+                print("MQTT connected successfully.")
+            else:
+                print("No MQTT broker information found.")
         except Exception as e:
             print(f"Error connecting to MQTT broker: {e}")
             time.sleep(5)
             self.connect_mqtt()
 
     def on_connect(self, client, userdata, flags, rc):
+        """Handle MQTT connection."""
         if rc == 0:
             print("Connected to MQTT broker.")
         else:
             print(f"Failed to connect to MQTT broker. Return code: {rc}")
-    
+
     def on_disconnect(self, client, userdata, rc):
+        """Handle MQTT disconnection."""
         print(f"Disconnected from MQTT broker with return code {rc}. Reconnecting...")
         self.connect_mqtt()
 
+    def subscribe_to_topics(self):
+        """Subscribe to topics listed in the config file."""
+        try:
+            for topic_key, topic_value in self.config["subscribed_topics"].items():
+                self.client.subscribe(topic_value)
+                print(f"Subscribed to topic: {topic_value}")
+        except KeyError as e:
+            print(f"Error in subscribed_topics format: {e}")
+
     def on_message(self, client, userdata, message):
-        # Determine the room from the topic
-        for room in rooms:
-            if message.topic.startswith(mqtt_topic_env_base + room):
+        """Handle received MQTT messages."""
+        for room in self.thresholds.keys():
+            if message.topic.startswith(self.config['subscribed_topics']['enviroment'].replace('#', room)):
                 self.handle_environment_data(room, message)
-            elif message.topic.startswith(mqtt_topic_desired_temperature_base + room):
+            elif message.topic.startswith(self.config['subscribed_topics']['desired_temperature'].replace('#', room)):
                 self.handle_desired_temperature(room, message)
-            elif message.topic.startswith(mqtt_topic_HVAC_on_off_base + room):
+            elif message.topic.startswith(self.config['subscribed_topics']['control_commands'].replace('#', room)):
                 self.handle_hvac_on_off(room, message)
 
-        if message.topic == mqtt_topic_occupancy:
+        if message.topic == self.config['subscribed_topics']['current_occupancy']:
             self.handle_occupancy(message)
 
     def handle_environment_data(self, room, message):
+        """Handle environment data (temperature and humidity) for a specific room."""
         try:
             data = json.loads(message.payload.decode())
             events = data.get('e', [])
@@ -97,6 +139,7 @@ class TempOptimizationService:
             print(f"Failed to decode environment data for {room}: {e}")
 
     def handle_desired_temperature(self, room, message):
+        """Handle desired temperature updates for a specific room."""
         try:
             threshold_data = json.loads(message.payload.decode())
             desired_temperature = threshold_data['message']['data'].get('desired_temperature')
@@ -114,6 +157,7 @@ class TempOptimizationService:
             print(f"Failed to decode threshold data for {room}: {e}")
 
     def handle_hvac_on_off(self, room, message):
+        """Handle HVAC on/off commands for a specific room."""
         try:
             command_data = json.loads(message.payload.decode())
             self.current_command[room] = command_data['message']['data'].get('state', "ON").upper()
@@ -122,6 +166,7 @@ class TempOptimizationService:
             print(f"Failed to decode command data for {room}: {e}")
 
     def handle_occupancy(self, message):
+        """Handle occupancy data."""
         try:
             occupancy_data = json.loads(message.payload.decode())
             self.current_occupancy = occupancy_data['message']['data'].get('current_occupancy', 0)
@@ -130,7 +175,7 @@ class TempOptimizationService:
             print(f"Failed to decode occupancy data: {e}")
 
     def control_hvac(self, room, temperature, humidity):
-        # If the command is OFF or ON, do not proceed with controlling the HVAC
+        """Control the HVAC system based on temperature, humidity, and occupancy."""
         if self.current_command[room] == "OFF" or self.current_command[room] == "ON":
             print(f"[{room}] Automatic HVAC control disabled by administrator.")
             return
@@ -166,8 +211,9 @@ class TempOptimizationService:
             self.send_hvac_command(room, 'turn_off')
 
     def send_hvac_command(self, room, command, mode=None):
+        """Send HVAC command to the appropriate MQTT topic."""
         payload = json.dumps({
-            "topic": mqtt_topic_control_base + room,
+            "topic": self.config["published_topics"]["automatic_control"].replace('<roomID>', room),
             "message": {
                 "device_id": "Temperature optimization and energy efficiency block",
                 "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -177,17 +223,18 @@ class TempOptimizationService:
                 }
             }
         })
-        self.client.publish(mqtt_topic_control_base + room, payload)
+        self.client.publish(self.config["published_topics"]["automatic_control"].replace('<roomID>', room), payload)
         print(f"[{room}] Sent HVAC command: {command}")
 
     def check_alerts(self, room, temperature, humidity):
+        """Check for any temperature or humidity alerts."""
         alert_triggered = False
 
-        if temperature > self.alert_temperature['upper']:
+        if temperature > self.alert_temperature[room]['upper']:
             alert_message = f"ALERT: Temperature too high! Current temperature: {temperature}°C"
             self.send_alert(room, alert_message)
             alert_triggered = True
-        elif temperature < self.alert_temperature['lower']:
+        elif temperature < self.alert_temperature[room]['lower']:
             alert_message = f"ALERT: Temperature too low! Current temperature: {temperature}°C"
             self.send_alert(room, alert_message)
             alert_triggered = True
@@ -205,9 +252,9 @@ class TempOptimizationService:
             print(f"[{room}] No alerts triggered for temperature or humidity.")
 
     def send_alert(self, room, message):
-        # Publish the alert in the required JSON structure
+        """Send an alert message to the appropriate MQTT topic."""
         payload = json.dumps({
-            "topic": mqtt_topic_alert_base + room,
+            "topic": self.config["published_topics"]["alert"].replace('<roomID>', room),
             "message": {
                 "device_id": "Temperature optimization and energy efficiency block",
                 "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -216,35 +263,37 @@ class TempOptimizationService:
                 }
             }
         })
-        self.client.publish(mqtt_topic_alert_base + room, payload)
+        self.client.publish(self.config["published_topics"]["alert"].replace('<roomID>', room), payload)
         print(f"[{room}] Sent alert: {message}")
 
     def stop(self):
-        self.client.loop_stop()  # Stop the MQTT loop
-        self.client.disconnect()  # Cleanly disconnect from the broker
+        """Stop the MQTT client."""
+        self.client.loop_stop()
+        self.client.disconnect()
         print("MQTT client stopped and disconnected.")
 
-def initialize_service():
-    # Register the service at startup
-    with open('config.json') as f:
-        config_dict = json.load(f)
+def initialize_service(config_dict):
+    """Initialize and register the service."""
     register_service(config_dict)
     print("Temperature Optimization Service Initialized and Registered")
 
 def stop_service(signum, frame):
+    """Cleanly stop the service."""
     print("Stopping service...")
     delete_service("hvac_control")
-    # Clean stop of the MQTT client
     service.stop()
-
 
 if __name__ == "__main__":
     gym_schedule = {'open': datetime.strptime('08:00', '%H:%M').time(),
                     'close': datetime.strptime('23:59', '%H:%M').time()}
 
-    # Initialize the service
-    service = TempOptimizationService(gym_schedule)
-    initialize_service()
+    # Load configuration from config.json
+    with open('config.json') as config_file:
+        config = json.load(config_file)
+
+    # Initialize the service with the loaded configuration
+    service = TempOptimizationService(gym_schedule, config)
+    initialize_service(config)
 
     # Signal handler for clean shutdown
     signal.signal(signal.SIGINT, stop_service)

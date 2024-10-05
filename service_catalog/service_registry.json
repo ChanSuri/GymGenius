@@ -14,6 +14,17 @@
                  "smith_machine_1", "smith_machine_2", "smith_machine_3", "smith_machine_4", "smith_machine_4","smith_machine_5",
                  "lat_pulldown_machine_1", "lat_pulldown_machine_2","lat_pulldown_machine_3","lat_pulldown_machine_4","lat_pulldown_machine_5"
                 ],
+  "time_slots": {
+                "0": {"start": "08:00", "end": "10:00"},
+                "1": {"start": "10:00", "end": "12:00"},
+                "2": {"start": "12:00", "end": "14:00"},
+                "3": {"start": "14:00", "end": "16:00"},
+                "4": {"start": "16:00", "end": "18:00"},
+                "5": {"start": "18:00", "end": "20:00"},
+                "6": {"start": "20:00", "end": "22:00"},
+                "7": {"start": "22:00", "end": "24:00"},
+                "8": {"start": "00:00", "end": "08:00"}
+              },              
   "temperature_default_thresholds":{  "entrance": {"upper": 28, "lower": 24},
                               "changing_room": {"upper": 28, "lower": 24},
                               "lifting_room": {"upper": 28, "lower": 24}, 

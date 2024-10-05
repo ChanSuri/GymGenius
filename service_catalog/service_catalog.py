@@ -25,7 +25,7 @@ class ServiceCatalog:
     exposed = True
 
     def GET(self, *uri, **params):
-    # Se viene fornito un service_id nell'URI, restituisci il servizio specifico
+        # Se viene fornito un service_id nell'URI, restituisci il servizio specifico
         if len(uri) > 0:
             service_id = uri[0]
             service = service_registry.get(service_id, None)
@@ -34,8 +34,9 @@ class ServiceCatalog:
             # Restituisci i dettagli del servizio specifico
             return json.dumps({"status": "success", "service": service})
         else:
-            # Restituisci tutti i servizi se non viene fornito nessun service_id
-            return json.dumps({"status": "success", "services": list(service_registry.values())})
+            # Restituisci l'intero catalogo se non viene fornito nessun service_id
+            return json.dumps({"status": "success", "catalog": service_registry})
+
 
 
     def POST(self, *uri, **params):

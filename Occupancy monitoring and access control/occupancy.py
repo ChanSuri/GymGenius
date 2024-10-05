@@ -9,80 +9,113 @@ from sklearn.linear_model import LinearRegression
 from registration_functions import register_service
 import signal
 
-# Global variable to track the current occupancy
+# Global variables
 current_occupancy = 0
-
-# Matrices 9x7: 9 time slots (from 8:00 to 24:00 with 2-hour intervals), 7 days of the week
-prediction_matrix = np.zeros((9, 7))
-
-# List to store the training data for regression
 X_train = []
 Y_train = []
-
-# Threshold to start training the model
-min_training_samples = 2 * 9 * 7  # At least 2 data points for each slot-hour/day combination
-
-# MQTT Configuration
-mqtt_broker = "test.mosquitto.org"
-mqtt_topic_entry = "gym/occupancy/entry"
-mqtt_topic_exit = "gym/occupancy/exit"
-mqtt_topic_current = "gym/occupancy/current"
-mqtt_topic_prediction = "gym/occupancy/prediction"  # Topic for publishing predictions
+min_training_samples = None  # Will be calculated based on the number of time slots
 
 # Model for regression
 model = LinearRegression()
 
-# URL di ThingSpeak per il file CSV
-#thingspeak_url = "https://localhost:8080/?channel=entrance"
-thingspeak_url = "http://thingspeak_adaptor:8089/?channel=entrance"
-
+# Class to manage occupancy
 class OccupancyService:
 
-    def __init__(self):
+    def __init__(self, config):
+        self.config = config
+        self.service_catalog_url = config['service_catalog']  # Retrieve the service catalog URL from config.json
+        self.mqtt_broker = self.get_mqtt_broker_from_service_catalog()
+        self.time_slots = self.get_time_slots_from_service_catalog()
+        self.thing_speak_url = self.get_thingspeak_url_from_service_catalog()
+
+        # Calculate min_training_samples based on the number of time slots and days in a week
+        global min_training_samples
+        min_training_samples = 2 * len(self.time_slots) * 7  # 2 data points per slot-hour/day combination
+
+        # Initialize the prediction matrix (dynamic based on time slots)
+        self.prediction_matrix = np.zeros((len(self.time_slots), 7))
+
         # MQTT client configuration
         self.client = mqtt.Client()
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
-        self.client.connect(mqtt_broker, 1883, 60)
+        self.client.connect(self.mqtt_broker, 1883, 60)
         self.client.loop_start()
 
-    # Function triggered when MQTT client connects to the broker
+    def get_mqtt_broker_from_service_catalog(self):
+        """Retrieve MQTT broker information from the service catalog."""
+        try:
+            response = requests.get(self.service_catalog_url)
+            if response.status_code == 200:
+                service_catalog = response.json()
+                return service_catalog['brokerIP']
+            else:
+                raise Exception(f"Failed to get broker information: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            print(f"Error retrieving MQTT broker from service catalog: {e}")
+            return None
+
+    def get_time_slots_from_service_catalog(self):
+        """Retrieve time slots configuration from the service catalog."""
+        try:
+            response = requests.get(self.service_catalog_url)
+            if response.status_code == 200:
+                service_catalog = response.json()
+                return service_catalog['time_slots']
+            else:
+                raise Exception(f"Failed to get time slots: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            print(f"Error retrieving time slots from service catalog: {e}")
+            return {}
+
+    def get_thingspeak_url_from_service_catalog(self):
+        """Retrieve ThingSpeak URL by requesting the service catalog with a specific service ID."""
+        try:
+            # Use the service ID directly in the request to get only the thingspeak_adaptor service
+            response = requests.get(f"{self.service_catalog_url}/thingspeak_adaptor")
+            if response.status_code == 200:
+                service_info = response.json().get("service", {})
+                return service_info.get('endpoint', None)
+            else:
+                raise Exception(f"Failed to get ThingSpeak service: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            print(f"Error retrieving ThingSpeak URL: {e}")
+            return None
+
     def on_connect(self, client, userdata, flags, rc):
         print("Connected to MQTT broker with result: " + str(rc))
-        client.subscribe(mqtt_topic_entry)
-        client.subscribe(mqtt_topic_exit)
+        for topic_key, topic_value in self.config["subscribed_topics"].items():
+            client.subscribe(topic_value)
+            print(f"Subscribed to topic: {topic_value}")
 
-    # Function triggered when a message is received
     def on_message(self, client, userdata, msg):
         global current_occupancy
 
         # Validate entry and exit messages
-        if msg.topic == mqtt_topic_entry:
+        if msg.topic == self.config["subscribed_topics"]["entries"]:
             self.increment_occupancy()
-        elif msg.topic == mqtt_topic_exit:
+        elif msg.topic == self.config["subscribed_topics"]["exits"]:
             self.decrement_occupancy()
 
         # Fetch historical data from ThingSpeak
         self.fetch_historical_data()
 
-        #Check if we can train the model (requires at least two data points per slot-hour/day)
+        # Check if we can train the model
         if len(X_train) >= min_training_samples:
             self.train_model()
             self.update_prediction()
-        
-        # Publish current occupancy to gym/occupancy/current
+
+        # Publish current occupancy
         self.publish_current_occupancy()
 
-    # Function to increment occupancy with validation
     def increment_occupancy(self):
         global current_occupancy
-        if current_occupancy < 1000:  # Arbitrary limit to prevent unrealistic occupancy
+        if current_occupancy < 1000:
             current_occupancy += 1
             print(f"Increment: New occupancy = {current_occupancy}")
         else:
             print("Maximum occupancy reached, cannot increment.")
 
-    # Function to decrement occupancy with validation
     def decrement_occupancy(self):
         global current_occupancy
         if current_occupancy > 0:
@@ -91,20 +124,21 @@ class OccupancyService:
         else:
             print("Occupancy is already zero, cannot decrement.")
 
-    # Function to fetch historical data from ThingSpeak
     def fetch_historical_data(self):
-        response = requests.get(thingspeak_url)
+        """Fetch historical data from ThingSpeak."""
+        if not self.thing_speak_url:
+            print("ThingSpeak URL not available.")
+            return
+
+        response = requests.get(self.thing_speak_url)
         if response.status_code == 200:
             data = response.content.decode('utf-8')
-
-            # Load CSV into pandas DataFrame
             df = pd.read_csv(pd.compat.StringIO(data))
 
-            # Process the data
             for index, row in df.iterrows():
                 timestamp = pd.to_datetime(row['created_at'])
                 hour_slot = self.get_time_slot(timestamp.hour)
-                day_of_week = timestamp.weekday()  # Monday = 0, Sunday = 6
+                day_of_week = timestamp.weekday()
                 occupancy = row['current_occupancy']
 
                 # Update training data
@@ -114,54 +148,35 @@ class OccupancyService:
         else:
             print(f"Failed to fetch data from ThingSpeak, status code: {response.status_code}")
 
-    # Function to determine the current time slot
     def get_time_slot(self, hour):
-        if 8 <= hour < 10:
-            return 0
-        elif 10 <= hour < 12:
-            return 1
-        elif 12 <= hour < 14:
-            return 2
-        elif 14 <= hour < 16:
-            return 3
-        elif 16 <= hour < 18:
-            return 4
-        elif 18 <= hour < 20:
-            return 5
-        elif 20 <= hour < 22:
-            return 6
-        elif 22 <= hour < 24:
-            return 7
-        else:
-            return 8  # Night slot for 24:00-8:00
-        
-    # Train the regression model with the historical data
+        """Determine the time slot based on the hour using the time slots from the service catalog."""
+        for slot, time_range in self.time_slots.items():
+            start_hour = int(time_range["start"].split(":")[0])
+            end_hour = int(time_range["end"].split(":")[0])
+            if start_hour <= hour < end_hour:
+                return int(slot)
+        return len(self.time_slots) - 1  # Default to last slot if no match
+
     def train_model(self):
         global model
         X_train_np = np.array(X_train)
         Y_train_np = np.array(Y_train)
 
-        # Fit the regression model
         model.fit(X_train_np, Y_train_np)
         print("Model trained with regression")
 
-    # Function to update the prediction matrix using the trained regression model
     def update_prediction(self):
         global model
-        for hour_slot in range(9):
+        for hour_slot in range(len(self.time_slots)):
             for day in range(7):
-                # Predict occupancy for each slot-hour/day combination
-                prediction_matrix[hour_slot, day] = model.predict([[hour_slot, day]])
-        print(f"Prediction matrix updated: \n{prediction_matrix}")
-
-        # Publish the updated prediction matrix to the corresponding MQTT topic
+                self.prediction_matrix[hour_slot, day] = model.predict([[hour_slot, day]])
+        print(f"Prediction matrix updated: \n{self.prediction_matrix}")
         self.publish_prediction()
 
-    # Function to publish the current occupancy to the gym/occupancy/current topic
     def publish_current_occupancy(self):
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         message = {
-            "topic": mqtt_topic_current,
+            "topic": self.config["published_topics"]["current_occupancy"],
             "message": {
                 "device_id": "DeviceConnector",
                 "timestamp": now,
@@ -171,34 +186,31 @@ class OccupancyService:
                 }
             }
         }
-        self.client.publish(mqtt_topic_current, json.dumps(message))
+        self.client.publish(self.config["published_topics"]["current_occupancy"], json.dumps(message))
         print(f"Published current occupancy: {current_occupancy}")
 
-    # Function to publish the prediction matrix to the gym/occupancy/prediction topic
     def publish_prediction(self):
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         message = {
-            "topic": mqtt_topic_prediction,
+            "topic": self.config["published_topics"]["prediction"],
             "message": {
                 "device_id": "Occupancy_block",
                 "timestamp": now,
                 "data": {
-                    "prediction_matrix": prediction_matrix.tolist()
+                    "prediction_matrix": self.prediction_matrix.tolist()
                 }
             }
         }
-        self.client.publish(mqtt_topic_prediction, json.dumps(message))
-        print(f"Published prediction matrix to {mqtt_topic_prediction}")
+        self.client.publish(self.config["published_topics"]["prediction"], json.dumps(message))
+        print(f"Published prediction matrix to {self.config['published_topics']['prediction']}")
 
     def stop(self):
-        self.client.loop_stop()  # Stop MQTT loop
-        self.client.disconnect()  # Disconnect from MQTT broker
+        self.client.loop_stop()
+        self.client.disconnect()
         print("Service stopped")
 
-def initialize_service():
-    # Register the service at startup
-    with open('config.json') as f:
-        config_dict = json.load(f)
+def initialize_service(config_dict):
+    """Initialize and register the service."""
     register_service(config_dict)
     print("Occupancy Service Initialized and Registered")
 
@@ -206,17 +218,19 @@ def stop_service(signum, frame):
     print("Stopping service...")
     occupancy_service.stop()
 
-# Main program to initialize the service
 if __name__ == '__main__':
-    initialize_service()
+    # Open config.json once and pass it to both functions
+    with open('config.json') as f:
+        config_dict = json.load(f)
 
-    # Configure the handler for graceful shutdown
+    # Initialize the service with the loaded configuration
+    initialize_service(config_dict)
+
+    # Graceful shutdown handler
     signal.signal(signal.SIGINT, stop_service)
 
     try:
-        # Start MQTT loop (no REST server here)
-        occupancy_service = OccupancyService()
+        occupancy_service = OccupancyService(config=config_dict)
         occupancy_service.client.loop_forever()
     finally:
-        # Ensure that stop_service is called on exit
         occupancy_service.stop()

@@ -1,17 +1,22 @@
 import paho.mqtt.client as mqtt
 import json
 import time
+import requests
 from datetime import datetime
 import signal
 from registration_functions import *
 
+# Global variables for the service catalog
+SERVICE_CATALOG_URL = "http://service_catalog:8080"
+
 # MQTT Configuration
-mqtt_broker = "test.mosquitto.org"
-mqtt_topic_availability = "gym/availability/#"  # Subscribe to all machine availability topics
-
-
 class MachineAvailabilityService:
-    def __init__(self, machine_types):
+    def __init__(self, config):
+        self.config = config
+        self.service_catalog_url = config['service_catalog']  # Get service catalog URL from config.json
+        self.mqtt_broker = self.get_mqtt_broker_from_service_catalog()
+        self.machine_types = self.get_machine_types_from_service_catalog()
+        
         self.client = mqtt.Client()
         self.client.on_connect = self.on_connect
         self.client.on_disconnect = self.on_disconnect
@@ -21,13 +26,53 @@ class MachineAvailabilityService:
         # Initial machine status for all machine types
         self.machines = {
             machine_type: {"total": total, "available": total, "occupied": 0}
-            for machine_type, total in machine_types.items()
+            for machine_type, total in self.machine_types.items()
         }
+
+    def get_mqtt_broker_from_service_catalog(self):
+        """Retrieve MQTT broker information from the service catalog."""
+        try:
+            response = requests.get(self.service_catalog_url)
+            if response.status_code == 200:
+                service_catalog = response.json()
+                return service_catalog['brokerIP']  # Return MQTT broker IP
+            else:
+                raise Exception(f"Failed to get broker information: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            print(f"Error getting MQTT broker from service catalog: {e}")
+            return None
+
+    def get_machine_types_from_service_catalog(self):
+        """Retrieve machine types and their counts from the service catalog."""
+        try:
+            response = requests.get(self.service_catalog_url)
+            if response.status_code == 200:
+                service_catalog = response.json()
+                machines_list = service_catalog['machinesID']
+                machine_types = {}
+                
+                # Count number of machines for each type
+                for machine in machines_list:
+                    machine_type = '_'.join(machine.split('_')[:-1])
+                    if machine_type in machine_types:
+                        machine_types[machine_type] += 1
+                    else:
+                        machine_types[machine_type] = 1
+                
+                return machine_types
+            else:
+                raise Exception(f"Failed to get machine types: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            print(f"Error getting machine types from service catalog: {e}")
+            return {}
 
     def connect_mqtt(self):
         try:
-            self.client.connect(mqtt_broker, 1883, 60)
-            print("MQTT connected successfully.")
+            if self.mqtt_broker:
+                self.client.connect(self.mqtt_broker, 1883, 60)
+                print("MQTT connected successfully.")
+            else:
+                print("No MQTT broker information found.")
         except Exception as e:
             print(f"Error connecting to MQTT broker: {e}")
             time.sleep(5)
@@ -36,10 +81,19 @@ class MachineAvailabilityService:
     def on_connect(self, client, userdata, flags, rc):
         if rc == 0:
             print("Connected to MQTT broker.")
-            self.client.subscribe(mqtt_topic_availability)  # Subscribe to all machine availability topics
+            self.subscribe_to_topics()  # Subscribe to all machine availability topics
         else:
             print(f"Failed to connect to MQTT broker. Return code: {rc}")
-    
+
+    def subscribe_to_topics(self):
+        """Subscribe to topics listed in the config file."""
+        try:
+            for topic_key, topic_value in self.config["subscribed_topics"].items():
+                self.client.subscribe(topic_value)
+                print(f"Subscribed to topic: {topic_value}")
+        except KeyError as e:
+            print(f"Error in subscribed_topics format: {e}")
+
     def on_disconnect(self, client, userdata, rc):
         print(f"Disconnected from MQTT broker with return code {rc}. Reconnecting...")
         self.connect_mqtt()
@@ -49,11 +103,11 @@ class MachineAvailabilityService:
             payload = json.loads(message.payload.decode())
             availability = payload['e']['v']  # Extract availability status (0 = available, 1 = occupied)
             machine_topic = payload['bn']  # Extract machine base name from 'bn'
-            
+
             # Extract machine type from topic, e.g., "gym/availability/treadmill/1"
             topic_parts = machine_topic.split('/')
             machine_type = topic_parts[2]  # Extract "treadmill", "elliptical_trainer", etc.
-            
+
             if machine_type in self.machines:
                 self.update_availability(machine_type, availability)
         except (json.JSONDecodeError, TypeError, KeyError) as e:
@@ -101,40 +155,30 @@ class MachineAvailabilityService:
         print("MQTT client stopped.")
 
 
-def initialize_service():
+def initialize_service(config_dict):
     # Register the service at startup
-    with open('config.json') as f:
-        config_dict = json.load(f)
     register_service(config_dict)
     print("Machine Availability Service Initialized and Registered")
 
 def stop_service(signum, frame):
     print("Stopping service...")
-    delete_service("hvac_control")
+    delete_service("machine_availability")
 
     # Clean stop of the MQTT client
     service.stop()
 
 
 if __name__ == "__main__":
-    # Define the total number of machines for each type
-    machine_types = {
-        "treadmill": 5,
-        "elliptical_trainer": 4,
-        "stationary_bike": 6,
-        "rowing_machine": 3,
-        "cable_machine": 5,
-        "leg_press_machine": 5,
-        "smith_machine": 5,
-        "lat_pulldown_machine": 5
-    }
+    # Load configuration from config.json
+    with open('config.json') as config_file:
+        config = json.load(config_file)
 
-    # Initialize the service
-    service = MachineAvailabilityService(machine_types)
-    initialize_service()
+    # Initialize the service with the loaded configuration
+    service = MachineAvailabilityService(config)
+    initialize_service(config)
 
     # Signal handler for clean stop
     signal.signal(signal.SIGINT, stop_service)
-    
+
     # Start the MQTT client loop
     service.client.loop_start()
