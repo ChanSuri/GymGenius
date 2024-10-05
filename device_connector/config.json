@@ -2,10 +2,11 @@
     "service_id": "device_connector",
     "description": "Handles sensors and actuators data",
     "status": "active",
+    "service_catalog": "http://service_catalog:8080",
     "endpoint": "http://device_connector:8082",
     "subscribed_topics": {
-        "automatic_control": "gym/hvac/control/<roomID>",
-        "control_commands": "gym/hvac/on_off/<roomID>"
+        "automatic_control": "gym/hvac/control/#",
+        "control_commands": "gym/hvac/on_off/#"
     },
     "published_topics": {
         "entries": "gym/occupancy/entry",

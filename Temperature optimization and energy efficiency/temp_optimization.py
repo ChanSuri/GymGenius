@@ -10,7 +10,7 @@ class TempOptimizationService:
     def __init__(self, gym_schedule, config):
         self.config = config
         self.service_catalog_url = config['service_catalog']  # Get service catalog URL from config.json
-        self.mqtt_broker = self.get_mqtt_broker_from_service_catalog()
+        self.mqtt_broker, self.mqtt_port = self.get_mqtt_info_from_service_catalog()  # Retrieve broker and port
         self.thresholds = self.get_thresholds_from_service_catalog()
         self.alert_temperature = self.get_alert_thresholds_from_service_catalog('temperature_alert_thresholds')
         self.alert_humidity = self.get_alert_thresholds_from_service_catalog('humidity_alert_thresholds')
@@ -29,18 +29,18 @@ class TempOptimizationService:
         self.current_occupancy = 0
         self.current_command = {room: "ON" for room in self.thresholds.keys()}  # Default command state is ON for each room
 
-    def get_mqtt_broker_from_service_catalog(self):
-        """Retrieve MQTT broker information from the service catalog."""
+    def get_mqtt_info_from_service_catalog(self):
+        """Retrieve MQTT broker and port information from the service catalog."""
         try:
             response = requests.get(self.service_catalog_url)
             if response.status_code == 200:
                 service_catalog = response.json()
-                return service_catalog['brokerIP']
+                return service_catalog['brokerIP'], service_catalog['brokerPort']  # Return both broker IP and port
             else:
                 raise Exception(f"Failed to get broker information: {response.status_code}")
         except requests.exceptions.RequestException as e:
-            print(f"Error retrieving MQTT broker from service catalog: {e}")
-            return None
+            print(f"Error getting MQTT info from service catalog: {e}")
+            return None, None
 
     def get_thresholds_from_service_catalog(self):
         """Retrieve temperature thresholds for all rooms from the service catalog."""

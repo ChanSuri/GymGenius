@@ -6,53 +6,63 @@ from datetime import datetime, timedelta
 from registration_functions import *
 import signal
 
-# URL of the Resource Catalog
-#RESOURCE_CATALOG_URL = 'http://localhost:8081/devices'
-RESOURCE_CATALOG_URL = 'http://resource_catalog:8081/devices'
-
-# MQTT Configuration
-mqtt_broker = "test.mosquitto.org"
-mqtt_topic_entry = "gym/occupancy/entry"
-mqtt_topic_exit = "gym/occupancy/exit"
-mqtt_topic_environment = "gym/environment"
-mqtt_topic_availability =  "gym/availability"
-mqtt_topic_hvac_control = "gym/hvac/control/#"  # Subscribe to all rooms
-mqtt_topic_hvac_on_off = "gym/hvac/on_off/#"  # Subscribe to all rooms
-
-# List of rooms
-rooms = ["entrance", "cardio_room", "lifting_room", "changing_room"]
-
 class DeviceConnector:
     exposed = True
 
-    def __init__(self):
+    def __init__(self, config):
+        # Load configuration from config.json
+        self.config = config
+        self.service_catalog_url = self.config['service_catalog']  # Get service catalog URL from config.json
+        self.mqtt_broker, self.mqtt_port = self.get_mqtt_info_from_service_catalog()
+
         # Initialize the MQTT client
         self.client = mqtt.Client()
         self.client.on_message = self.on_message  # Attach the on_message callback
-        self.client.connect(mqtt_broker, 1883, 60)
+        self.client.connect(self.mqtt_broker, self.mqtt_port, 60)
         self.client.loop_start()
 
         # Subscribe to the HVAC control topics for all rooms
-        self.client.subscribe(mqtt_topic_hvac_control)
-        self.client.subscribe(mqtt_topic_hvac_on_off)
+        self.subscribe_to_topics()
 
         # Initialize HVAC status and mode for each room
-        self.hvac_state = {room: 'off' for room in rooms}  # HVAC is initially off for all rooms
-        self.hvac_mode = {room: None for room in rooms}  # No mode when HVAC is off
-        self.hvac_last_turned_on = {room: None for room in rooms}  # Track when HVAC was last turned on per room
+        self.hvac_state = {room: 'off' for room in self.config['rooms']}  # HVAC is initially off for all rooms
+        self.hvac_mode = {room: None for room in self.config['rooms']}  # No mode when HVAC is off
+        self.hvac_last_turned_on = {room: None for room in self.config['rooms']}  # Track when HVAC was last turned on per room
 
-        self.real_temperature = {room: None for room in rooms}  # Actual temperature per room
-        self.simulated_temperature = {room: None for room in rooms}  # Simulated temperature per room
+        self.real_temperature = {room: None for room in self.config['rooms']}  # Actual temperature per room
+        self.simulated_temperature = {room: None for room in self.config['rooms']}  # Simulated temperature per room
 
         # Perform device checks at initialization
         self.check_and_delete_inactive_devices()
 
+    def get_mqtt_info_from_service_catalog(self):
+        """Retrieve MQTT broker and port information from the service catalog."""
+        try:
+            response = requests.get(self.service_catalog_url)
+            if response.status_code == 200:
+                service_catalog = response.json()
+                return service_catalog['brokerIP'], service_catalog['brokerPort']  # Return both broker IP and port
+            else:
+                raise Exception(f"Failed to get broker information: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            print(f"Error getting MQTT info from service catalog: {e}")
+            return None, None
+
+    def subscribe_to_topics(self):
+        """Subscribe to topics listed in the config file."""
+        try:
+            for topic_key, topic_value in self.config["subscribed_topics"].items():
+                self.client.subscribe(topic_value)
+                print(f"Subscribed to topic: {topic_value}")
+        except KeyError as e:
+            print(f"Error in subscribed_topics format: {e}")
+
     def GET(self, *uri, **params):
-        """Handles GET requests (not used in this case)"""
+        """Handles GET requests (not used in this case)."""
         return json.dumps({"message": "Welcome to the Gym Genius Device Connector"})
 
     def POST(self, *uri, **params):
-        """Handles POST requests based on the type of request"""
+        """Handles POST requests based on the type of request."""
         body = cherrypy.request.body.read().decode('utf-8')
         input_data = json.loads(body)
 
@@ -99,7 +109,7 @@ class DeviceConnector:
             raise cherrypy.HTTPError(400, "Invalid data format")
 
     def register_device(self, input_data):
-        """Registers or updates a device in the Resource Catalog using the function from registration_functions.py"""
+        """Registers or updates a device in the Resource Catalog using the function from registration_functions.py."""
         device_id = input_data.get("device_id")
         device_type = input_data.get("type")
         location = input_data.get("location")
@@ -144,7 +154,7 @@ class DeviceConnector:
             }
 
             # Convert the modified SenML record to JSON and publish it to MQTT
-            self.client.publish(mqtt_topic_availability + "/" + machine_name, json.dumps(modified_senml_record))
+            self.client.publish(self.config["published_topics"]["availability"].replace('<machineID>', machine_name), json.dumps(modified_senml_record))
             return json.dumps({"status": "success", "message": f"Availability data for {machine_name} published to MQTT"})
 
         except Exception as e:
@@ -171,7 +181,7 @@ class DeviceConnector:
                         entry["v"] = modified_temperature
 
             # Convert the record to JSON and publish it to the MQTT topic
-            self.client.publish(mqtt_topic_environment + '/' + room, json.dumps(senml_record))
+            self.client.publish(self.config["published_topics"]["enviroment"].replace('<roomID>', room), json.dumps(senml_record))
             return json.dumps({"status": "success", "message": "Environment data published to MQTT"})
 
         except Exception as e:
@@ -210,15 +220,15 @@ class DeviceConnector:
         return round(self.simulated_temperature[room], 2)
 
     def publish_entry_exit_data(self, input_data):
-        """Handles entry/exit events by publishing them on MQTT"""
+        """Handles entry/exit events by publishing them on MQTT."""
         event_type = input_data["event_type"]
         senml_record = input_data.get("senml_record", {})
 
         if event_type == "entry":
-            self.client.publish(mqtt_topic_entry, json.dumps({"event": "entry", "senml_record": senml_record}))
+            self.client.publish(self.config["published_topics"]["entries"], json.dumps({"event": "entry", "senml_record": senml_record}))
             return json.dumps({"status": "success", "message": "Entry event published"})
         elif event_type == "exit":
-            self.client.publish(mqtt_topic_exit, json.dumps({"event": "exit", "senml_record": senml_record}))
+            self.client.publish(self.config["published_topics"]["exits"], json.dumps({"event": "exit", "senml_record": senml_record}))
             return json.dumps({"status": "success", "message": "Exit event published"})
         else:
             raise cherrypy.HTTPError(400, "Invalid event type")
@@ -283,9 +293,9 @@ class DeviceConnector:
             print(f"Error in processing the message from topic {message.topic}: {e}")
 
     def check_and_delete_inactive_devices(self):
-        """Checks for inactive devices and deletes them if they haven't been updated in the last 3 days"""
+        """Checks for inactive devices and deletes them if they haven't been updated in the last 3 days."""
         try:
-            response = requests.get(RESOURCE_CATALOG_URL)
+            response = requests.get(self.config['resource_catalog'])  # URL for resource catalog is loaded from config
             if response.status_code == 200:
                 device_registry = response.json().get("devices", [])
                 current_time = datetime.now()
@@ -305,10 +315,10 @@ class DeviceConnector:
             print(f"Connection error during GET request to the Resource Catalog: {e}")
 
     def delete_device(self, device_id):
-        """Sends a DELETE request to remove an inactive device from the Resource Catalog"""
+        """Sends a DELETE request to remove an inactive device from the Resource Catalog."""
         if device_id:
             try:
-                response = requests.delete(f"{RESOURCE_CATALOG_URL}/{device_id}")
+                response = requests.delete(f"{self.config['resource_catalog']}/{device_id}")
                 if response.status_code == 200:
                     print(f"Device {device_id} successfully deleted from the Resource Catalog.")
                 else:
@@ -322,26 +332,26 @@ class DeviceConnector:
         self.client.loop_stop()
         print("MQTT client stopped.")        
 
-def initialize_service():
-    # Register the service at startup
-    with open('config.json') as f:
-        config_dict = json.load(f)
+def initialize_service(config_dict):
+    """Initialize and register the service."""
     register_service(config_dict)
-    print("Machine Availability Service Initialized and Registered")
+    print("Device Connector Service Initialized and Registered")
 
 def stop_service(signum, frame):
+    """Cleanly stop the service."""
     print("Stopping service...")
-    delete_service("hvac_control")
-
-    # Clean stop of the MQTT client
+    delete_service("device_connector")
     service.stop()    
-
 
 if __name__ == '__main__':
     try:
+        # Load configuration from config.json
+        with open('config.json') as config_file:
+            config = json.load(config_file)
+
         # Initialize the service
-        service = DeviceConnector()
-        initialize_service()
+        service = DeviceConnector(config)
+        initialize_service(config)
 
         # Signal handler for clean stop
         signal.signal(signal.SIGINT, stop_service)

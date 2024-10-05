@@ -24,7 +24,7 @@ class OccupancyService:
     def __init__(self, config):
         self.config = config
         self.service_catalog_url = config['service_catalog']  # Retrieve the service catalog URL from config.json
-        self.mqtt_broker = self.get_mqtt_broker_from_service_catalog()
+        self.mqtt_broker, self.mqtt_port = self.get_mqtt_info_from_service_catalog()  # Retrieve broker and port
         self.time_slots = self.get_time_slots_from_service_catalog()
         self.thing_speak_url = self.get_thingspeak_url_from_service_catalog()
 
@@ -42,18 +42,18 @@ class OccupancyService:
         self.client.connect(self.mqtt_broker, 1883, 60)
         self.client.loop_start()
 
-    def get_mqtt_broker_from_service_catalog(self):
-        """Retrieve MQTT broker information from the service catalog."""
+    def get_mqtt_info_from_service_catalog(self):
+        """Retrieve MQTT broker and port information from the service catalog."""
         try:
             response = requests.get(self.service_catalog_url)
             if response.status_code == 200:
                 service_catalog = response.json()
-                return service_catalog['brokerIP']
+                return service_catalog['brokerIP'], service_catalog['brokerPort']  # Return both broker IP and port
             else:
                 raise Exception(f"Failed to get broker information: {response.status_code}")
         except requests.exceptions.RequestException as e:
-            print(f"Error retrieving MQTT broker from service catalog: {e}")
-            return None
+            print(f"Error getting MQTT info from service catalog: {e}")
+            return None, None
 
     def get_time_slots_from_service_catalog(self):
         """Retrieve time slots configuration from the service catalog."""
