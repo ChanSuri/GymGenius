@@ -1,9 +1,6 @@
 {
     "ThingspeakURL_write": "https://api.thingspeak.com/update?",
     "ThingspeakURL_read": "https://api.thingspeak.com/channels/",
-    "ServiceInfo": {
-        "serviceName": "Thingspeak"
-    },
     "channels": {
         "Entrance": {
             "channel_id": "2636342",
