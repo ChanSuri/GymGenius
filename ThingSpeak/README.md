@@ -66,7 +66,7 @@ Replace `Entrance` with the name of the room you want to retrieve the data for. 
 
 ### Subscribed Topics
 - **Temperature & Humidity**:
-  - The service subscribes to the following topics to monitor environmental conditions for each room, provided by the `device_connector` service:
+  - The service subscribes to the following topics, provided by the `device_connector` service, to monitor environmental conditions for each room:
     - `gym/environment/entrance`
     - `gym/environment/changing_room`
     - `gym/environment/lifting_room`
@@ -153,3 +153,4 @@ To stop the service gracefully, press `Ctrl+C`. This triggers the signal handler
 - Stop the MQTT client and cleanly shut down all processes.
 
 The service ensures that the MQTT client disconnects properly and that the ThingSpeak data stream is closed without any interruptions.
+
