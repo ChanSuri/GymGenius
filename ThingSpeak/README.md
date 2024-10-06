@@ -71,7 +71,7 @@ Replace `Entrance` with the name of the room you want to retrieve the data for. 
     - `gym/environment/changing_room`
     - `gym/environment/lifting_room`
     - `gym/environment/cardio_room`
-- Example payload:
+  - Example payload:
   \```json
   {
     "bn": "gym/environment/{room_name}",
@@ -91,7 +91,7 @@ Replace `Entrance` with the name of the room you want to retrieve the data for. 
 - **Current Occupancy**:
   - The service listens to `gym/occupancy/current`, a topic provided by the `occupancy` service, to track the current number of clients in the gym.
 
- - Example payload:
+  - Example payload:
   \```json
   {
     "topic": "gym/occupancy/current",
