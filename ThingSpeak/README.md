@@ -71,53 +71,60 @@ Replace `Entrance` with the name of the room you want to retrieve the data for. 
     - `gym/environment/changing_room`
     - `gym/environment/lifting_room`
     - `gym/environment/cardio_room`
-
-  **Example payload**:
-  ```json
+- Example payload:
+  \```json
   {
     "bn": "gym/environment/{room_name}",
-    "e": [
-      { "n": "temperature", "u": "Cel", "t": current_time, "v": temperature_value },
-      { "n": "humidity", "u": "%", "t": current_time, "v": humidity_value }
+    "e":[
+      {"n": "temperature",
+       "u": "Cel",
+       "t":current_time,
+       "v": temperature_value},
+      {"n": "humidity",
+       "u": "%",
+       "t" :current_time,
+       "v": humidity_value
+      } 
     ]
   }
+  \```
 - **Current Occupancy**:
   - The service listens to `gym/occupancy/current`, a topic provided by the `occupancy` service, to track the current number of clients in the gym.
 
-  **Example payload**:
-  ```json
-{
-  "topic": "gym/occupancy/current",
-  "message": {
-    "device_id": "Occupancy_block",
-    "timestamp": "YYYY-MM-DD HH:MM:SS",
-    "data": {
-      "current_occupancy": value,
-      "unit": "count"
+ - Example payload:
+  \```json
+  {
+    "topic": "gym/occupancy/current",
+    "message": {
+      "device_id": "Occupancy_block",
+      "timestamp": "YYYY-MM-DD HH:MM:SS",
+      "data": {
+        "current_occupancy": value,
+        "unit": "count"
+      }
     }
   }
-}
+  \```
 - **Aggregated Machine Availability**:
   - The service subscribes to `gym/group_availability/#` to receive real-time aggregated machine availability data, provided by the `machine_availability` service. This includes machines like treadmills, elliptical trainers, stationary bikes, and others.
 
-  **Example topic**:
-- `gym/group_availability/treadmill`
-
-**Example payload**:
-```json
-{
-  "topic": "gym/group_availability/treadmill",
-  "message": {
-    "device_id": "Machine availability block",
-    "timestamp": "YYYY-MM-DD HH:MM:SS",
-    "data": {
-      "available": 3,
-      "busy": 2,
-      "total": 5,
-      "unit": "count"
+  - Example topic: `gym/group_availability/treadmill`
+  - Payload format:
+    \```json
+    {
+      "topic": "gym/group_availability/treadmill",
+      "message": {
+        "device_id": "Machine availability block",
+        "timestamp": "YYYY-MM-DD HH:MM:SS",
+        "data": {
+          "available": 3,
+          "busy": 2,
+          "total": 5,
+          "unit": "count"
+        }
+      }
     }
-  }
-}
+    \```
 ### Published Topics
 - The **Thingspeak Adaptor** does not publish data back to MQTT. Its purpose is to forward the data from MQTT to **ThingSpeak** via REST API calls.
 
