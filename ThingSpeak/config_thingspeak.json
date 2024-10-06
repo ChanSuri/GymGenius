@@ -1,16 +1,6 @@
 {
     "ThingspeakURL_write": "https://api.thingspeak.com/update?",
     "ThingspeakURL_read": "https://api.thingspeak.com/channels/",
-    "brokerIP":  "test.mosquitto.org",
-    "brokerPort": 1883,
-    "mqttTopics": {
-        "current_occupancy": "gym/occupancy/current",
-        "cardio_room": "gym/environment/cardio_room",
-        "lifting_room": "gym/environment/lifting_room",
-        "changing_room": "gym/environment/changing_room",
-        "entrance_room": "gym/environment/entrance_room",
-        "machine_availability": "gym/group_availability/#"
-    },
     "ServiceInfo": {
         "serviceName": "Thingspeak"
     },
@@ -62,3 +52,4 @@
         }
     }
 }
+
