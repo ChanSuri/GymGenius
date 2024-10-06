@@ -52,7 +52,7 @@ Once data is collected, it is uploaded to ThingSpeak via REST API calls, where i
 In addition, **TA_reader** processes this real-time data and generates files that store historical information for each room separately. These historical records provide insights into the occupancy, availability, usage, and environmental conditions in the *Cardio Room*, *Lifting Room*, *Changing Room*, and *Entrance Room*.
 
 ### GET Requests for Historical Data
-You can retrieve historical data files for each room by making a GET request to the `TA_reader` endpoint. For example, to retrieve the data for the **Entrance Room**, use the following URL format: [http://localhost:8080/thingspeak_adaptor?channel=Entrance](http://localhost:8080/thingspeak_adaptor?channel=Entrance)
+You can retrieve historical data files for each room by making a GET request to the `TA_reader` endpoint. For example, to retrieve the data for the **Entrance Room**, use the following URL format: [http://thingspeak_adaptor:8089/thingspeak_adaptor?channel=Entrance](http://thingspeak_adaptor:8089/thingspeak_adaptor?channel=Entrance)
 
 Replace `Entrance` with the name of the room you want to retrieve the data for. The available channels are:
 - Entrance
