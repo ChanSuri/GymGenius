@@ -10,24 +10,33 @@
 - [Shutdown and Cleanup](#shutdown-and-cleanup)
 
 ## Overview
-The **Machine Availability Service** is a microservice that monitors and manages the availability of gym machines. It listens to MQTT topics for real-time machine availability updates, maintains the current status of each machine type (available/occupied), and publishes aggregated data to a dedicated MQTT topic. The service uses MQTT to receive and publish data and can be configured for various machine types.
+The **Machine Availability Service** is a microservice that monitors and manages the availability of gym machines. It listens to MQTT topics for real-time machine availability updates, maintains the current status of each machine type (available/occupied), and publishes aggregated data to a dedicated MQTT topic. The service uses MQTT to receive and publish data and can be configured for various machine types. Additionally, it registers itself with a Service Catalog at startup and deregisters upon shutdown.
 
 ## Features
-- **MQTT Integration**: Subscribes to machine availability topics and updates the machine status accordingly.
-- **Real-time Machine Monitoring**: Tracks the availability and occupancy of each machine type.
-- **Data Publishing**: Publishes machine availability data to aggregated MQTT topics.
-- **Service Registration**: Registers and deregisters the service with a service catalog at startup and shutdown.
+- **Dynamic Configuration**: The MQTT broker details and machine types are fetched dynamically from the service catalog.
+- **MQTT Integration**: The service listens for machine availability updates via MQTT and publishes aggregated data.
+- **Real-time Monitoring**: Updates machine availability status dynamically based on incoming MQTT messages.
+- **Service Registration**: Automatically registers and deregisters itself with a service catalog at startup and shutdown.
+- **Machine Data Aggregation**: Tracks the total number of available, occupied, and total machines for each machine type.
+- **Graceful Shutdown**: Stops the service and MQTT client loop cleanly when interrupted.
 
 ## Installation
 
 ### Prerequisites
 - Python 3.x
-- `paho-mqtt` library
+- Required libraries:
+  - `paho-mqtt`
+  - `requests`
 
 ## Usage
 
 ### Service Registration
-The service registers itself at startup by calling the `register_service` function.
+The service registers itself with a service catalog at startup using the `register_service` function from `registration_functions.py`.
+
+### Dynamic Configuration from the Service Catalog
+Upon startup, the service retrieves the following information from the Service Catalog via a GET request:
+  - **MQTT Broker and Port**: The service dynamically fetches the broker IP and port.
+  - **Machine Types**: The list and count of machines (e.g., treadmills, elliptical trainers) are fetched and tracked.
 
 The service will connect to the MQTT broker and begin listening for machine availability updates. The current machine availability status will be published to the MQTT topics.
 
@@ -76,24 +85,11 @@ The service will connect to the MQTT broker and begin listening for machine avai
     \```
 
 ## Service Configuration
-The service configuration includes MQTT broker details, gym schedule, and default thresholds.
-
-- **MQTT Broker**: `test.mosquitto.org` on port `1883`.
-- Example machine types configuration:
-  \```python
-  machine_types = {
-      "treadmill": 5,
-      "elliptical_trainer": 4,
-      "stationary_bike": 6,
-      "rowing_machine": 3,
-      "cable_machine": 5,
-      "leg_press_machine": 5,
-      "smith_machine": 5,
-      "lat_pulldown_machine": 5
-  }
-  \```
+The service does not require manual configuration of the MQTT broker or machine types. These details are fetched dynamically from the Service Catalog. The only required configuration is the Service Catalog's URL and the list of topic to which is needed subscription, which should be specified in the config.json file.
 
 ## Shutdown and Cleanup
-To stop the service gracefully, press `Ctrl+C`. The signal handler will:
-- Deregister the service from the service catalog using `delete_service()`.
-- Stop the MQTT client loop cleanly.
+To stop the service gracefully:
+1. Press Ctrl+C in the terminal where the service is running.
+2. The service will:
+  - Deregister itself from the service catalog using the delete_service function from registration_functions.py.
+  - Stop the MQTT client loop cleanly.

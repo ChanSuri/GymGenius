@@ -7,13 +7,14 @@ import signal
 from registration_functions import *
 
 class TempOptimizationService:
-    def __init__(self, gym_schedule, config):
+    def __init__(self, config):
         self.config = config
         self.service_catalog_url = config['service_catalog']  # Get service catalog URL from config.json
         self.mqtt_broker, self.mqtt_port = self.get_mqtt_info_from_service_catalog()  # Retrieve broker and port
         self.thresholds = self.get_thresholds_from_service_catalog()
         self.alert_temperature = self.get_alert_thresholds_from_service_catalog('temperature_alert_thresholds')
         self.alert_humidity = self.get_alert_thresholds_from_service_catalog('humidity_alert_thresholds')
+        self.gym_schedule = self.get_gym_schedule_from_service_catalog()  # Get gym schedule from service catalog
 
         self.client = mqtt.Client()
         self.client.on_connect = self.on_connect
@@ -24,7 +25,6 @@ class TempOptimizationService:
         # Subscribe to topics from config.json
         self.subscribe_to_topics()
 
-        self.gym_schedule = gym_schedule
         self.hvac_state = {room: 'off' for room in self.thresholds.keys()}
         self.current_occupancy = 0
         self.current_command = {room: "ON" for room in self.thresholds.keys()}  # Default command state is ON for each room
@@ -67,6 +67,32 @@ class TempOptimizationService:
         except requests.exceptions.RequestException as e:
             print(f"Error retrieving alert thresholds from service catalog: {e}")
             return {}
+        
+    def get_gym_schedule_from_service_catalog(self):
+        """Retrieve gym schedule from the service catalog."""
+        try:
+            response = requests.get(self.service_catalog_url, timeout=5)
+            if response.status_code == 200:
+                service_catalog = response.json()
+                time_slots = service_catalog['time_slots']
+                gym_schedule = {
+                    'open': datetime.strptime(time_slots['0']['start'], '%H:%M').time(),
+                    'close': datetime.strptime(time_slots['7']['end'], '%H:%M').time()
+                }
+                print(f"Gym schedule retrieved: Open at {gym_schedule['open']}, Close at {gym_schedule['close']}")
+                return gym_schedule
+            else:
+                raise Exception(f"Failed to get gym schedule: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            # Log the error and notify about fallback
+            print(f"Error retrieving gym schedule from service catalog: {e}")
+            print("Using fallback gym schedule (08:00 to 23:59)")
+            # Return fallback schedule
+            return {
+                'open': datetime.strptime('08:00', '%H:%M').time(),
+                'close': datetime.strptime('23:59', '%H:%M').time()
+            }
+
 
     def connect_mqtt(self):
         """Connect to the MQTT broker."""
@@ -284,15 +310,12 @@ def stop_service(signum, frame):
     service.stop()
 
 if __name__ == "__main__":
-    gym_schedule = {'open': datetime.strptime('08:00', '%H:%M').time(),
-                    'close': datetime.strptime('23:59', '%H:%M').time()}
-
     # Load configuration from config.json
     with open('config.json') as config_file:
         config = json.load(config_file)
 
     # Initialize the service with the loaded configuration
-    service = TempOptimizationService(gym_schedule, config)
+    service = TempOptimizationService(config)
     initialize_service(config)
 
     # Signal handler for clean shutdown

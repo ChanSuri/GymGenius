@@ -9,28 +9,38 @@
 - [Service Configuration](#service-configuration)
 - [Shutdown and Cleanup](#shutdown-and-cleanup)
 
-
 ## Overview
-The **Occupancy Monitoring and Prediction Service** is a microservice designed to monitor and predict the occupancy of a gym. It uses MQTT to track entry and exit events, maintains historical data, and employs a linear regression model to predict future occupancy levels based on time slots and days of the week. The service also publishes the current occupancy and predictions to specific MQTT topics.
+The **Occupancy Monitoring and Prediction Service** is a microservice designed to monitor and predict the occupancy of a gym. It subscribes to MQTT topics to track entry and exit events and uses a linear regression model to predict future occupancy levels based on time slots and days of the week. The service dynamically retrieves MQTT broker information, time slots, and ThingSpeak details from the service catalog at startup. The service also publishes the current occupancy and predictions to specific MQTT topics.
 
 ## Features
+- **Dynamic Configuration**: The MQTT broker details, time slots, and ThingSpeak URL are fetched dynamically from the service catalog.
 - **MQTT Integration**: Subscribes to entry and exit events and updates the current occupancy accordingly.
 - **Occupancy Tracking**: Maintains historical data on occupancy by time slot and day of the week.
 - **Prediction Model**: Uses a linear regression model to predict future occupancy levels.
 - **Data Publishing**: Publishes current occupancy and predicted occupancy to MQTT topics.
 
+
 ## Installation
 
 ### Prerequisites
 - Python 3.x
-- `paho-mqtt` library
-- `numpy` library
-- `scikit-learn` library
+- Required libraries:
+  - `paho-mqtt`
+  - `numpy`
+  - `pandas`
+  - `scikit-learn`
+  - `requests`
 
 ## Usage
 
 ### Service Registration
-The service registers itself at startup by calling the `register_service` function.
+The service registers itself with a Service Catalog at startup using the `register_service` function from registration_functions.py.
+
+### Dynamic Configuration from the Service Catalog
+At startup, the service retrieves the following information from the service catalog via a GET request:
+  - **MQTT Broker and Port**: The service fetches the MQTT broker IP and port from the service catalog.
+  - **Time Slots**: The service dynamically retrieves the time slots configuration to track and predict gym occupancy.
+  - **ThingSpeak URL**: The service retrieves the URL for fetching historical data.
 
 The service will connect to the MQTT broker and begin listening for entry and exit events. It will update the current occupancy, record historical data, and publish predictions.
 
@@ -96,17 +106,16 @@ The service will connect to the MQTT broker and begin listening for entry and ex
   \```
 
 ## Service Configuration
-The service can be configured to monitor and predict gym occupancy based on different time slots and days of the week. In the current setup, the service divides each day into 9 time slots (from 08:00 to 24:00) and tracks occupancy across 7 days of the week.
+The service configuration is dynamically fetched from the service catalog. The configuration includes:
+  - **MQTT Broker Details**: The broker IP and port are retrieved via a GET request.
+  - **Time Slots**: The service retrieves time slots configuration for occupancy prediction.
+  - **ThingSpeak URL**: The service retrieves the ThingSpeak endpoint to fetch historical data for model training.
 
-Example time slot configuration:
-- Time Slot 0: 08:00 - 10:00
-- Time Slot 1: 10:00 - 12:00
-- Time Slot 2: 12:00 - 14:00
-- ...
-
-The service uses these slots to record historical data and generate predictions.
+The only manual configuration required in the `config.json` file is:
+  - **Service Catalog URL**: The URL of the service catalog from which the service retrieves the necessary information.
+  - **MQTT Topics**: The topics to which the service subscribes and publishes.
 
 ## Shutdown and Cleanup
 To stop the service gracefully, press `Ctrl+C`. The signal handler will:
-- Stop the MQTT client loop cleanly.
-- Ensure that the service is deregistered from the service catalog.
+- Deregister the service from the service catalog using the `delete_service` function from `registration_functions.py`.
+- Stop the MQTT client loop and disconnect cleanly.
