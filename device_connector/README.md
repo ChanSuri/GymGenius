@@ -13,9 +13,11 @@
 The **Device Connector Service** is a microservice designed to manage and integrate various gym devices, such as sensors and HVAC systems. It connects to an MQTT broker to exchange messages regarding environment data, machine availability, and occupancy. It also ensures that devices are registered and monitored in the Resource Catalog, and inactive devices are removed if they have not sent updates in a while.
 
 ## Features
+- **Dynamic Room Configuration**: Retrieves room information dynamically from the Service Catalog, eliminating static configuration files.
 - **Device Registration**: Registers devices (e.g., sensors, HVAC systems) with the Resource Catalog.
 - **MQTT Integration**: Subscribes to and publishes messages on various MQTT topics related to occupancy, environment, and machine availability.
 - **HVAC Control**: Automatically controls the HVAC system based on incoming MQTT commands and environment data.
+- **Temperature Simulation**: Adjusts and simulates the temperature for each room, considering HVAC activity and gradual changes.
 - **Device Inactivity Management**: Checks for inactive devices and deletes them from the Resource Catalog if they have been inactive for more than 3 days.
 
 ## Installation
@@ -28,10 +30,30 @@ The **Device Connector Service** is a microservice designed to manage and integr
 
 ## Usage
 
-### Service Registration
-The service registers devices with the Resource Catalog at startup by using the `register_device` function. This ensures that each device (e.g., environment sensor, occupancy sensor) is recognized and its data can be tracked.
+### Service Initialization
+The service initializes by:
+1. Loading configuration from a `config.json` file.
+2. Retrieving **MQTT broker** and **port information** from the **Service Catalog**.
+3. Retrieving **room configurations** from the **Service Catalog**.
+4. Registering the service in the **Resource Catalog** using the `register_service` function.
+5. Connecting to the MQTT broker.
+6. Subscribing to various topics for machine availability, HVAC control, and entry/exit events.
+7. Performing device checks at startup to delete inactive devices.
 
-The service will connect to the MQTT broker and the Resource Catalog, handle HVAC control, and ensure that machine availability and environment data are published to the appropriate MQTT topics.
+### Device Registration
+The service registers devices with the Resource Catalog at startup using the `register_device` function. This ensures that each device (e.g., environment sensor, occupancy sensor) is recognized and its data can be tracked. If a device is successfully registered or updated, it will then start publishing relevant data.
+
+### Device Inactivity Management
+The service periodically checks the **Resource Catalog** for devices that have not been updated in the last 3 days. If such devices are found, they are deleted from the catalog.
+
+### MQTT Message Handling
+The service subscribes to topics related to HVAC control, machine availability, and occupancy entry/exit events. Based on incoming messages, it:
+- Controls HVAC systems, adjusting the mode and on/off state for specific rooms.
+- Publishes availability data for machines like treadmills and stationary bikes.
+- Publishes environment data such as temperature and humidity, while considering HVAC effects.
+  
+### Temperature Simulation
+The service simulates temperature changes in each room by applying HVAC effects or gradually returning the temperature to real values when HVAC is off.
 
 ## MQTT Topics
 
@@ -129,12 +151,15 @@ The service will connect to the MQTT broker and the Resource Catalog, handle HVA
   - If the "v" field is 0 if the machine is available, instead if it is 1 the machine is occupied
 
 ## Service Configuration
-The service is configured to interact with an MQTT broker (`test.mosquitto.org` by default) and a **Resource Catalog** (by default at `http://localhost:8081/devices`).
+The service is configured via a `config.json` file. The configuration includes settings for:
 
-- **MQTT Broker**: The broker can be configured by updating the `mqtt_broker` variable in the code.
-- **Resource Catalog URL**: The URL for the Resource Catalog can be updated by modifying the `RESOURCE_CATALOG_URL` variable.
+- **Service Catalog URL**: The URL of the Service Catalog from which the service retrieves the MQTT broker, port, and room configurations. By default, it is set to `http://service_catalog:8080` and `http://localhost:8081/devices`, respectively.
+- **Service Catalog URL**: The URL of the Resource Catalog where devices are registered. By default, it is set to `http://localhost:8081/devices`
+- **Subscribed Topics**: Lists MQTT topics the service listens to (e.g., HVAC control).
+- **Published Topics**: Specifies the topics to publish data (e.g., environment data, machine availability).
 
 ## Shutdown and Cleanup
 To stop the service gracefully, press `Ctrl+C`. The signal handler will:
 - Stop the MQTT client loop cleanly.
 - Ensure all processes are properly terminated.
+- Delete the service from the **Service Catalog** by calling the `delete_service` function.

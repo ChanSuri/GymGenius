@@ -13,7 +13,11 @@ class DeviceConnector:
         # Load configuration from config.json
         self.config = config
         self.service_catalog_url = self.config['service_catalog']  # Get service catalog URL from config.json
+        self.resource_catalog_url = self.config['resource_catalog']  # Get resource catalog URL from config.json
         self.mqtt_broker, self.mqtt_port = self.get_mqtt_info_from_service_catalog()
+
+        # Get rooms from service catalog
+        self.rooms = self.get_rooms_from_service_catalog()
 
         # Initialize the MQTT client
         self.client = mqtt.Client()
@@ -24,13 +28,13 @@ class DeviceConnector:
         # Subscribe to the HVAC control topics for all rooms
         self.subscribe_to_topics()
 
-        # Initialize HVAC status and mode for each room
-        self.hvac_state = {room: 'off' for room in self.config['rooms']}  # HVAC is initially off for all rooms
-        self.hvac_mode = {room: None for room in self.config['rooms']}  # No mode when HVAC is off
-        self.hvac_last_turned_on = {room: None for room in self.config['rooms']}  # Track when HVAC was last turned on per room
+       # Initialize HVAC status and mode for each room
+        self.hvac_state = {room: 'off' for room in self.rooms}  # HVAC is initially off for all rooms
+        self.hvac_mode = {room: None for room in self.rooms}  # No mode when HVAC is off
+        self.hvac_last_turned_on = {room: None for room in self.rooms}  # Track when HVAC was last turned on per room
 
-        self.real_temperature = {room: None for room in self.config['rooms']}  # Actual temperature per room
-        self.simulated_temperature = {room: None for room in self.config['rooms']}  # Simulated temperature per room
+        self.real_temperature = {room: None for room in self.rooms}  # Actual temperature per room
+        self.simulated_temperature = {room: None for room in self.rooms}  # Simulated temperature per room
 
         # Perform device checks at initialization
         self.check_and_delete_inactive_devices()
@@ -47,6 +51,19 @@ class DeviceConnector:
         except requests.exceptions.RequestException as e:
             print(f"Error getting MQTT info from service catalog: {e}")
             return None, None
+        
+    def get_rooms_from_service_catalog(self):
+        """Retrieve rooms from the service catalog."""
+        try:
+            response = requests.get(self.service_catalog_url)
+            if response.status_code == 200:
+                service_catalog = response.json()
+                return service_catalog['roomsID']  # Return the list of room IDs
+            else:
+                raise Exception(f"Failed to get room information: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            print(f"Error getting room info from service catalog: {e}")
+            return []    
 
     def subscribe_to_topics(self):
         """Subscribe to topics listed in the config file."""
@@ -122,7 +139,7 @@ class DeviceConnector:
 
         # Use the register_device function from the registration_functions.py file
         try:
-            register_device(device_id, device_type, location, status, endpoint, time)
+            register_device(device_id, device_type, location, status, endpoint, time, self.resource_catalog_url)
             return json.dumps({"status": "success", "message": "Device registered/updated successfully"})
         except Exception as e:
             cherrypy.response.status = 500
@@ -181,7 +198,7 @@ class DeviceConnector:
                         entry["v"] = modified_temperature
 
             # Convert the record to JSON and publish it to the MQTT topic
-            self.client.publish(self.config["published_topics"]["enviroment"].replace('<roomID>', room), json.dumps(senml_record))
+            self.client.publish(self.config["published_topics"]["environment"].replace('<roomID>', room), json.dumps(senml_record))
             return json.dumps({"status": "success", "message": "Environment data published to MQTT"})
 
         except Exception as e:
@@ -295,7 +312,7 @@ class DeviceConnector:
     def check_and_delete_inactive_devices(self):
         """Checks for inactive devices and deletes them if they haven't been updated in the last 3 days."""
         try:
-            response = requests.get(self.config['resource_catalog'])  # URL for resource catalog is loaded from config
+            response = requests.get(self.resource_catalog_url)  # URL for resource catalog is loaded from config
             if response.status_code == 200:
                 device_registry = response.json().get("devices", [])
                 current_time = datetime.now()
@@ -318,7 +335,7 @@ class DeviceConnector:
         """Sends a DELETE request to remove an inactive device from the Resource Catalog."""
         if device_id:
             try:
-                response = requests.delete(f"{self.config['resource_catalog']}/{device_id}")
+                response = requests.delete(f"{self.resource_catalog_url}/{device_id}")
                 if response.status_code == 200:
                     print(f"Device {device_id} successfully deleted from the Resource Catalog.")
                 else:
@@ -334,13 +351,13 @@ class DeviceConnector:
 
 def initialize_service(config_dict):
     """Initialize and register the service."""
-    register_service(config_dict)
+    register_service(config_dict, service.service_catalog_url)
     print("Device Connector Service Initialized and Registered")
 
 def stop_service(signum, frame):
     """Cleanly stop the service."""
     print("Stopping service...")
-    delete_service("device_connector")
+    delete_service("device_connector", service.service_catalog_url)
     service.stop()    
 
 if __name__ == '__main__':

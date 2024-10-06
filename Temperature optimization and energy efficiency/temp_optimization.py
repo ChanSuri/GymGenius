@@ -274,13 +274,13 @@ class TempOptimizationService:
 
 def initialize_service(config_dict):
     """Initialize and register the service."""
-    register_service(config_dict)
+    register_service(config_dict, service.service_catalog_url)
     print("Temperature Optimization Service Initialized and Registered")
 
 def stop_service(signum, frame):
     """Cleanly stop the service."""
     print("Stopping service...")
-    delete_service("hvac_control")
+    delete_service("hvac_control",service.service_catalog_url)
     service.stop()
 
 if __name__ == "__main__":

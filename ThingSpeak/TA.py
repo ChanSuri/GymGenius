@@ -155,13 +155,15 @@ class ThingspeakAdaptor:
     # Register the service at startup
      with open('config_thingspeak_adaptor.json') as f:
         config_dict = json.load(f)
-     register_service(config_dict)
+     register_service(config_dict, config_dict["service_catalog"])
      print("Thingspeak Adaptor Service Initialized and Registered")
 
     def stop(self):
         """Stop the MQTT client and unregister the service."""
+        with open('config_thingspeak_adaptor.json') as f:
+            config_dict = json.load(f)
         self.mqtt_client.stop()
-        delete_service("thingspeak_adaptor")
+        delete_service("thingspeak_adaptor",config_dict["service_catalog"])
         print("Thingspeak Adaptor stopped and service deleted.")
 
 

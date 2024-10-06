@@ -3,6 +3,7 @@
     "description": "Handles sensors and actuators data",
     "status": "active",
     "service_catalog": "http://service_catalog:8080",
+    "resource_catalog": "http://resource_catalog:8081",
     "endpoint": "http://device_connector:8082",
     "subscribed_topics": {
         "automatic_control": "gym/hvac/control/#",

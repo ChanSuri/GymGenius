@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import requests
 from sklearn.linear_model import LinearRegression
-from registration_functions import register_service
+from registration_functions import *
 import signal
 
 # Global variables
@@ -211,11 +211,12 @@ class OccupancyService:
 
 def initialize_service(config_dict):
     """Initialize and register the service."""
-    register_service(config_dict)
+    register_service(config_dict, occupancy_service.service_catalog_url)
     print("Occupancy Service Initialized and Registered")
 
 def stop_service(signum, frame):
     print("Stopping service...")
+    delete_service("occupancy", occupancy_service.service_catalog_url)
     occupancy_service.stop()
 
 if __name__ == '__main__':

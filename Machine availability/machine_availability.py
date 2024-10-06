@@ -154,12 +154,12 @@ class MachineAvailabilityService:
 
 def initialize_service(config_dict):
     # Register the service at startup
-    register_service(config_dict)
+    register_service(config_dict,service.service_catalog_url)
     print("Machine Availability Service Initialized and Registered")
 
 def stop_service(signum, frame):
     print("Stopping service...")
-    delete_service("machine_availability")
+    delete_service("machine_availability",service.service_catalog_url)
 
     # Clean stop of the MQTT client
     service.stop()
