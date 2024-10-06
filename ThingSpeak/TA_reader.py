@@ -6,7 +6,7 @@ import cherrypy
 import os
 
 # Load configuration from config.json
-with open('config_thingspeak_adaptor.json') as f:
+with open('config_thingspeak.json') as f:
     config = json.load(f)
 
 THINGSPEAK_URL = config['ThingspeakURL_read']
@@ -84,7 +84,6 @@ if __name__ == "__main__":
         'server.socket_port': 8080,       # Listen on port 8080
     })
 
-    # Start CherryPy and map the thingspeak_adaptor method to '/thingspeak_adaptor'
     # Start CherryPy and map the thingspeak_adaptor method to '/thingspeak_adaptor'
     cherrypy.quickstart(TS, '/thingspeak_adaptor/')
 
