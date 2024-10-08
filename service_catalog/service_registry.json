@@ -36,10 +36,10 @@
                             "cardio_room": {"upper": 35, "lower": 15}
               },
   "humidity_alert_thresholds":{ "entrance": {"upper": 70, "lower": 20},
-                          "changing_room": {"upper": 0, "lower": 100},
+                          "changing_room": {"upper": 100, "lower": 0},
                           "lifting_room": {"upper": 70, "lower": 20}, 
                           "cardio_room": {"upper": 70, "lower": 20}
               },            
-  "services": {},
+  "services": [],
   "lastUpdate": "2024-09-03 11:10:36"
 }
