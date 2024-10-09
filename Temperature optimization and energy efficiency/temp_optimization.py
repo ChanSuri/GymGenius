@@ -32,32 +32,14 @@ class TempOptimizationService:
     def get_mqtt_info_from_service_catalog(self):
         """Retrieve MQTT broker and port information from the service catalog."""
         try:
-            # Request to the service catalog
-            response = requests.get(self.service_catalog_url, timeout=5)
-
-            # Check if the response was successful
+            response = requests.get(self.service_catalog_url)
             if response.status_code == 200:
-                print("Response received from service catalog.")
                 service_catalog = response.json()
-                
-                # Print the full response for debugging purposes
-                print(f"Service catalog response: {service_catalog}")
-
                 catalog = service_catalog.get('catalog', {})
-
-                # Ensure the required fields are present in the JSON
-                broker_ip = catalog.get('brokerIP')
-                broker_port = catalog.get('brokerPort')
-
-                # Check if both values are not None
-                if broker_ip and broker_port:
-                    print(f"MQTT broker: {broker_ip}, Port: {broker_port}")
-                    return broker_ip, broker_port
-                else:
-                    raise ValueError("Broker information (IP/Port) is missing in the service catalog response.")
+                return catalog.get('brokerIP'), catalog.get('brokerPort')  # Return both broker IP and port
             else:
                 raise Exception(f"Failed to get broker information: {response.status_code}")
-        except (requests.exceptions.RequestException, ValueError) as e:
+        except requests.exceptions.RequestException as e:
             print(f"Error getting MQTT info from service catalog: {e}")
             return None, None
 
@@ -68,7 +50,8 @@ class TempOptimizationService:
             response = requests.get(self.service_catalog_url)
             if response.status_code == 200:
                 service_catalog = response.json()
-                return service_catalog.get('temperature_default_thresholds')
+                catalog = service_catalog.get('catalog', {})
+                return catalog.get('temperature_default_thresholds')
             else:
                 raise Exception(f"Failed to get temperature thresholds: {response.status_code}")
         except requests.exceptions.RequestException as e:
@@ -81,7 +64,8 @@ class TempOptimizationService:
             response = requests.get(self.service_catalog_url)
             if response.status_code == 200:
                 service_catalog = response.json()
-                return service_catalog.get(threshold_type)
+                catalog = service_catalog.get('catalog', {})
+                return catalog.get(threshold_type)
             else:
                 raise Exception(f"Failed to get alert thresholds: {response.status_code}")
         except requests.exceptions.RequestException as e:
@@ -99,8 +83,10 @@ class TempOptimizationService:
                 print("Response received from service catalog.")
                 service_catalog = response.json()
 
+                catalog = service_catalog.get('catalog', {})
+
                 # Verifica la presenza del campo 'time_slots' nel JSON
-                time_slots = service_catalog.get('time_slots', None)
+                time_slots = catalog.get('time_slots', None)
                 if time_slots is None:
                     raise ValueError("time_slots is missing in the service catalog response")
 
