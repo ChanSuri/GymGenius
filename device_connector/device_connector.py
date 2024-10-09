@@ -45,7 +45,7 @@ class DeviceConnector:
             response = requests.get(self.service_catalog_url)
             if response.status_code == 200:
                 service_catalog = response.json()
-                return service_catalog['brokerIP'], service_catalog['brokerPort']  # Return both broker IP and port
+                return service_catalog.get('brokerIP'), service_catalog.get('brokerPort')  # Return both broker IP and port
             else:
                 raise Exception(f"Failed to get broker information: {response.status_code}")
         except requests.exceptions.RequestException as e:
@@ -58,7 +58,7 @@ class DeviceConnector:
             response = requests.get(self.service_catalog_url)
             if response.status_code == 200:
                 service_catalog = response.json()
-                return service_catalog['roomsID']  # Return the list of room IDs
+                return service_catalog.get('roomsID')  # Return the list of room IDs
             else:
                 raise Exception(f"Failed to get room information: {response.status_code}")
         except requests.exceptions.RequestException as e:

@@ -68,7 +68,7 @@ services:
       - device_connector
       - service_catalog
       - resource_catalog
-      - thingspeak_adaptor 
+     # - thingspeak_adaptor 
     environment:
       - SERVICE_CATALOG_URL=http://service_catalog:8080
 
@@ -123,18 +123,18 @@ services:
     depends_on:
       - device_connector
 
-  # Thingspeak Adaptor Service
-  thingspeak_adaptor:
-    build:
-      context: C:\Users\feder\OneDrive\Desktop\GymGenius\thingspeak  
-    ports:
-      - "8089:8089" 
-    networks:
-      - gym-genius-network
-    depends_on:
-      - device_connector
-    environment:
-      - SERVICE_CATALOG_URL=http://service_catalog:8080
+  # # Thingspeak Adaptor Service
+  # thingspeak_adaptor:
+  #   build:
+  #     context: C:\Users\feder\OneDrive\Desktop\GymGenius\thingspeak  
+  #   ports:
+  #     - "8089:8089" 
+  #   networks:
+  #     - gym-genius-network
+  #   depends_on:
+  #     - device_connector
+  #   environment:
+  #     - SERVICE_CATALOG_URL=http://service_catalog:8080
 
 
   # Telegram Bot Service
