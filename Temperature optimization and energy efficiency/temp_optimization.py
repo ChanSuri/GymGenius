@@ -35,7 +35,7 @@ class TempOptimizationService:
             response = requests.get(self.service_catalog_url)
             if response.status_code == 200:
                 service_catalog = response.json()
-                return service_catalog['brokerIP'], service_catalog['brokerPort']  # Return both broker IP and port
+                return service_catalog.get('brokerIP'), service_catalog.get('brokerPort')  # Return both broker IP and port
             else:
                 raise Exception(f"Failed to get broker information: {response.status_code}")
         except requests.exceptions.RequestException as e:
@@ -48,7 +48,7 @@ class TempOptimizationService:
             response = requests.get(self.service_catalog_url)
             if response.status_code == 200:
                 service_catalog = response.json()
-                return service_catalog['temperature_default_thresholds']
+                return service_catalog.get('temperature_default_thresholds')
             else:
                 raise Exception(f"Failed to get temperature thresholds: {response.status_code}")
         except requests.exceptions.RequestException as e:
@@ -61,7 +61,7 @@ class TempOptimizationService:
             response = requests.get(self.service_catalog_url)
             if response.status_code == 200:
                 service_catalog = response.json()
-                return service_catalog[threshold_type]
+                return service_catalog.get(threshold_type)
             else:
                 raise Exception(f"Failed to get alert thresholds: {response.status_code}")
         except requests.exceptions.RequestException as e:
@@ -74,7 +74,7 @@ class TempOptimizationService:
             response = requests.get(self.service_catalog_url, timeout=5)
             if response.status_code == 200:
                 service_catalog = response.json()
-                time_slots = service_catalog['time_slots']
+                time_slots = service_catalog.get('time_slots')
                 gym_schedule = {
                     'open': datetime.strptime(time_slots['0']['start'], '%H:%M').time(),
                     'close': datetime.strptime(time_slots['7']['end'], '%H:%M').time()

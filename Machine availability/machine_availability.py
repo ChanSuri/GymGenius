@@ -32,7 +32,7 @@ class MachineAvailabilityService:
             response = requests.get(self.service_catalog_url)
             if response.status_code == 200:
                 service_catalog = response.json()
-                return service_catalog['brokerIP'], service_catalog['brokerPort']  # Return both broker IP and port
+                return service_catalog.get('brokerIP'), service_catalog.get('brokerPort')  # Return both broker IP and port
             else:
                 raise Exception(f"Failed to get broker information: {response.status_code}")
         except requests.exceptions.RequestException as e:
@@ -45,7 +45,7 @@ class MachineAvailabilityService:
             response = requests.get(self.service_catalog_url)
             if response.status_code == 200:
                 service_catalog = response.json()
-                machines_list = service_catalog['machinesID']
+                machines_list = service_catalog.get('machinesID')
                 machine_types = {}
                 
                 # Count number of machines for each type
