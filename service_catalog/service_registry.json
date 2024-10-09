@@ -15,15 +15,15 @@
                  "lat_pulldown_machine_1", "lat_pulldown_machine_2","lat_pulldown_machine_3","lat_pulldown_machine_4","lat_pulldown_machine_5"
                 ],
   "time_slots": {
-                "0": {"start": "08:00", "end": "10:00"},
-                "1": {"start": "10:00", "end": "12:00"},
-                "2": {"start": "12:00", "end": "14:00"},
-                "3": {"start": "14:00", "end": "16:00"},
-                "4": {"start": "16:00", "end": "18:00"},
-                "5": {"start": "18:00", "end": "20:00"},
-                "6": {"start": "20:00", "end": "22:00"},
-                "7": {"start": "22:00", "end": "24:00"},
-                "8": {"start": "00:00", "end": "08:00"}
+                "0": {"start": "08:00", "end": "09:59"},
+                "1": {"start": "10:00", "end": "11:59"},
+                "2": {"start": "12:00", "end": "13:59"},
+                "3": {"start": "14:00", "end": "15:59"},
+                "4": {"start": "16:00", "end": "17:59"},
+                "5": {"start": "18:00", "end": "19:59"},
+                "6": {"start": "20:00", "end": "21:59"},
+                "7": {"start": "22:00", "end": "23:59"},
+                "8": {"start": "00:00", "end": "07:59"}
               },              
   "temperature_default_thresholds":{  "entrance": {"upper": 28, "lower": 24},
                               "changing_room": {"upper": 28, "lower": 24},

@@ -354,12 +354,12 @@ def initialize_service(config_dict):
     register_service(config_dict,config_dict["service_catalog_url"])
     print("Device Connector Service Initialized and Registered")
 
-def stop_service(signum, frame):
-    """Cleanly stop the service."""
-    with open('config.json') as config_file:
-        config = json.load(config_file)
-    print("Stopping service...")
-    delete_service("device_connector", config["service_catalog_url"])
+# def stop_service(signum, frame):
+#     """Cleanly stop the service."""
+#     with open('config.json') as config_file:
+#         config = json.load(config_file)
+#     print("Stopping service...")
+#     delete_service("device_connector", config["service_catalog_url"])
 
 if __name__ == '__main__':
     try:
@@ -372,8 +372,8 @@ if __name__ == '__main__':
         initialize_service(config)
 
         # Signal handler for clean stop
-        signal.signal(signal.SIGINT, stop_service)
-        service.stop()
+        # signal.signal(signal.SIGINT, stop_service)
+        # service.stop()
 
         # CherryPy configuration with port and host settings
         cherrypy.config.update({'server.socket_port': 8082, 'server.socket_host': '0.0.0.0'})
@@ -393,5 +393,5 @@ if __name__ == '__main__':
 
     except Exception as e:
         print(f"Error in the main execution: {e}")
-    finally:
-        service.stop()
+    # finally:
+    #     service.stop()

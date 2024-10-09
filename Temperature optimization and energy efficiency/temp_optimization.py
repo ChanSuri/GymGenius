@@ -32,15 +32,35 @@ class TempOptimizationService:
     def get_mqtt_info_from_service_catalog(self):
         """Retrieve MQTT broker and port information from the service catalog."""
         try:
-            response = requests.get(self.service_catalog_url)
+            # Request to the service catalog
+            response = requests.get(self.service_catalog_url, timeout=5)
+
+            # Check if the response was successful
             if response.status_code == 200:
+                print("Response received from service catalog.")
                 service_catalog = response.json()
-                return service_catalog.get('brokerIP'), service_catalog.get('brokerPort')  # Return both broker IP and port
+                
+                # Print the full response for debugging purposes
+                print(f"Service catalog response: {service_catalog}")
+
+                catalog = service_catalog.get('catalog', {})
+
+                # Ensure the required fields are present in the JSON
+                broker_ip = catalog.get('brokerIP')
+                broker_port = catalog.get('brokerPort')
+
+                # Check if both values are not None
+                if broker_ip and broker_port:
+                    print(f"MQTT broker: {broker_ip}, Port: {broker_port}")
+                    return broker_ip, broker_port
+                else:
+                    raise ValueError("Broker information (IP/Port) is missing in the service catalog response.")
             else:
                 raise Exception(f"Failed to get broker information: {response.status_code}")
-        except requests.exceptions.RequestException as e:
+        except (requests.exceptions.RequestException, ValueError) as e:
             print(f"Error getting MQTT info from service catalog: {e}")
             return None, None
+
 
     def get_thresholds_from_service_catalog(self):
         """Retrieve temperature thresholds for all rooms from the service catalog."""
@@ -71,19 +91,35 @@ class TempOptimizationService:
     def get_gym_schedule_from_service_catalog(self):
         """Retrieve gym schedule from the service catalog."""
         try:
+            # Request to the service catalog
             response = requests.get(self.service_catalog_url, timeout=5)
+            
+            # Check if the response was successful
             if response.status_code == 200:
+                print("Response received from service catalog.")
                 service_catalog = response.json()
-                time_slots = service_catalog.get('time_slots')
-                gym_schedule = {
-                    'open': datetime.strptime(time_slots['0']['start'], '%H:%M').time(),
-                    'close': datetime.strptime(time_slots['7']['end'], '%H:%M').time()
-                }
-                print(f"Gym schedule retrieved: Open at {gym_schedule['open']}, Close at {gym_schedule['close']}")
-                return gym_schedule
+
+                # Verifica la presenza del campo 'time_slots' nel JSON
+                time_slots = service_catalog.get('time_slots', None)
+                if time_slots is None:
+                    raise ValueError("time_slots is missing in the service catalog response")
+
+                # Stampa i time_slots per assicurarsi che i dati siano corretti
+                print(f"time_slots: {time_slots}")
+                
+                # Check if specific time slots exist
+                if '0' in time_slots and '7' in time_slots:
+                    gym_schedule = {
+                        'open': datetime.strptime(time_slots['0']['start'], '%H:%M').time(),
+                        'close': datetime.strptime(time_slots['7']['end'], '%H:%M').time()
+                    }
+                    print(f"Gym schedule retrieved: Open at {gym_schedule['open']}, Close at {gym_schedule['close']}")
+                    return gym_schedule
+                else:
+                    raise ValueError("Missing required time slots ('0' or '7') in the service catalog.")
             else:
                 raise Exception(f"Failed to get gym schedule: {response.status_code}")
-        except requests.exceptions.RequestException as e:
+        except (requests.exceptions.RequestException, ValueError) as e:
             # Log the error and notify about fallback
             print(f"Error retrieving gym schedule from service catalog: {e}")
             print("Using fallback gym schedule (08:00 to 23:59)")
