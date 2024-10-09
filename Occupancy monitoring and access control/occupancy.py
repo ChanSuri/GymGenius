@@ -213,13 +213,14 @@ class OccupancyService:
 
 def initialize_service(config_dict):
     """Initialize and register the service."""
-    register_service(config_dict, occupancy_service.service_catalog_url)
+    register_service(config_dict, config_dict["service_catalog"])
     print("Occupancy Service Initialized and Registered")
 
 def stop_service(signum, frame):
+    with open('config.json') as f:
+        config_dict = json.load(f)
     print("Stopping service...")
-    delete_service("occupancy", occupancy_service.service_catalog_url)
-    occupancy_service.stop()
+    delete_service("occupancy", config_dict["service_catalog"])
 
 if __name__ == '__main__':
     # Open config.json once and pass it to both functions
