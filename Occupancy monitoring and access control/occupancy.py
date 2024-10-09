@@ -233,8 +233,5 @@ if __name__ == '__main__':
     # Graceful shutdown handler
     signal.signal(signal.SIGINT, stop_service)
 
-    try:
-        occupancy_service = OccupancyService(config=config_dict)
-        occupancy_service.client.loop_forever()
-    finally:
-        occupancy_service.stop()
+    occupancy_service = OccupancyService(config=config_dict)
+    occupancy_service.client.loop_forever()
