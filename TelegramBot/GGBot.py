@@ -14,11 +14,7 @@ import threading
 class Telegrambot():
 
     def __init__(self, conf_dict):
-        try:
-            self.conf = conf_dict
-        except:
-            print("Configuration file not found")
-            exit()
+        self.conf = conf_dict
         self.token = self.conf["token"]
         self.bot = telepot.Bot(self.token)
         self.serviceId = self.conf["service_id"]
