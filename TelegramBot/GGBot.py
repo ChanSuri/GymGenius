@@ -13,9 +13,9 @@ import threading
 
 class Telegrambot():
 
-    def __init__(self, conf):
+    def __init__(self, conf_dict):
         try:
-            self.conf = json.load(open(conf))
+            self.conf = conf_dict
         except:
             print("Configuration file not found")
             exit()
@@ -381,18 +381,12 @@ if __name__ == "__main__":
     # if len(configFile) == 0:
     #     configFile = "TelegramBot/configuration.json"
     configFile = "TelegramBot/configuration.json"
-    telegrambot = Telegrambot(configFile)
-    
-    
-    # Register the service at startup
-    service_id = "telegram"
-    description = "Telegram Bot"
-    status = "active"
-    endpoint = "http://localhost:8086/TelegramBot"
-    register_time = time.time()  # Use the current time as the 'time' argument
-    register_service(service_id, description, status, endpoint,register_time)
+    with open(configFile) as config_file:
+        config_dict = json.load(config_file)
+        # Register the service at startup
+    register_service(config_dict, config_dict["service_catalog"])    
     print("Telegram Service Initialized and Registered")
-    
+    telegrambot = Telegrambot(config_dict)
     # Start CherryPy in a separate thread
     cherrypy_thread = threading.Thread(target=start_cherrypy,args=(telegrambot,))
     cherrypy_thread.start()
