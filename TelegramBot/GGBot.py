@@ -21,7 +21,7 @@ class Telegrambot():
             exit()
         self.token = self.conf["token"]
         self.bot = telepot.Bot(self.token)
-        self.serviceId = self.conf["serviceId"]
+        self.serviceId = self.conf["service_id"]
         self.service_catalog_url = self.conf['service_catalog'] 
         self.mqtt_broker, self.mqtt_port = self.get_mqtt_info_from_service_catalog()  # Retrieve broker and port
         self.time_slots = self.get_time_slots_from_service_catalog()
@@ -29,13 +29,14 @@ class Telegrambot():
         self.client = MyMQTT(self.serviceId, self.mqtt_broker, self.mqtt_port, self)
         self.webServerAddr = self.conf["webServerAddress"]
         #self.__message={'service': self.serviceId,'n':'','value':'', 'timestamp':'','unit':"status"}
-
-        self.switchTopic = self.conf["switchTopic"] 
-        self.availTopic = self.conf["availTopic"]
-        self.crowdTopic = self.conf["crowdTopic"] #occupancy/current
-        self.overtempTopic = self.conf["overtempTopic"]
-        self.predictionTopic = self.conf["predictionTopic"]
-        self.mqtt_topic_control_base = self.conf["mqtt_topic_control_base"]
+        self.subscribedTopic = self.conf["subscribed_topics"]
+        self.publishedTopic = self.conf["published_topics"]
+        self.switchTopic = self.publishedTopic["switchTopic"] 
+        self.availTopic = self.subscribedTopic["availTopic"]
+        self.crowdTopic = self.subscribedTopic["crowdTopic"] #occupancy/current
+        self.overtempTopic = self.subscribedTopic["overtempTopic"]
+        self.predictionTopic = self.subscribedTopic["predictionTopic"]
+        self.mqtt_topic_control_base = self.publishedTopic["mqtt_topic_control_base"]
         self.crowdthreshold=60
         
         #Predict occupancy for each slot-hour/day combination

@@ -11,13 +11,13 @@
                             "predictionTopic": "gym/occupancy/prediction"
                         },
     "published_topics": {
-                             "switchTopic":"gym/mainswitch", #gym/hvac/on_off/#
-                             "mqtt_topic_control_base": "gym/hvac/control/" #gym/desired_temperature/#
+                             "switchTopic":"gym/hvac/on_off/#",
+                             "mqtt_topic_control_base": "gym/desired_temperature/#" 
     },
     "token": "6961607644:AAFCNHwGsNI67k5m53VjFY48b5O9DlCNgZg",
     "message": ["switchon","switchoff","start","client","Administrator"],
     "zones": ["entrance","changing_room","cardio","lifting"],
     "machines":["Treadmill","Elliptical_Trainer","Stationary_Bike","Rowing_Machine","Cable_Machine","LegPress_Machine","Smith_Machine","Lat_Pulldown_Machine"],
-
+    "webServerAddress":"https://api.thingspeak.com/channels/",
     "last_update": null
 }
