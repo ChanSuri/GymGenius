@@ -120,7 +120,7 @@ class TempOptimizationService:
         """Connect to the MQTT broker."""
         try:
             if self.mqtt_broker:
-                self.client.connect(self.mqtt_broker, 1883, 60)
+                self.client.connect(self.mqtt_broker, self.mqtt_port, 60)
                 print("MQTT connected successfully.")
             else:
                 print("No MQTT broker information found.")

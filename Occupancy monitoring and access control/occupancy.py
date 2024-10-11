@@ -39,7 +39,7 @@ class OccupancyService:
         self.client = mqtt.Client()
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
-        self.client.connect(self.mqtt_broker, 1883, 60)
+        self.client.connect(self.mqtt_broker, self.mqtt_port, 60)
         self.client.loop_start()
 
     def get_mqtt_info_from_service_catalog(self):
