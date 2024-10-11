@@ -2,7 +2,7 @@
     "service_id": "Telegram_bot",
     "description": "Connects the proposed infrastructure to the cloud-based instant messaging platform Telegram",
     "status": "active",
-    "service_catalog": "http://service_catalog:8080",
+    "service_catalog": "http://localhost:8080",
     "endpoint": null,
     "subscribed_topics": {
                             "crowdTopic":"gym/occupancy/current",
@@ -12,7 +12,7 @@
                         },
     "published_topics": {
                              "switchTopic":"gym/hvac/on_off/#",
-                             "mqtt_topic_control_base": "gym/desired_temperature/#" 
+                             "TempTopic": "gym/desired_temperature/#" 
     },
     "token": "6961607644:AAFCNHwGsNI67k5m53VjFY48b5O9DlCNgZg",
     "message": ["switchon","switchoff","start","client","Administrator"],

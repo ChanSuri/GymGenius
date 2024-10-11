@@ -1,7 +1,7 @@
 {
   "projectOwner": "group 22",
   "projectName": "GymGenius",
-  "brokerIP": "test.moquitto.org",
+  "brokerIP": "test.mosquitto.org",
   "brokerPort": 1883,
   "base_name": "gym/",
   "roomsID":["entrance", "changing_room", "lifting_room", "cardio_room"],

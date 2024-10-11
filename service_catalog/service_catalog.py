@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 
 # Path to the service_registry.json file
-SERVICE_REGISTRY_FILE = 'service_registry.json'
+SERVICE_REGISTRY_FILE = 'service_catalog/service_registry.json'
 
 def load_registry():
     """Loads the service registry from the file."""
@@ -20,6 +20,7 @@ def save_service_registry(registry):
 
 # Load the registry from the file at startup
 service_registry = load_registry()
+#print(service_registry)
 
 class ServiceCatalog:
     exposed = True
@@ -50,7 +51,7 @@ class ServiceCatalog:
             raise cherrypy.HTTPError(400, "service_id is required")
         
         # Build a dictionary for quick lookup
-        services_by_id = {service["service_id"]: service for service in service_registry["services"]}
+        services_by_id = {service["service_id"]: service for service in service_registry.get("services", [])}
 
         # Check if the device already exists
         if service_id in services_by_id:
