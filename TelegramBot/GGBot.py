@@ -22,7 +22,11 @@ class Telegrambot():
         self.token = self.conf["token"]
         self.bot = telepot.Bot(self.token)
         self.serviceId = self.conf["serviceId"]
-        self.client = MyMQTT(self.serviceId, self.conf["broker"], int(self.conf["port"]), self)
+        self.service_catalog_url = self.conf['service_catalog'] 
+        self.mqtt_broker, self.mqtt_port = self.get_mqtt_info_from_service_catalog()  # Retrieve broker and port
+        self.time_slots = self.get_time_slots_from_service_catalog()
+        
+        self.client = MyMQTT(self.serviceId, self.mqtt_broker, self.mqtt_port, self)
         self.webServerAddr = self.conf["webServerAddress"]
         #self.__message={'service': self.serviceId,'n':'','value':'', 'timestamp':'','unit':"status"}
 
@@ -67,7 +71,33 @@ class Telegrambot():
         self.possibleSwitch.append(["Entrance"])
         self.possibleSwitch.append(["Machines"])
         
-        
+    def get_mqtt_info_from_service_catalog(self):
+        """Retrieve MQTT broker and port information from the service catalog."""
+        try:
+            response = requests.get(self.service_catalog_url)
+            if response.status_code == 200:
+                service_catalog = response.json()
+                catalog = service_catalog.get('catalog', {})
+                return catalog.get('brokerIP'), catalog.get('brokerPort')  # Return both broker IP and port
+            else:
+                raise Exception(f"Failed to get broker information: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            print(f"Error getting MQTT info from service catalog: {e}")
+            return None, None
+    def get_time_slots_from_service_catalog(self):
+        """Retrieve time slots configuration from the service catalog."""
+        try:
+            response = requests.get(self.service_catalog_url)
+            if response.status_code == 200:
+                service_catalog = response.json()
+                catalog = service_catalog.get('catalog', {})
+                return catalog.get('time_slots')
+            else:
+                raise Exception(f"Failed to get time slots: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            print(f"Error retrieving time slots from service catalog: {e}")
+            return {}
+            
     def start(self):
         self.client.start()
         self.client.mySubscribe(self.crowdTopic) #occupancy alert
