@@ -15,8 +15,6 @@
                              "TempTopic": "gym/desired_temperature/#" 
     },
     "token": "6961607644:AAFCNHwGsNI67k5m53VjFY48b5O9DlCNgZg",
-    "message": ["switchon","switchoff","start","client","Administrator"],
-    "zones": ["entrance","changing_room","cardio","lifting"],
     "machines":["Treadmill","Elliptical_Trainer","Stationary_Bike","Rowing_Machine","Cable_Machine","LegPress_Machine","Smith_Machine","Lat_Pulldown_Machine"],
     "webServerAddress":"https://api.thingspeak.com/channels/",
     "last_update": null
