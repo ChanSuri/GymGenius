@@ -9,6 +9,7 @@ from telepot.namedtuple import ReplyKeyboardMarkup,InlineKeyboardMarkup, InlineK
 from registration_functions import register_service
 import cherrypy
 import threading
+import calendar
 
 
 class Telegrambot():
@@ -25,45 +26,48 @@ class Telegrambot():
         self.webServerAddr = self.conf["webServerAddress"]
         #self.__message={'service': self.serviceId,'n':'','value':'', 'timestamp':'','unit':"status"}
         
+        #subscribe
         self.subscribedTopic = self.conf["subscribed_topics"]
         self.availTopic = self.subscribedTopic["availTopic"]
         self.crowdTopic = self.subscribedTopic["crowdTopic"] #occupancy/current
         self.overtempTopic = self.subscribedTopic["overtempTopic"]
         self.predictionTopic = self.subscribedTopic["predictionTopic"]
-        
+        #publish
         self.publishedTopic = self.conf["published_topics"]
         self.switchTopic = self.publishedTopic["switchTopic"] 
-        self.tempTopic = self.publishedTopic["TempTopic"]
+        self.tempTopic = self.publishedTopic["TempTopic"] #send temperature, NEED directly get temp&humidity from device in env data
         
         self.crowdthreshold=60
         
         #Predict occupancy for each slot-hour/day combination
-        #self.timeslot=['8:00-10:00','10:00-12:00','12:00-14:00','14:00-16:00','16:00-18:00','18:00-20:00','20:00-22:00','22:00-24:00','24:00-8:00']
         self.timeslot=self.get_time_slots_from_service_catalog()
-        self.weekdays=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
+        self.weekdays=list(calendar.day_name)
         self.current_occupancy = 0
         
-        self.user_states = {} #suggestion
-        self.suggestion = []
+        self.user_states = {} #suggestion state
+        self.suggestion = [] #suggestion context
         self.chat_auth = {} #auth id
         self.chatIDs=[] #store users chatid
         self.chat_ids = {} #map chatid for query
         self.switchMode = "None"
+        self.ACMode = "None"
         self.prediction_matrix = [
-            [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
-            [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8],
-            [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
-            [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
-            [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1],
-            [0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2],
-            [0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3],
-            [0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4],
-            [0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5]
-        ] #example
-        self.machines = self.conf["machines"]
+            [42, 43, 31, 38, 46, 59, 54],  # 08:00-10:00
+            [19, 25, 21, 28, 16, 34, 28],  # 10:00-12:00
+            [9,  7,  6, 14,  9, 28, 24],   # 12:00-14:00
+            [7,  9,  6,  6, 15, 21, 23],   # 14:00-16:00
+            [13, 6, 10, 11, 10, 28, 25],   # 16:00-18:00
+            [31, 42, 40, 39, 41, 52, 32],   # 18:00-20:00
+            [5,  7, 17,  5, 20, 22, 25],    # 20:00-22:00
+            [15, 7, 11, 12, 12, 26, 39],    # 22:00-24:00
+            [0,  0,  2,  4,  3, 15,  9]     # 00:00-08:00
+        ] #example #example
+        self.machines = self.get_machines_from_service_catalog()
+        self.machines.append("All")
         self.zones = self.get_rooms_from_service_catalog()
-        #self.zones = self.conf["zones"] #"zones": ["entrance","changing_room","cardio","lifting"],
-        
+        self.zones.append("All")
+    
+    #get info from service catalog   
     def get_mqtt_info_from_service_catalog(self):
         """Retrieve MQTT broker and port information from the service catalog."""
         try:
@@ -106,6 +110,25 @@ class Telegrambot():
             print(f"Error getting room info from service catalog: {e}")
             return []  
     
+    def get_machines_from_service_catalog(self):
+        """Retrieve machine types and their counts from the service catalog."""
+        try:
+            response = requests.get(self.service_catalog_url)
+            if response.status_code == 200:
+                service_catalog = response.json()
+                catalog = service_catalog.get('catalog', {})
+                machines_list = set()
+                for machine_id in catalog.get('machinesID'):
+                    machine_name = '_'.join(machine_id.split('_')[:-1])
+                    machines_list.add(machine_name)
+                machines_list = sorted(machines_list)
+                return machines_list
+            else:
+                raise Exception(f"Failed to get machine types: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            print(f"Error getting machine types from service catalog: {e}")
+            return {}
+        
     #MQTT        
     def start(self):
         self.client.start()
@@ -162,10 +185,17 @@ class Telegrambot():
                 self.admin_operate(chat_id)
             else:
                 self.bot.sendMessage(chat_id, "Please send '/administrator' to login first!")
-        elif message == "/switchon":
+        elif message == "cool" or message == "heat":
             if self.check_auth(chat_id)==True:
                 self.switchMode ="turn_on"
+                self.ACMode = message
                 self.admin_switch_zone(chat_id)
+            else:
+                self.bot.sendMessage(chat_id, "Please send '/administrator' to login first!")
+        elif message == "/switchon":
+            if self.check_auth(chat_id)==True:
+                mark_up = ReplyKeyboardMarkup(keyboard=[['cool'], ['heat']],one_time_keyboard=True)
+                self.bot.sendMessage(chat_id, 'Which AC mode to set?', reply_markup=mark_up)
             else:
                 self.bot.sendMessage(chat_id, "Please send '/administrator' to login first!")
         elif message == "/switchoff":
@@ -198,39 +228,18 @@ class Telegrambot():
         elif message == "Timeslot": 
             keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=f"{slot['start']} - {slot['end']}", callback_data=key)] for key, slot in self.timeslot.items()])
             self.bot.sendMessage(chat_id, parse_mode='Markdown',text='*Please select the time slot that you want to predict:*', reply_markup=keyboard)
-        # elif message in self.zones:
-        #     print("!!!!!!!!!!!!!")
-        #     if self.switchMode == "turn_on" or self.switchMode=="turn_off":
-        #         if self.check_auth(chat_id) ==True:
-        #             self.bot.answerCallbackQuery(chat_id, text= f"AC in {message} switched to {self.switchMode}")
-        #             self.send_hvac_command(message,self.switchMode) #publish on/off
-        #             self.switchMode ="None"
-        #             self.bot.sendMessage(chat_id, "Command sent successfully!")
-        #             mark_up = ReplyKeyboardMarkup(keyboard=[['Operate'], ['Envdata'],['Suggestions'],['Logout']],one_time_keyboard=True)
-        #             self.bot.sendMessage(chat_id, text='What would you like to do next?', reply_markup=mark_up)
-        #             return
-        #         else:
-        #             self.bot.sendMessage(chat_id, "Please send '/administrator' to login first!")
-        #             self.chat_auth[str(chat_id)]==False
         else:
             if self.switchMode == "turn_on" or self.switchMode=="turn_off":
                 if self.check_auth(chat_id) ==True:
-                    # self.bot.answerCallbackQuery(chat_id, text= f"AC in {message} switched to {self.switchMode}")
-                    # self.send_hvac_command(message,self.switchMode) #publish on/off
-                    # self.switchMode ="None"
-                    # self.bot.sendMessage(chat_id, "Command sent successfully!")
-                    # mark_up = ReplyKeyboardMarkup(keyboard=[['Operate'], ['Envdata'],['Suggestions'],['Logout']],one_time_keyboard=True)
-                    # self.bot.sendMessage(chat_id, text='What would you like to do next?', reply_markup=mark_up)
-                    # return
-                    for switch in self.zones:
-                        if switch == message:
-                            self.bot.answerCallbackQuery(chat_id, text= f"AC in {message} switched to {self.switchMode}")
-                            self.send_hvac_command(message,self.switchMode) #publish on/off
-                            self.switchMode ="None"
-                            self.bot.sendMessage(chat_id, "Command sent successfully!")
-                            mark_up = ReplyKeyboardMarkup(keyboard=[['Operate'], ['Envdata'],['Suggestions'],['Logout']],one_time_keyboard=True)
-                            self.bot.sendMessage(chat_id, text='What would you like to do next?', reply_markup=mark_up)
-                            return
+                    if message in self.zones:
+                        self.bot.sendMessage(chat_id, text= f"AC in {message} switched to {self.switchMode} in mode {self.ACMode}")
+                        self.send_hvac_command(message,self.switchMode,self.ACMode) #publish on/off
+                        self.switchMode ="None"
+                        self.ACMode ="None"
+                        self.bot.sendMessage(chat_id, "Command sent successfully!")
+                        mark_up = ReplyKeyboardMarkup(keyboard=[['Operate'], ['Envdata'],['Suggestions'],['Logout']],one_time_keyboard=True)
+                        self.bot.sendMessage(chat_id, text='What would you like to do next?', reply_markup=mark_up)
+                        return
                     self.bot.sendMessage(chat_id, 'Please enter the correct command!')
                 else:
                     self.bot.sendMessage(chat_id, "Please send '/administrator' to login first!")
@@ -305,6 +314,8 @@ class Telegrambot():
         #self.bot.sendMessage(chat_id, parse_mode='Markdown',text='Please select the zone you want to switch...', reply_markup=keyboard)
                 
     def send_hvac_command(self, room, command, mode=None):
+        if room == "All":
+            room = "#"
         payload = json.dumps({
             "topic": self.switchTopic + room,
             "message": {
@@ -317,47 +328,39 @@ class Telegrambot():
             }
         })
         self.client.myPublish(self.switchTopic + room, payload)
-        print(f"[{room}] Sent HVAC command: {command}")
-    
-        
-    # def admin_switch(self,chat_id,message,switchMode):
-    #     if message == "AC":
-    #         keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=room, callback_data=f"AC:{room}:{switchMode}")] for room in self.zones])
-    #         self.bot.sendMessage(chat_id, parse_mode='Markdown',text='*Please select the room to operate...*', reply_markup=keyboard)
-    #     elif message == "Entrance": #button
-    #         self.publish(target="entrance",switchTo=switchMode)
-    #     elif message == "Machines":
-    #         machines = self.machines
-    #         keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=machine, callback_data=f"Machines:{machine}:{switchMode}")] for machine in machines])
-    #         self.bot.sendMessage(chat_id, parse_mode='Markdown',text='*Please select your machine to operate...*', reply_markup=keyboard)
-    
+        print(f"[{room}] Sent HVAC command: {command} with mode {mode}")
+
     def notify(self,topic,msg):
         print(msg)
         message=json.loads(msg.payload.decode('utf-8'))
-        if message["topic"].startswith(self.overtempTopic):
-            tosend=f"{message["message"]["data"]["alert"]}. Please check it and do some operations!"
+        topic = message["topic"]
+        if topic.startswith(self.overtempTopic):
+            room = topic.split('/')[-1]
+            tosend=f"{message["message"]["data"]["alert"]}. Please check it and do some operations in {room}!"
             for chat_ID in self.chat_auth:
                 keyboard = ReplyKeyboardMarkup(keyboard=[['Operate'], ['Envdata'],['Suggestions']],one_time_keyboard=True)
                 self.bot.sendMessage(chat_ID, text=tosend, reply_markup=keyboard)
-        elif message["topic"]==self.crowdTopic: #entrance
+        elif topic==self.crowdTopic: #Only entrance
             self.current_occupancy = message["message"]["data"]["current_occupancy"]
             if self.current_occupancy > self.crowdthreshold:
                 tosend = f"Alert! Current occupancy is reaching {self.current_occupancy}. Please consider coming another time."
                 for chat_ID in self.chatIDs:
                     self.bot.sendMessage(chat_ID, text=tosend)
-        elif message["topic"]==self.predictionTopic: #prediction_matrix update
+        elif topic==self.predictionTopic: #prediction_matrix update
             self.prediction_matrix = message["message"]["data"]["prediction_matrix"]
-        elif message["topic"].startswith(self.availTopic):
-            machine=message["topic"].split('/')[-1]
+        elif topic.startswith(self.availTopic):
+            machine=topic.split('/')[-1]
+            if machine == "#":
+                machine = "ALL"
             data=message["message"]["data"]
             if data["available"] == 0:
-                tosend=f"The machine {machine} is full, we suggest you to train something else and come later!"
+                tosend=f"{machine} machine is full, we suggest you to train something else and come later!"
                 for chat_ID in self.chatIDs:
                     self.bot.sendMessage(chat_ID, text=tosend)
             else:
                 chat_id = self.chat_ids.get(machine)
                 if chat_id:
-                    tosend = f"Situation for {machine}:\n Available num: {data["available"]}\n Occupied num: {data["busy"]}\n Total num: {data["total"]}\n"
+                    tosend = f"Situation for {machine} machine:\n Available num: {data["available"]}\n Occupied num: {data["busy"]}\n Total num: {data["total"]}\n"
                     self.bot.sendMessage(chat_id, tosend)
         
 
@@ -366,11 +369,13 @@ class Telegrambot():
         query_id, chat_id, query_data = telepot.glance(msg, flavor='callback_query')
         if query_data in self.machines:
             try: #choose machine
-                topic = f"{self.availTopic}/{query_data}"
-                self.client.mySubscribe(topic)
                 # update chat_ids dict for sending users msg by query data
                 self.chat_ids[query_data] = chat_id
-                self.bot.sendMessage(chat_id, f"Subscribed to {query_data}!")
+                if query_data == "All":
+                    query_data = "#"
+                topic = f"{self.availTopic}/{query_data}"
+                self.client.mySubscribe(topic)
+                self.bot.sendMessage(chat_id, f"Subscribed to availability of {query_data.replace('#', "All")}!")
             except Exception as e:
                 self.bot.sendMessage(chat_id, f"Failed to subscribe to {query_data}: {str(e)}")
         elif query_data in self.weekdays:
@@ -398,27 +403,7 @@ class Telegrambot():
                 self.bot.sendMessage(chat_id, tosend)
             except Exception as e:
                 self.bot.sendMessage(chat_id, f"Failed")
-        # elif query_data.startswith('AC'):
-        #     print(query_data)
-        #     data = query_data.split(':')  
-        #     room = data[1] 
-        #     switchMode = data[2]
-        #     if switchMode == 'on':
-        #         switchMode = 'turn_on'
-        #     else:
-        #         switchMode = 'turn_off'
-        #     if room in self.zones:
-        #         self.bot.answerCallbackQuery(query_id, text= f"AC in {room} switched to {switchMode}")
-        #         self.send_hvac_command(room,switchMode) #publish on/off
-        # else:
-        #     print(query_data)
-        #     data = query_data.split(':')  
-        #     machine = data[1] 
-        #     switchMode = data[2]
-        #     if machine in self.machines:
-        #         self.bot.answerCallbackQuery(query_id, text= machine + " is " + switchMode)
-        #         self.publish(target=machine, switchTo=switchMode) #publish on/off
-
+                
 def start_cherrypy(telegrambot):
     cherrypy.config.update({'server.socket_port': 8086, 'server.socket_host': '0.0.0.0'})
     conf = {

@@ -6,16 +6,15 @@
     "endpoint": null,
     "subscribed_topics": {
                             "crowdTopic":"gym/occupancy/current",
-                            "availTopic":"gym/group_availability/#",
-                            "overtempTopic":"gym/environment/alert/#",
+                            "availTopic":"gym/group_availability/",
+                            "overtempTopic":"gym/environment/alert/",
                             "predictionTopic": "gym/occupancy/prediction"
                         },
     "published_topics": {
-                             "switchTopic":"gym/hvac/on_off/#",
-                             "TempTopic": "gym/desired_temperature/#" 
+                             "switchTopic":"gym/hvac/on_off/",
+                             "TempTopic": "gym/environment/" 
     },
     "token": "6961607644:AAFCNHwGsNI67k5m53VjFY48b5O9DlCNgZg",
-    "machines":["Treadmill","Elliptical_Trainer","Stationary_Bike","Rowing_Machine","Cable_Machine","LegPress_Machine","Smith_Machine","Lat_Pulldown_Machine"],
     "webServerAddress":"https://api.thingspeak.com/channels/",
     "last_update": null
 }
