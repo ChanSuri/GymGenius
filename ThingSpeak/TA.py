@@ -12,12 +12,15 @@ class ThingspeakAdaptor:
         self.config_adaptor = self.load_adaptor_config()
         self.service_catalog_url = self.config_adaptor['service_catalog']
 
-        # Retrieve the full service catalog
-        self.config_dict = self.get_service_catalog()
-        self.broker_ip = self.config_dict['brokerIP']
-        self.broker_port = self.config_dict['brokerPort']
-        self.rooms = self.config_dict['roomsID']
-        self.machines = self.config_dict['machinesID']
+        # Retrieve broker and port information
+        self.broker_ip, self.broker_port = self.get_broker_info()
+        
+        # Retrieve room and machine information
+        self.rooms, self.machines = self.get_room_and_machine_info()
+
+        # Check if the critical information is available
+        if not self.broker_ip or not self.broker_port:
+            raise ValueError("brokerIP or brokerPort missing in service catalog")
 
         # Load ThingSpeak configuration from the separate config file
         self.thingspeak_config = self.load_thingspeak_config()
@@ -27,11 +30,8 @@ class ThingspeakAdaptor:
         # Initialize field_cache to store the latest values for each room and field
         self.field_cache = {room: {field: None for field in self.channels[room]['fields']} for room in self.channels}
 
-        # Get service details
-        self.occupancy_service = self.config_dict['services']['occupancy']
-        self.hvac_service = self.config_dict['services']['hvac_control']
-        self.device_connector_service = self.config_dict['services']['device_connector']
-        self.machine_availability_service = self.config_dict['services']['machine_availability']
+        # Retrieve services (occupancy, hvac, device_connector, machine_availability)
+        self.occupancy_service, self.hvac_service, self.device_connector_service, self.machine_availability_service = self.get_services()
 
         # Initialize MQTT client
         self.mqtt_client = MyMQTT(clientID="ThingspeakAdaptor", broker=self.broker_ip, port=self.broker_port, notifier=self)
@@ -49,17 +49,51 @@ class ThingspeakAdaptor:
             print(f"Error loading adaptor configuration: {e}")
             return {}
 
-    def get_service_catalog(self):
-        """Retrieve the service catalog data."""
+    def get_broker_info(self):
+        """Retrieve broker information from the service catalog."""
         try:
             response = requests.get(self.service_catalog_url)
             if response.status_code == 200:
-                return response.json()  # Return the full catalog as a dictionary
+                catalog = response.json().get('catalog', {})
+                return catalog.get('brokerIP'), catalog.get('brokerPort')
             else:
-                raise Exception(f"Failed to retrieve service catalog: {response.status_code}")
+                raise Exception(f"Failed to retrieve broker info: {response.status_code}")
         except requests.exceptions.RequestException as e:
-            print(f"Error retrieving service catalog: {e}")
-            return {}
+            print(f"Error retrieving broker info: {e}")
+            return None, None
+
+    def get_room_and_machine_info(self):
+        """Retrieve room and machine information from the service catalog."""
+        try:
+            response = requests.get(self.service_catalog_url)
+            if response.status_code == 200:
+                catalog = response.json().get('catalog', {})
+                return catalog.get('roomsID', []), catalog.get('machinesID', [])
+            else:
+                raise Exception(f"Failed to retrieve room and machine info: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            print(f"Error retrieving room and machine info: {e}")
+            return [], []
+
+    def get_services(self):
+        """Retrieve services from the service catalog."""
+        try:
+            response = requests.get(self.service_catalog_url)
+            if response.status_code == 200:
+                catalog = response.json().get('catalog', {})
+                services = catalog.get('services', [])
+                
+                occupancy_service = next((s for s in services if s['service_id'] == 'occupancy'), None)
+                hvac_service = next((s for s in services if s['service_id'] == 'hvac_control'), None)
+                device_connector_service = next((s for s in services if s['service_id'] == 'device_connector'), None)
+                machine_availability_service = next((s for s in services if s['service_id'] == 'machine_availability'), None)
+
+                return occupancy_service, hvac_service, device_connector_service, machine_availability_service
+            else:
+                raise Exception(f"Failed to retrieve services: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            print(f"Error retrieving services: {e}")
+            return None, None, None, None
 
     def load_thingspeak_config(self):
         """Load the ThingSpeak configuration from a local JSON file."""
@@ -72,16 +106,44 @@ class ThingspeakAdaptor:
 
     def subscribe_to_services(self):
         """Subscribe to the necessary MQTT topics based on the services defined in the catalog."""
+        
         # Subscribe to the current occupancy topic
-        self.mqtt_client.mySubscribe(self.occupancy_service['published_topics']['current_occupancy'])  # gym/occupancy/current
-
+        if self.occupancy_service and 'published_topics' in self.occupancy_service:
+            try:
+                occupancy_topic = self.occupancy_service['published_topics'].get('current_occupancy')
+                if occupancy_topic:
+                    self.mqtt_client.mySubscribe(occupancy_topic)
+                    print(f"Subscribed to occupancy topic: {occupancy_topic}")
+                else:
+                    print("No current_occupancy topic found in occupancy_service.")
+            except Exception as e:
+                print(f"Error subscribing to occupancy topic: {e}")
+        
         # Subscribe to environment (temperature, humidity) topics for each room from device_connector
-        for room in self.rooms:
-            room_topic = self.device_connector_service['published_topics']['enviroment'].replace('<roomID>', room)
-            self.mqtt_client.mySubscribe(room_topic)  # gym/environment/<roomID>
-
+        if self.device_connector_service and 'published_topics' in self.device_connector_service:
+            try:
+                environment_topic_template = self.device_connector_service['published_topics'].get('enviroment')
+                if environment_topic_template:
+                    for room in self.rooms:
+                        room_topic = environment_topic_template.replace('<roomID>', room)
+                        self.mqtt_client.mySubscribe(room_topic)
+                        print(f"Subscribed to environment topic for room {room}: {room_topic}")
+                else:
+                    print("No environment topic template found in device_connector_service.")
+            except Exception as e:
+                print(f"Error subscribing to environment topics: {e}")
+        
         # Subscribe to machine availability topic
-        self.mqtt_client.mySubscribe(self.machine_availability_service['published_topics']['group_availability_x_machine_type'])  # gym/group_availability/#
+        if self.machine_availability_service and 'published_topics' in self.machine_availability_service:
+            try:
+                machine_availability_topic = self.machine_availability_service['published_topics'].get('group_availability_x_machine_type')
+                if machine_availability_topic:
+                    self.mqtt_client.mySubscribe(machine_availability_topic)
+                    print(f"Subscribed to machine availability topic: {machine_availability_topic}")
+                else:
+                    print("No group_availability_x_machine_type topic found in machine_availability_service.")
+            except Exception as e:
+                print(f"Error subscribing to machine availability topic: {e}")
 
     def notify(self, topic, payload):
         """Handle received MQTT messages and process them accordingly."""
@@ -177,6 +239,7 @@ def stop_service(signum, frame):
     adaptor.stop()
 
 if __name__ == "__main__":
+
     # Initialize the service and register it
     adaptor = ThingspeakAdaptor()
     initialize_service(adaptor)
