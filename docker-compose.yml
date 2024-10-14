@@ -115,7 +115,7 @@ services:
   pir_sensor:
     build:
       context: C:\Users\feder\OneDrive\Desktop\GymGenius\device_connector\sensors
-    command: python simulate_PIR_sensor.py
+    command: python simulate_PIR.py
     volumes:
       - C:\Users\feder\OneDrive\Desktop\GymGenius\device_connector\sensors:/app
     networks:
