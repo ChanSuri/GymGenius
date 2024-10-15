@@ -177,20 +177,42 @@
             "last_update": "2024-10-12 15:47:09"
         },
         {
-            "service_id": "occupancy",
-            "description": "Handles the occupancy count of the gym and makes prediction about it",
+            "service_id": "device_connector",
+            "description": "Handles sensors and actuators data",
             "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
+            "service_catalog": "http://localhost:8080",
+            "resource_catalog": "http://localhost:8081",
+            "endpoint": "http://localhost:8082",
             "subscribed_topics": {
-                "entries": "gym/occupancy/entry",
-                "exits": "gym/occupancy/exit"
+                "automatic_control": "gym/hvac/control/#",
+                "control_commands": "gym/hvac/on_off/#"
             },
             "published_topics": {
-                "current_occupancy": "gym/occupancy/current",
-                "prediction": "gym/occupancy/prediction"
+                "entries": "gym/occupancy/entry",
+                "exits": "gym/occupancy/exit",
+                "enviroment": "gym/environment/<roomID>",
+                "availability": "gym/availability/<machineID>"
             },
-            "last_update": "2024-10-12 15:47:13"
+            "last_update": "2024-10-15 12:42:30"
+        },
+        {
+            "service_id": "device_connector",
+            "description": "Handles sensors and actuators data",
+            "status": "active",
+            "service_catalog": "http://localhost:8080",
+            "resource_catalog": "http://localhost:8081",
+            "endpoint": "http://localhost:8082",
+            "subscribed_topics": {
+                "automatic_control": "gym/hvac/control/#",
+                "control_commands": "gym/hvac/on_off/#"
+            },
+            "published_topics": {
+                "entries": "gym/occupancy/entry",
+                "exits": "gym/occupancy/exit",
+                "enviroment": "gym/environment/<roomID>",
+                "availability": "gym/availability/<machineID>"
+            },
+            "last_update": "2024-10-15 12:43:04"
         },
         {
             "service_id": "machine_availability",
@@ -204,7 +226,7 @@
             "published_topics": {
                 "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
             },
-            "last_update": "2024-10-12 16:08:17"
+            "last_update": "2024-10-15 10:48:22"
         },
         {
             "service_id": "hvac_control",
@@ -222,7 +244,7 @@
                 "automatic_control": "gym/hvac/control/<roomID>",
                 "alert": "gym/environment/alert/<roomID>"
             },
-            "last_update": "2024-10-12 16:08:17"
+            "last_update": "2024-10-15 10:48:23"
         },
         {
             "service_id": "occupancy",
@@ -238,7 +260,7 @@
                 "current_occupancy": "gym/occupancy/current",
                 "prediction": "gym/occupancy/prediction"
             },
-            "last_update": "2024-10-12 16:08:20"
+            "last_update": "2024-10-15 10:48:24"
         },
         {
             "service_id": "machine_availability",
@@ -252,7 +274,7 @@
             "published_topics": {
                 "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
             },
-            "last_update": "2024-10-12 16:41:26"
+            "last_update": "2024-10-15 10:53:02"
         },
         {
             "service_id": "hvac_control",
@@ -270,7 +292,7 @@
                 "automatic_control": "gym/hvac/control/<roomID>",
                 "alert": "gym/environment/alert/<roomID>"
             },
-            "last_update": "2024-10-12 16:41:26"
+            "last_update": "2024-10-15 10:53:03"
         },
         {
             "service_id": "occupancy",
@@ -286,7 +308,7 @@
                 "current_occupancy": "gym/occupancy/current",
                 "prediction": "gym/occupancy/prediction"
             },
-            "last_update": "2024-10-12 16:41:29"
+            "last_update": "2024-10-15 10:53:05"
         },
         {
             "service_id": "machine_availability",
@@ -300,7 +322,7 @@
             "published_topics": {
                 "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
             },
-            "last_update": "2024-10-12 16:44:24"
+            "last_update": "2024-10-15 13:09:28"
         },
         {
             "service_id": "hvac_control",
@@ -318,7 +340,7 @@
                 "automatic_control": "gym/hvac/control/<roomID>",
                 "alert": "gym/environment/alert/<roomID>"
             },
-            "last_update": "2024-10-12 16:44:24"
+            "last_update": "2024-10-15 13:09:28"
         },
         {
             "service_id": "occupancy",
@@ -334,7 +356,45 @@
                 "current_occupancy": "gym/occupancy/current",
                 "prediction": "gym/occupancy/prediction"
             },
-            "last_update": "2024-10-12 16:44:26"
+            "last_update": "2024-10-15 13:09:32"
+        },
+        {
+            "service_id": "device_connector",
+            "description": "Handles sensors and actuators data",
+            "status": "active",
+            "service_catalog": "http://localhost:8080",
+            "resource_catalog": "http://localhost:8081",
+            "endpoint": "http://localhost:8082",
+            "subscribed_topics": {
+                "automatic_control": "gym/hvac/control/#",
+                "control_commands": "gym/hvac/on_off/#"
+            },
+            "published_topics": {
+                "entries": "gym/occupancy/entry",
+                "exits": "gym/occupancy/exit",
+                "enviroment": "gym/environment/<roomID>",
+                "availability": "gym/availability/<machineID>"
+            },
+            "last_update": "2024-10-15 18:02:24"
+        },
+        {
+            "service_id": "device_connector",
+            "description": "Handles sensors and actuators data",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "resource_catalog": "http://resource_catalog:8081",
+            "endpoint": "http://device_connector:8082",
+            "subscribed_topics": {
+                "automatic_control": "gym/hvac/control/#",
+                "control_commands": "gym/hvac/on_off/#"
+            },
+            "published_topics": {
+                "entries": "gym/occupancy/entry",
+                "exits": "gym/occupancy/exit",
+                "enviroment": "gym/environment/<roomID>",
+                "availability": "gym/availability/<machineID>"
+            },
+            "last_update": "2024-10-15 16:05:16"
         },
         {
             "service_id": "machine_availability",
@@ -348,7 +408,7 @@
             "published_topics": {
                 "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
             },
-            "last_update": "2024-10-12 16:46:51"
+            "last_update": "2024-10-15 16:05:17"
         },
         {
             "service_id": "hvac_control",
@@ -366,7 +426,7 @@
                 "automatic_control": "gym/hvac/control/<roomID>",
                 "alert": "gym/environment/alert/<roomID>"
             },
-            "last_update": "2024-10-12 16:46:51"
+            "last_update": "2024-10-15 16:05:18"
         },
         {
             "service_id": "occupancy",
@@ -382,72 +442,8 @@
                 "current_occupancy": "gym/occupancy/current",
                 "prediction": "gym/occupancy/prediction"
             },
-            "last_update": "2024-10-12 16:46:53"
-        },
-        {
-            "service_id": "occupancy",
-            "description": "Handles the occupancy count of the gym and makes prediction about it",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "entries": "gym/occupancy/entry",
-                "exits": "gym/occupancy/exit"
-            },
-            "published_topics": {
-                "current_occupancy": "gym/occupancy/current",
-                "prediction": "gym/occupancy/prediction"
-            },
-            "last_update": "2024-10-14 08:30:25"
-        },
-        {
-            "service_id": "occupancy",
-            "description": "Handles the occupancy count of the gym and makes prediction about it",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "entries": "gym/occupancy/entry",
-                "exits": "gym/occupancy/exit"
-            },
-            "published_topics": {
-                "current_occupancy": "gym/occupancy/current",
-                "prediction": "gym/occupancy/prediction"
-            },
-            "last_update": "2024-10-14 08:31:45"
-        },
-        {
-            "service_id": "occupancy",
-            "description": "Handles the occupancy count of the gym and makes prediction about it",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "entries": "gym/occupancy/entry",
-                "exits": "gym/occupancy/exit"
-            },
-            "published_topics": {
-                "current_occupancy": "gym/occupancy/current",
-                "prediction": "gym/occupancy/prediction"
-            },
-            "last_update": "2024-10-14 08:45:41"
-        },
-        {
-            "service_id": "occupancy",
-            "description": "Handles the occupancy count of the gym and makes prediction about it",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "entries": "gym/occupancy/entry",
-                "exits": "gym/occupancy/exit"
-            },
-            "published_topics": {
-                "current_occupancy": "gym/occupancy/current",
-                "prediction": "gym/occupancy/prediction"
-            },
-            "last_update": "2024-10-14 10:18:11"
+            "last_update": "2024-10-15 16:05:22"
         }
     ],
-    "lastUpdate": "2024-10-14 10:18:11"
+    "lastUpdate": "2024-10-15 16:05:22"
 }

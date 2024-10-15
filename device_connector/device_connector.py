@@ -256,13 +256,14 @@ class DeviceConnector:
         """Handles incoming MQTT messages, especially for HVAC control and on/off commands."""
         try:
             payload = json.loads(message.payload.decode())
+            print("Received payload:", payload)
             topic = message.topic
             room = topic.split('/')[-1]  # Extract the room name from the topic
 
             if f"gym/hvac/control/{room}" in topic:
                 control_command = payload['message']['data'].get('control_command')
                 mode = payload['message']['data'].get('mode', self.hvac_mode[room])  # Use current mode if not specified
-
+            
                 if control_command == 'turn_on':
                     if self.hvac_state[room] == 'off':
                         self.hvac_state[room] = 'on'
@@ -315,11 +316,12 @@ class DeviceConnector:
         """Checks for inactive devices and deletes them if they haven't been updated in the last 3 days."""
         try:
             response = requests.get(self.resource_catalog_url)  # URL for resource catalog is loaded from config
+            print(response)
             if response.status_code == 200:
                 device_registry = response.json().get("devices", [])
                 current_time = datetime.now()
 
-                for device in device_registry:
+                for device in device_registry["devices"]:
                     last_update_str = device.get("lastUpdate")
                     if last_update_str:
                         last_update = datetime.strptime(last_update_str, "%Y-%m-%d %H:%M:%S")
@@ -353,7 +355,7 @@ class DeviceConnector:
 
 def initialize_service(config_dict):
     """Initialize and register the service."""
-    register_service(config_dict,config_dict["service_catalog_url"])
+    register_service(config_dict,config_dict["service_catalog"])
     print("Device Connector Service Initialized and Registered")
 
 # def stop_service(signum, frame):
@@ -366,6 +368,7 @@ def initialize_service(config_dict):
 if __name__ == '__main__':
     try:
         # Load configuration from config.json
+        # with open('C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\device_connector\\config.json') as config_file:
         with open('config.json') as config_file:
             config = json.load(config_file)
 

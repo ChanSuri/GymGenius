@@ -10,7 +10,7 @@
             "location": "entrance",
             "status": "active",
             "endpoint": "GymGenius/Occupancy/Entrance",
-            "last_update": "2024-10-03 16:58:03"
+            "last_update": "2024-10-15 16:05:36"
         },
         {
             "device_id": "DHT11_Sensor_entrance",
@@ -18,7 +18,7 @@
             "location": "entrance",
             "status": "active",
             "endpoint": "gym/environment/entrance",
-            "last_update": "2024-10-03T16:57:53.397676+00:00"
+            "last_update": "2024-10-15T16:05:17.924034+00:00"
         },
         {
             "device_id": "DHT11_Sensor_cardio_room",
@@ -26,7 +26,7 @@
             "location": "cardio_room",
             "status": "active",
             "endpoint": "gym/environment/cardio_room",
-            "last_update": "2024-10-03T16:57:53.424795+00:00"
+            "last_update": "2024-10-15T16:05:17.960545+00:00"
         },
         {
             "device_id": "DHT11_Sensor_lifting_room",
@@ -34,7 +34,7 @@
             "location": "lifting_room",
             "status": "active",
             "endpoint": "gym/environment/lifting_room",
-            "last_update": "2024-10-03T16:57:53.449300+00:00"
+            "last_update": "2024-10-15T16:05:18.016100+00:00"
         },
         {
             "device_id": "DHT11_Sensor_changing_room",
@@ -42,7 +42,7 @@
             "location": "changing_room",
             "status": "active",
             "endpoint": "gym/environment/changing_room",
-            "last_update": "2024-10-03T16:57:53.470451+00:00"
+            "last_update": "2024-10-15T16:05:18.099909+00:00"
         },
         {
             "device_id": "ExitSensor001",
@@ -50,8 +50,32 @@
             "location": "entrance",
             "status": "active",
             "endpoint": "GymGenius/Occupancy/Exit",
-            "last_update": "2024-10-03 16:58:04"
+            "last_update": "2024-10-15 16:05:30"
+        },
+        {
+            "device_id": "simulated_treadmill_1",
+            "type": "treadmill",
+            "location": "cardio room",
+            "status": "inactive",
+            "endpoint": "GymGenius/Occupancy/Availability/treadmill/1",
+            "last_update": "2024-10-15 16:05:37"
+        },
+        {
+            "device_id": "simulated_elliptical_trainer_2",
+            "type": "elliptical_trainer",
+            "location": "cardio room",
+            "status": "active",
+            "endpoint": "GymGenius/Occupancy/Availability/elliptical_trainer/2",
+            "last_update": "2024-10-15 16:05:23"
+        },
+        {
+            "device_id": "simulated_stationary_bike_3",
+            "type": "stationary_bike",
+            "location": "cardio room",
+            "status": "inactive",
+            "endpoint": "GymGenius/Occupancy/Availability/stationary_bike/3",
+            "last_update": "2024-10-15 16:05:30"
         }
     ],
-    "lastUpdate": "2024-10-03 16:58:04"
+    "lastUpdate": "2024-10-15 16:05:37"
 }

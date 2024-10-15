@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 
 # Path to the service_registry.json file
-#SERVICE_REGISTRY_FILE = 'service_catalog/service_registry.json'
+# SERVICE_REGISTRY_FILE = 'service_catalog/service_registry.json'
 SERVICE_REGISTRY_FILE = 'service_registry.json'
 
 def load_registry():

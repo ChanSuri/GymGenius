@@ -4,6 +4,7 @@ import os
 from datetime import datetime
 
 # Path to the device_registry.json file
+# DEVICE_REGISTRY_FILE = 'C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\resource_catalog\\device_registry.json'
 DEVICE_REGISTRY_FILE = 'device_registry.json'
 
 def load_device_registry():
@@ -35,7 +36,9 @@ class ResourceCatalog:
                 raise cherrypy.HTTPError(404, "Device not found")
         else:
             # Return all devices if no device_id is provided
-            return json.dumps({"status": "success", "devices": list(device_registry.values())})
+            # return json.dumps({"status": "success", "devices": list(device_registry.values())})
+            return json.dumps({"status": "success", "devices": device_registry})
+
 
     def POST(self, *uri, **params):
         # Read and decode the request body
