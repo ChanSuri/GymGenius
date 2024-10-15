@@ -16,5 +16,6 @@
     },
     "token": "6961607644:AAFCNHwGsNI67k5m53VjFY48b5O9DlCNgZg",
     "webServerAddress":"https://api.thingspeak.com/channels/",
+    "device_connector":"http://device_connector:8082",
     "last_update": null
 }

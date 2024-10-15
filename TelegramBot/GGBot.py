@@ -24,18 +24,13 @@ class Telegrambot():
 
         self.client = MyMQTT(self.serviceId, self.mqtt_broker, self.mqtt_port, self)
         self.webServerAddr = self.conf["webServerAddress"]
+        self.device_connector = self.conf["device_connector"]
         #self.__message={'service': self.serviceId,'n':'','value':'', 'timestamp':'','unit':"status"}
         
-        #subscribe
-        self.subscribedTopic = self.conf["subscribed_topics"]
-        self.availTopic = self.subscribedTopic["availTopic"]
-        self.crowdTopic = self.subscribedTopic["crowdTopic"] #occupancy/current
-        self.overtempTopic = self.subscribedTopic["overtempTopic"]
-        self.predictionTopic = self.subscribedTopic["predictionTopic"]
         #publish
         self.publishedTopic = self.conf["published_topics"]
         self.switchTopic = self.publishedTopic["switchTopic"] 
-        self.tempTopic = self.publishedTopic["TempTopic"] #send temperature, NEED directly get temp&humidity from device in env data
+        self.tempTopic = self.publishedTopic["TempTopic"] #send temperature, NEED directly get temp&humidity from device in env data  
         
         self.crowdthreshold=60
         
@@ -63,7 +58,6 @@ class Telegrambot():
             [0,  0,  2,  4,  3, 15,  9]     # 00:00-08:00
         ] #example #example
         self.machines = self.get_machines_from_service_catalog()
-        self.machines.append("All")
         self.zones = self.get_rooms_from_service_catalog()
         self.zones.append("All")
     
@@ -111,32 +105,35 @@ class Telegrambot():
             return []  
     
     def get_machines_from_service_catalog(self):
-        """Retrieve machine types and their counts from the service catalog."""
+        """Retrieve machine types from the service catalog."""
         try:
             response = requests.get(self.service_catalog_url)
-            if response.status_code == 200:
-                service_catalog = response.json()
-                catalog = service_catalog.get('catalog', {})
-                machines_list = set()
-                for machine_id in catalog.get('machinesID'):
-                    machine_name = '_'.join(machine_id.split('_')[:-1])
-                    machines_list.add(machine_name)
-                machines_list = sorted(machines_list)
-                return machines_list
-            else:
-                raise Exception(f"Failed to get machine types: {response.status_code}")
+            response.raise_for_status()  # 检查响应状态码
+            service_catalog = response.json()
+            
+            # 提取机器ID列表
+            machines_list = service_catalog.get('catalog', {}).get('machinesID', [])
+
+            # 使用集合推导式创建机器类型集合
+            machines_type = {machine_id.rsplit('_', 1)[0] for machine_id in machines_list}
+            machines_type.add("All")
+            # 返回排序后的机器类型列表
+            return sorted(machines_type)
+
         except requests.exceptions.RequestException as e:
             print(f"Error getting machine types from service catalog: {e}")
-            return {}
+            return []
         
     #MQTT        
     def start(self):
         self.client.start()
-        self.client.mySubscribe(self.crowdTopic) #occupancy alert
-        # subscribe to topic according to available device...not sure to subscribe
-        self.client.mySubscribe(self.availTopic)
-        self.client.mySubscribe(self.overtempTopic)
-        MessageLoop(self.bot,{'chat': self.on_chat_message,'callback_query': self.on_callback_query}).run_as_thread()
+        try:
+            for topic_key, topic_value in self.conf["subscribed_topics"].items():
+                self.client.mySubscribe(topic_value)
+                print(f"Subscribed to topic: {topic_key}")
+            MessageLoop(self.bot,{'chat': self.on_chat_message,'callback_query': self.on_callback_query}).run_as_thread()
+        except KeyError as e:
+            print(f"Error in subscribed_topics format: {e}")
         
     def stop(self):
         self.workingStatus = False
@@ -150,24 +147,27 @@ class Telegrambot():
         self.chatIDs.append(chat_id)
         message = msg['text']
         if chat_id in self.user_states and self.user_states[chat_id] == 'awaiting_suggestion':
-            if not message.startswith('/'):
+            if message == "quit":
+                self.bot.sendMessage(chat_id, 'What do you want to know about us? [/knowus]')
+            else:
                 current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 with open("TelegramBot/suggestions.txt", "a") as file:
                     file.write(f"{current_time} | {chat_id} | {message}\n")
                 self.bot.sendMessage(chat_id, "Your suggestion is saved! Thank you.")
-                self.user_states[chat_id] = None
+            self.user_states[chat_id] = None
         elif message ==  "/start":
             self.bot.sendMessage(chat_id, 'Welcome to GymGenius! You can start your incredible experience here!')
         elif message == '/knowus':
             self.bot.sendMessage(chat_id, 'The IoT application Gym Genius is intended to optimize gym management, improve customer satisfaction, and guarantee optimal utilization of resources. It employs automated mechanisms, a variety of sensors, and a Telegram bot to facilitate user interaction.')
         elif message == "/suggestion": #write as client
-            self.bot.sendMessage(chat_id, 'Please enter your suggestion:')
             self.user_states[chat_id] = 'awaiting_suggestion'
+            mark_up = ReplyKeyboardMarkup(keyboard=[['quit']],one_time_keyboard=True)
+            self.bot.sendMessage(chat_id, 'Please enter your suggestion:', reply_markup=mark_up)
         elif message == "/login":
             self.initial_message(chat_id)
-        elif message == "/client":
+        elif message == "Client":
             self.user_message(chat_id)
-        elif message == "/administrator":
+        elif message == "Administrator":
             self.chat_auth[str(chat_id)]=False
             self.bot.sendMessage(chat_id, 'Please enter the password')
         elif message == "Suggestions": #check as admin
@@ -192,13 +192,13 @@ class Telegrambot():
                 self.admin_switch_zone(chat_id)
             else:
                 self.bot.sendMessage(chat_id, "Please send '/administrator' to login first!")
-        elif message == "/switchon":
+        elif message == "Switchon":
             if self.check_auth(chat_id)==True:
                 mark_up = ReplyKeyboardMarkup(keyboard=[['cool'], ['heat']],one_time_keyboard=True)
                 self.bot.sendMessage(chat_id, 'Which AC mode to set?', reply_markup=mark_up)
             else:
                 self.bot.sendMessage(chat_id, "Please send '/administrator' to login first!")
-        elif message == "/switchoff":
+        elif message == "Switchoff":
             if self.check_auth(chat_id)==True:
                 self.switchMode="turn_off"
                 self.admin_switch_zone(chat_id)
@@ -242,7 +242,7 @@ class Telegrambot():
                         return
                     self.bot.sendMessage(chat_id, 'Please enter the correct command!')
                 else:
-                    self.bot.sendMessage(chat_id, "Please send '/administrator' to login first!")
+                    self.bot.sendMessage(chat_id, "Please send 'Administrator' to login first!")
                     self.chat_auth[str(chat_id)]==False
             else:
                 try:
@@ -255,12 +255,12 @@ class Telegrambot():
                     else:
                         self.bot.sendMessage(chat_id, 'Please enter the correct command!')
                 except:
-                    self.bot.sendMessage(chat_id, "Please send '/administrator' to login !")
+                    self.bot.sendMessage(chat_id, "Please send 'Administrator' to login !")
                     
             
     def initial_message(self,chat_id):
         # design as reply keyboard
-        mark_up = ReplyKeyboardMarkup(keyboard=[['/client'], ['/administrator']],one_time_keyboard=True)
+        mark_up = ReplyKeyboardMarkup(keyboard=[['Client'], ['Administrator']],one_time_keyboard=True)
         self.bot.sendMessage(chat_id, text='Welcome our gym genius!', reply_markup=mark_up)
         
     def user_message(self, chat_id):
@@ -294,17 +294,29 @@ class Telegrambot():
                 self.bot.sendMessage(chat_id, text=line.strip())
 
     def admin_see_data(self,chat_id):
-        self.bot.keyboardRow = 2
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(
-                text='See data', url=self.webServerAddr)]
-        ])
-        self.bot.sendMessage(chat_id, 'What would you like to see?', reply_markup=keyboard)
-        mark_up = ReplyKeyboardMarkup(keyboard=[['Operate'], ['Envdata'],['Suggestions']],one_time_keyboard=True)
-        self.bot.sendMessage(chat_id, text='What else would you like to do?', reply_markup=mark_up)
+        try:
+            response = requests.get(self.device_connector)
+            if response.status_code == 200:
+                data = response.json()  # Assume JSON response with "temperature" and "humidity" keys
+                senml_record = data.get("senml_record", {})
+                temperature = next((e["v"] for e in senml_record["e"] if e["n"] == "temperature"), None)
+                room = data.get("location")
+                if temperature is not None:
+                    # Send the temperature and humidity to the user
+                    self.bot.sendMessage(chat_id, f"Current temperature: {temperature}°C\nRoom: {room}%")
+                else:
+                    # Handle the error case
+                    self.bot.sendMessage(chat_id, "Unable to fetch the enviroment data.")
+                mark_up = ReplyKeyboardMarkup(keyboard=[['Operate'], ['Envdata'],['Suggestions']],one_time_keyboard=True)
+                self.bot.sendMessage(chat_id, text='What else would you like to do?', reply_markup=mark_up)
+            else:
+                raise Exception(f"Failed to fetch data from DeviceConnector: {response.status_code}")
+        except requests.RequestException as e:
+            print(f"Error fetching data: {e}")
+            return None, None
        
     def admin_operate(self, chat_id):
-        mark_up = ReplyKeyboardMarkup(keyboard=[['/switchon'], ['/switchoff']],one_time_keyboard=True)
+        mark_up = ReplyKeyboardMarkup(keyboard=[['Switchon'], ['Switchoff']],one_time_keyboard=True)
         self.bot.sendMessage(chat_id, text='Please select your operation for HVAC...', reply_markup=mark_up)
         
     def admin_switch_zone(self,chat_id):
@@ -346,7 +358,7 @@ class Telegrambot():
                 tosend = f"Alert! Current occupancy is reaching {self.current_occupancy}. Please consider coming another time."
                 for chat_ID in self.chatIDs:
                     self.bot.sendMessage(chat_ID, text=tosend)
-        elif topic==self.predictionTopic: #prediction_matrix update
+        elif topic==self.predictionTopic: #prediction_matrix update to local
             self.prediction_matrix = message["message"]["data"]["prediction_matrix"]
         elif topic.startswith(self.availTopic):
             machine=topic.split('/')[-1]
