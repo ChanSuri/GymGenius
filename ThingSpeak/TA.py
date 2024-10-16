@@ -188,7 +188,7 @@ def stop_service(signum, frame):
 
 if __name__ == "__main__":
     # Load configuration from config.json
-    with open('config.json') as config_file:
+    with open('config_thingspeak_adaptor.json') as config_file:
         config = json.load(config_file)
 
     # Initialize the service with the loaded configuration
