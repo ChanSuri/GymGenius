@@ -68,6 +68,8 @@ services:
       - device_connector
       - service_catalog
       - resource_catalog
+      - thingspeak_adaptor
+      - thingspeak_reader
     environment:
       - SERVICE_CATALOG_URL=http://service_catalog:8080
 
@@ -132,6 +134,8 @@ services:
       - gym-genius-network
     depends_on:
       - device_connector
+      - service_catalog
+      - resource_catalog
     environment:
       - SERVICE_CATALOG_URL=http://service_catalog:8080
     command: python TA.py
@@ -144,6 +148,9 @@ services:
       - gym-genius-network
     depends_on:
       - device_connector
+      - thingspeak_adaptor
+      - service_catalog
+      - resource_catalog
     command: python TA_reader.py
 
 
