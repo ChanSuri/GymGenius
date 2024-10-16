@@ -11,9 +11,9 @@ class ThingspeakAdaptor:
         self.service_catalog_url = config['service_catalog']
 
         # Get MQTT broker and port from service catalog
-        self.mqtt_broker, self.mqtt_port = self.get_mqtt_info_from_service_catalog()
-        
-        # Load ThingSpeak configuration from config file
+        self.mqtt_broker, self.mqtt_port, self.roomsID, self.machinesID = self.get_info_from_service_catalog()
+
+        # Load ThingSpeak configuration from config_thingspeak.json
         self.thingspeak_config = self.load_thingspeak_config()
         self.thingspeak_url = self.thingspeak_config['ThingspeakURL_write']
         self.channels = self.thingspeak_config['channels']
@@ -28,18 +28,18 @@ class ThingspeakAdaptor:
         # Field cache to store latest values for each room and field
         self.field_cache = {room: {field: None for field in self.channels[room]['fields']} for room in self.channels}
 
-    def get_mqtt_info_from_service_catalog(self):
-        """Retrieve MQTT broker and port information from the service catalog."""
+    def get_info_from_service_catalog(self):
+        """Retrieve MQTT broker, port, roomsID, and machinesID from the service catalog."""
         try:
             response = requests.get(self.service_catalog_url)
             if response.status_code == 200:
                 catalog = response.json().get('catalog', {})
-                return catalog.get('brokerIP'), catalog.get('brokerPort')
+                return catalog.get('brokerIP'), catalog.get('brokerPort'), catalog.get('roomsID'), catalog.get('machinesID')
             else:
-                raise Exception(f"Failed to get broker information: {response.status_code}")
+                raise Exception(f"Failed to retrieve service catalog: {response.status_code}")
         except requests.exceptions.RequestException as e:
-            print(f"Error getting MQTT info from service catalog: {e}")
-            return None, None
+            print(f"Error retrieving info from service catalog: {e}")
+            return None, None, [], []
 
     def load_thingspeak_config(self):
         """Load the ThingSpeak configuration from a local JSON file."""
@@ -51,6 +51,7 @@ class ThingspeakAdaptor:
             return {}
 
     def connect_mqtt(self):
+        """Connect to the MQTT broker."""
         try:
             if self.mqtt_broker:
                 self.client.connect(self.mqtt_broker, self.mqtt_port, 60)
@@ -74,15 +75,31 @@ class ThingspeakAdaptor:
         self.connect_mqtt()
 
     def subscribe_to_topics(self):
-        """Subscribe to topics defined in the service catalog."""
-        # Subscribing to necessary topics from service catalog
+        """Subscribe to topics dynamically based on roomsID and machinesID."""
         try:
-            for room in self.channels:
-                for field_name in self.channels[room]['fields']:
-                    topic = self.config['subscribed_topics'].get(field_name)
-                    if topic:
-                        self.client.subscribe(topic)
-                        print(f"Subscribed to topic: {topic}")
+            # Subscribe to environment topics for each room
+            env_topic_template = self.config['subscribed_topics'].get('enviroments')
+            if env_topic_template:
+                for room in self.roomsID:
+                    topic = env_topic_template.replace('<roomID>', room)
+                    self.client.subscribe(topic)
+                    print(f"Subscribed to environment topic: {topic}")
+
+            # Subscribe to machine availability topics for each machine
+            machine_topic_template = self.config['subscribed_topics'].get('machine_availability')
+            if machine_topic_template:
+                for machine in self.machinesID:
+                    machine_type = '_'.join(machine.split('_')[:-1])  # Extract machine type from machine name
+                    topic = machine_topic_template.replace('<machine_type>', machine_type)
+                    self.client.subscribe(topic)
+                    print(f"Subscribed to machine availability topic: {topic}")
+
+            # Subscribe to occupancy topic
+            occupancy_topic = self.config['subscribed_topics'].get('current_occupancy')
+            if occupancy_topic:
+                self.client.subscribe(occupancy_topic)
+                print(f"Subscribed to occupancy topic: {occupancy_topic}")
+
         except KeyError as e:
             print(f"Error subscribing to topics: {e}")
 
@@ -106,8 +123,8 @@ class ThingspeakAdaptor:
         """Handle occupancy data."""
         current_occupancy = payload.get('current_occupancy')
         if current_occupancy is not None:
-            self.update_cache('Entrance', 'current_occupancy', current_occupancy)
-            self.upload_to_thingspeak('Entrance')
+            self.update_cache('entrance', 'current_occupancy', current_occupancy)
+            self.upload_to_thingspeak('entrance')
 
     def handle_environment_data(self, topic, payload):
         """Handle environment data."""
@@ -126,7 +143,7 @@ class ThingspeakAdaptor:
         machine_type = topic.split('/')[-1]
         available_machines = payload.get('available')
         if available_machines is not None:
-            room = 'Lifting Room' if machine_type in ['cable_machine', 'leg_press_machine', 'smith_machine', 'lat_pulldown_machine'] else 'Cardio Room'
+            room = 'lifting_room' if machine_type in ['cable_machine', 'leg_press_machine', 'smith_machine', 'lat_pulldown_machine'] else 'cardio_room'
             self.update_cache(room, machine_type, available_machines)
             self.upload_to_thingspeak(room)
 
@@ -162,7 +179,7 @@ class ThingspeakAdaptor:
 
     def get_room_from_topic(self, topic):
         """Extract room name from topic."""
-        for room in self.channels:
+        for room in self.roomsID:
             if room in topic:
                 return room
         return None
@@ -187,7 +204,7 @@ def stop_service(signum, frame):
     adaptor.stop()
 
 if __name__ == "__main__":
-    # Load configuration from config.json
+    # Load configuration from config_thingspeak_adaptor.json
     with open('config_thingspeak_adaptor.json') as config_file:
         config = json.load(config_file)
 
