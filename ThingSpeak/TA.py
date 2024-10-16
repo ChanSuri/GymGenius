@@ -10,7 +10,7 @@ class ThingspeakAdaptor:
         self.config = config
         self.service_catalog_url = config['service_catalog']
 
-        # Get MQTT broker and port from service catalog
+        # Get MQTT broker, port, roomsID, and machinesID from the service catalog
         self.mqtt_broker, self.mqtt_port, self.roomsID, self.machinesID = self.get_info_from_service_catalog()
 
         # Load ThingSpeak configuration from config_thingspeak.json
@@ -25,7 +25,7 @@ class ThingspeakAdaptor:
         self.client.on_message = self.on_message
         self.connect_mqtt()
 
-        # Field cache to store latest values for each room and field
+        # Field cache to store the latest values for each room and field
         self.field_cache = {room: {field: None for field in self.channels[room]['fields']} for room in self.channels}
 
     def get_info_from_service_catalog(self):
@@ -64,6 +64,7 @@ class ThingspeakAdaptor:
             self.connect_mqtt()
 
     def on_connect(self, client, userdata, flags, rc):
+        """Callback when the client connects to the MQTT broker."""
         if rc == 0:
             print("Connected to MQTT broker.")
             self.subscribe_to_topics()
@@ -71,11 +72,12 @@ class ThingspeakAdaptor:
             print(f"Failed to connect to MQTT broker. Return code: {rc}")
 
     def on_disconnect(self, client, userdata, rc):
+        """Callback when the client disconnects from the MQTT broker."""
         print(f"Disconnected from MQTT broker with return code {rc}. Reconnecting...")
         self.connect_mqtt()
 
     def subscribe_to_topics(self):
-        """Subscribe to topics dynamically based on roomsID and machinesID."""
+        """Subscribe to MQTT topics dynamically based on roomsID and machinesID."""
         try:
             # Subscribe to environment topics for each room
             env_topic_template = self.config['subscribed_topics'].get('enviroments')
@@ -106,46 +108,66 @@ class ThingspeakAdaptor:
     def on_message(self, client, userdata, msg):
         """Callback for handling received MQTT messages."""
         try:
-            payload = json.loads(msg.payload.decode())
-            topic = msg.topic
+            # Step 1: Decode the payload from the message
+            payload = json.loads(msg.payload.decode())  # Convert the payload from JSON to a Python object
+            topic = msg.topic  # Get the topic from the message
 
-            # Handle message based on the topic
+            # Step 2: Identify the topic and process the data
             if topic == self.config['subscribed_topics'].get('current_occupancy'):
                 self.handle_occupancy_data(payload)
             elif 'environment' in topic:
                 self.handle_environment_data(topic, payload)
             elif 'group_availability' in topic:
                 self.handle_machine_availability(topic, payload)
+
         except json.JSONDecodeError as e:
             print(f"Error decoding message: {e}")
 
     def handle_occupancy_data(self, payload):
         """Handle occupancy data."""
-        current_occupancy = payload.get('current_occupancy')
-        if current_occupancy is not None:
-            self.update_cache('entrance', 'current_occupancy', current_occupancy)
-            self.upload_to_thingspeak('entrance')
+        try:
+            occupancy_data = payload['message']['data']
+            current_occupancy = occupancy_data.get('current_occupancy')
+            if current_occupancy is not None:
+                self.update_cache('entrance', 'current_occupancy', current_occupancy)
+                self.upload_to_thingspeak('entrance')
+        except KeyError as e:
+            print(f"Error handling occupancy data: {e}")
 
     def handle_environment_data(self, topic, payload):
-        """Handle environment data."""
-        room = self.get_room_from_topic(topic)
-        if room:
-            temperature = payload.get('temperature')
-            humidity = payload.get('humidity')
-            if temperature is not None:
-                self.update_cache(room, 'temperature', temperature)
-            if humidity is not None:
-                self.update_cache(room, 'humidity', humidity)
-            self.upload_to_thingspeak(room)
+        """Handle environment data like temperature and humidity."""
+        try:
+            room = self.get_room_from_topic(topic)
+            if room:
+                data_points = payload['e']  # List of environment data (temperature, humidity)
+                temperature = None
+                humidity = None
+                for data_point in data_points:
+                    if data_point['n'] == 'temperature':
+                        temperature = data_point['v']
+                    elif data_point['n'] == 'humidity':
+                        humidity = data_point['v']
+                
+                if temperature is not None:
+                    self.update_cache(room, 'temperature', temperature)
+                if humidity is not None:
+                    self.update_cache(room, 'humidity', humidity)
+                self.upload_to_thingspeak(room)
+        except KeyError as e:
+            print(f"Error handling environment data: {e}")
 
     def handle_machine_availability(self, topic, payload):
         """Handle machine availability data."""
-        machine_type = topic.split('/')[-1]
-        available_machines = payload.get('available')
-        if available_machines is not None:
-            room = 'lifting_room' if machine_type in ['cable_machine', 'leg_press_machine', 'smith_machine', 'lat_pulldown_machine'] else 'cardio_room'
-            self.update_cache(room, machine_type, available_machines)
-            self.upload_to_thingspeak(room)
+        try:
+            machine_type = topic.split('/')[-1]  # Extract the machine type from the topic
+            availability_data = payload['message']['data']  # Extract the data from the payload
+            available_machines = availability_data.get('available')
+            if available_machines is not None:
+                room = 'lifting_room' if machine_type in ['cable_machine', 'leg_press_machine', 'smith_machine', 'lat_pulldown_machine'] else 'cardio_room'
+                self.update_cache(room, machine_type, available_machines)
+                self.upload_to_thingspeak(room)
+        except KeyError as e:
+            print(f"Error handling machine availability data: {e}")
 
     def update_cache(self, room, field_name, value):
         """Update the cache for a specific field in a room."""
@@ -178,7 +200,7 @@ class ThingspeakAdaptor:
                 print(f"No data to upload for {room}")
 
     def get_room_from_topic(self, topic):
-        """Extract room name from topic."""
+        """Extract room name from the topic."""
         for room in self.roomsID:
             if room in topic:
                 return room
