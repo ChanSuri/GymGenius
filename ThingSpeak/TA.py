@@ -2,7 +2,7 @@ import json
 import time
 import requests
 import signal
-from MyMQTT import MyMQTT
+import paho.mqtt.client as PahoMQTT
 from registration_functions import register_service, delete_service
 
 class ThingspeakAdaptor:
@@ -34,8 +34,11 @@ class ThingspeakAdaptor:
         self.occupancy_service, self.hvac_service, self.device_connector_service, self.machine_availability_service = self.get_services()
 
         # Initialize MQTT client
-        self.mqtt_client = MyMQTT(clientID="ThingspeakAdaptor", broker=self.broker_ip, port=self.broker_port, notifier=self)
-        self.mqtt_client.start()
+        self.mqtt_client = PahoMQTT.Client(client_id="ThingspeakAdaptor")
+        self.mqtt_client.on_connect = self.on_connect
+        self.mqtt_client.on_message = self.on_message
+        self.mqtt_client.connect(self.broker_ip, self.broker_port)
+        self.mqtt_client.loop_start()
 
         # Subscribe to the topics dynamically based on the services
         self.subscribe_to_services()
@@ -112,7 +115,7 @@ class ThingspeakAdaptor:
             try:
                 occupancy_topic = self.occupancy_service['published_topics'].get('current_occupancy')
                 if occupancy_topic:
-                    self.mqtt_client.mySubscribe(occupancy_topic)
+                    self.mqtt_client.subscribe(occupancy_topic, 2)
                     print(f"Subscribed to occupancy topic: {occupancy_topic}")
                 else:
                     print("No current_occupancy topic found in occupancy_service.")
@@ -126,7 +129,7 @@ class ThingspeakAdaptor:
                 if environment_topic_template:
                     for room in self.rooms:
                         room_topic = environment_topic_template.replace('<roomID>', room)
-                        self.mqtt_client.mySubscribe(room_topic)
+                        self.mqtt_client.subscribe(room_topic, 2)
                         print(f"Subscribed to environment topic for room {room}: {room_topic}")
                 else:
                     print("No environment topic template found in device_connector_service.")
@@ -138,16 +141,22 @@ class ThingspeakAdaptor:
             try:
                 machine_availability_topic = self.machine_availability_service['published_topics'].get('group_availability_x_machine_type')
                 if machine_availability_topic:
-                    self.mqtt_client.mySubscribe(machine_availability_topic)
+                    self.mqtt_client.subscribe(machine_availability_topic, 2)
                     print(f"Subscribed to machine availability topic: {machine_availability_topic}")
                 else:
                     print("No group_availability_x_machine_type topic found in machine_availability_service.")
             except Exception as e:
                 print(f"Error subscribing to machine availability topic: {e}")
 
-    def notify(self, topic, payload):
-        """Handle received MQTT messages and process them accordingly."""
-        payload = json.loads(payload.decode())
+    def on_connect(self, client, userdata, flags, rc):
+        """Callback function for when the client receives a CONNACK response from the server."""
+        print(f"Connected to MQTT broker with result code {rc}")
+
+    def on_message(self, client, userdata, msg):
+        """Callback function for when a PUBLISH message is received from the server."""
+        payload = json.loads(msg.payload.decode())
+        topic = msg.topic
+
         if topic == self.occupancy_service['published_topics']['current_occupancy']:
             self.handle_occupancy_data(payload)
         elif 'environment' in topic:
@@ -222,14 +231,16 @@ class ThingspeakAdaptor:
 
     def stop(self):
         """Stop the MQTT client."""
-        self.mqtt_client.stop()
+        self.mqtt_client.loop_stop()
+        self.mqtt_client.disconnect()
         print("MQTT client stopped.")
+
 
 # Functions outside the class for service registration and stopping
 
 def initialize_service(adaptor):
     """Register the service at startup."""
-    register_service(adaptor.config_dict, adaptor.service_catalog_url)
+    register_service(adaptor.config_adaptor, adaptor.service_catalog_url)
     print("Thingspeak Adaptor Service Initialized and Registered")
 
 def stop_service(signum, frame):
