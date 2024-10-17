@@ -108,11 +108,10 @@ class ThingspeakAdaptor:
     def on_message(self, client, userdata, msg):
         """Callback for handling received MQTT messages."""
         try:
-            # Step 1: Decode the payload from the message
             payload = json.loads(msg.payload.decode())  # Convert the payload from JSON to a Python object
             topic = msg.topic  # Get the topic from the message
 
-            # Step 2: Identify the topic and process the data
+            # Identify the topic and process the data
             if topic == self.config['subscribed_topics'].get('current_occupancy'):
                 self.handle_occupancy_data(payload)
             elif 'environment' in topic:
@@ -216,13 +215,15 @@ class ThingspeakAdaptor:
 
 def initialize_service(config_dict):
     """Register the service at startup."""
-    register_service(config_dict, adaptor.service_catalog_url)
+    register_service(config_dict, config_dict['service_catalog'])
     print("Thingspeak Adaptor Service Initialized and Registered")
 
 def stop_service(signum, frame):
     """Unregister and stop the service."""
+    with open('config_thingspeak_adaptor.json') as config_file:
+        config_dict = json.load(config_file)
     print("Stopping service...")
-    delete_service("thingspeak_adaptor", adaptor.service_catalog_url)
+    delete_service("thingspeak_adaptor", config_dict['service_catalog'])
     adaptor.stop()
 
 if __name__ == "__main__":
