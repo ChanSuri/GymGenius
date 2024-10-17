@@ -232,17 +232,15 @@ if __name__ == "__main__":
     with open('config_thingspeak_adaptor.json') as config_file:
         config_dict = json.load(config_file)
 
-    # Initialize the service with the loaded configuration
+    # Initialize the adaptor before service registration
+    adaptor = ThingspeakAdaptor(config_dict)
+
+    # Register the service
     initialize_service(config_dict)
 
     # Signal handler for clean stop
     signal.signal(signal.SIGINT, stop_service)
 
-    adaptor = ThingspeakAdaptor(config_dict)
-
     # Start the MQTT client loop
-    adaptor.client.loop_start()
+    adaptor.client.loop_forever()  # Removes the unnecessary while True loop
 
-    # Keep the service running
-    while True:
-        time.sleep(60)
