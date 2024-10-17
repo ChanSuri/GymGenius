@@ -22,7 +22,12 @@ class DeviceConnector:
         # Initialize the MQTT client
         self.client = mqtt.Client()
         self.client.on_message = self.on_message  # Attach the on_message callback
-        self.client.connect(self.mqtt_broker, self.mqtt_port, 60)
+        print(self.mqtt_broker, self.mqtt_port)
+        try:
+            self.client.connect(self.mqtt_broker, self.mqtt_port, 60)
+            #self.client.connect("test.mosquitto.org", 8883, 60)
+        except Exception as e:
+            print(f"Failed to connect to MQTT Broker: {e}")
         self.client.loop_start()
 
         # Subscribe to the HVAC control topics for all rooms

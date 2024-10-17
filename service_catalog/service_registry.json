@@ -1,7 +1,7 @@
 {
     "projectOwner": "group 22",
     "projectName": "GymGenius",
-    "brokerIP": "test.mosquitto.org",
+    "brokerIP": "broker.hivemq.com",
     "brokerPort": 1883,
     "base_name": "gym/",
     "roomsID": [
@@ -177,6 +177,378 @@
             "last_update": "2024-10-12 15:47:09"
         },
         {
+            "service_id": "occupancy",
+            "description": "Handles the occupancy count of the gym and makes prediction about it",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "entries": "gym/occupancy/entry",
+                "exits": "gym/occupancy/exit"
+            },
+            "published_topics": {
+                "current_occupancy": "gym/occupancy/current",
+                "prediction": "gym/occupancy/prediction"
+            },
+            "last_update": "2024-10-16 19:53:01"
+        },
+        {
+            "service_id": "occupancy",
+            "description": "Handles the occupancy count of the gym and makes prediction about it",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "entries": "gym/occupancy/entry",
+                "exits": "gym/occupancy/exit"
+            },
+            "published_topics": {
+                "current_occupancy": "gym/occupancy/current",
+                "prediction": "gym/occupancy/prediction"
+            },
+            "last_update": "2024-10-17 09:53:31"
+        },
+        {
+            "service_id": "occupancy",
+            "description": "Handles the occupancy count of the gym and makes prediction about it",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "entries": "gym/occupancy/entry",
+                "exits": "gym/occupancy/exit"
+            },
+            "published_topics": {
+                "current_occupancy": "gym/occupancy/current",
+                "prediction": "gym/occupancy/prediction"
+            },
+            "last_update": "2024-10-17 09:55:23"
+        },
+        {
+            "service_id": "thingspeak_adaptor",
+            "description": "Handles ThingSpeak data uploads and CSV generation",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "endpoint": "http://thingspeak_adaptor:8089/?channel=entrance",
+            "subscribed_topics": {
+                "current_occupancy": "gym/occupancy/current",
+                "enviroments": "gym/environment/<roomID>",
+                "machine_availability": "gym/group_availability/<machine_type>"
+            },
+            "published_topics": null,
+            "last_update": "2024-10-17 10:59:21"
+        },
+        {
+            "service_id": "device_connector",
+            "description": "Handles sensors and actuators data",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "resource_catalog": "http://resource_catalog:8081",
+            "endpoint": "http://device_connector:8082",
+            "subscribed_topics": {
+                "automatic_control": "gym/hvac/control/#",
+                "control_commands": "gym/hvac/on_off/#"
+            },
+            "published_topics": {
+                "entries": "gym/occupancy/entry",
+                "exits": "gym/occupancy/exit",
+                "enviroment": "gym/environment/<roomID>",
+                "availability": "gym/availability/<machineID>"
+            },
+            "last_update": "2024-10-17 10:59:21"
+        },
+        {
+            "service_id": "machine_availability",
+            "description": "Handles availability of a single machine and group it with other machines of the same type",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "availability": "gym/availability/#"
+            },
+            "published_topics": {
+                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
+            },
+            "last_update": "2024-10-17 10:59:21"
+        },
+        {
+            "service_id": "hvac_control",
+            "description": "HVAC management and control",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "enviroment": "gym/environment/#",
+                "desired_temperature": "gym/desired_temperature/#",
+                "current_occupancy": "gym/occupancy/current",
+                "control_commands": "gym/hvac/on_off/#"
+            },
+            "published_topics": {
+                "automatic_control": "gym/hvac/control/<roomID>",
+                "alert": "gym/environment/alert/<roomID>"
+            },
+            "last_update": "2024-10-17 10:59:21"
+        },
+        {
+            "service_id": "occupancy",
+            "description": "Handles the occupancy count of the gym and makes prediction about it",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "entries": "gym/occupancy/entry",
+                "exits": "gym/occupancy/exit"
+            },
+            "published_topics": {
+                "current_occupancy": "gym/occupancy/current",
+                "prediction": "gym/occupancy/prediction"
+            },
+            "last_update": "2024-10-17 10:59:27"
+        },
+        {
+            "service_id": "device_connector",
+            "description": "Handles sensors and actuators data",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "resource_catalog": "http://resource_catalog:8081",
+            "endpoint": "http://device_connector:8082",
+            "subscribed_topics": {
+                "automatic_control": "gym/hvac/control/#",
+                "control_commands": "gym/hvac/on_off/#"
+            },
+            "published_topics": {
+                "entries": "gym/occupancy/entry",
+                "exits": "gym/occupancy/exit",
+                "enviroment": "gym/environment/<roomID>",
+                "availability": "gym/availability/<machineID>"
+            },
+            "last_update": "2024-10-17 13:13:37"
+        },
+        {
+            "service_id": "machine_availability",
+            "description": "Handles availability of a single machine and group it with other machines of the same type",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "availability": "gym/availability/#"
+            },
+            "published_topics": {
+                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
+            },
+            "last_update": "2024-10-17 13:13:37"
+        },
+        {
+            "service_id": "thingspeak_adaptor",
+            "description": "Handles ThingSpeak data uploads and CSV generation",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "endpoint": "http://thingspeak_adaptor:8089/?channel=entrance",
+            "subscribed_topics": {
+                "current_occupancy": "gym/occupancy/current",
+                "enviroments": "gym/environment/<roomID>",
+                "machine_availability": "gym/group_availability/<machine_type>"
+            },
+            "published_topics": null,
+            "last_update": "2024-10-17 13:13:38"
+        },
+        {
+            "service_id": "hvac_control",
+            "description": "HVAC management and control",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "enviroment": "gym/environment/#",
+                "desired_temperature": "gym/desired_temperature/#",
+                "current_occupancy": "gym/occupancy/current",
+                "control_commands": "gym/hvac/on_off/#"
+            },
+            "published_topics": {
+                "automatic_control": "gym/hvac/control/<roomID>",
+                "alert": "gym/environment/alert/<roomID>"
+            },
+            "last_update": "2024-10-17 13:13:38"
+        },
+        {
+            "service_id": "occupancy",
+            "description": "Handles the occupancy count of the gym and makes prediction about it",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "entries": "gym/occupancy/entry",
+                "exits": "gym/occupancy/exit"
+            },
+            "published_topics": {
+                "current_occupancy": "gym/occupancy/current",
+                "prediction": "gym/occupancy/prediction"
+            },
+            "last_update": "2024-10-17 13:13:42"
+        },
+        {
+            "service_id": "device_connector",
+            "description": "Handles sensors and actuators data",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "resource_catalog": "http://resource_catalog:8081",
+            "endpoint": "http://device_connector:8082",
+            "subscribed_topics": {
+                "automatic_control": "gym/hvac/control/#",
+                "control_commands": "gym/hvac/on_off/#"
+            },
+            "published_topics": {
+                "entries": "gym/occupancy/entry",
+                "exits": "gym/occupancy/exit",
+                "enviroment": "gym/environment/<roomID>",
+                "availability": "gym/availability/<machineID>"
+            },
+            "last_update": "2024-10-17 13:19:47"
+        },
+        {
+            "service_id": "thingspeak_adaptor",
+            "description": "Handles ThingSpeak data uploads and CSV generation",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "endpoint": "http://thingspeak_adaptor:8089/?channel=entrance",
+            "subscribed_topics": {
+                "current_occupancy": "gym/occupancy/current",
+                "enviroments": "gym/environment/<roomID>",
+                "machine_availability": "gym/group_availability/<machine_type>"
+            },
+            "published_topics": null,
+            "last_update": "2024-10-17 13:19:47"
+        },
+        {
+            "service_id": "machine_availability",
+            "description": "Handles availability of a single machine and group it with other machines of the same type",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "availability": "gym/availability/#"
+            },
+            "published_topics": {
+                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
+            },
+            "last_update": "2024-10-17 13:19:48"
+        },
+        {
+            "service_id": "hvac_control",
+            "description": "HVAC management and control",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "enviroment": "gym/environment/#",
+                "desired_temperature": "gym/desired_temperature/#",
+                "current_occupancy": "gym/occupancy/current",
+                "control_commands": "gym/hvac/on_off/#"
+            },
+            "published_topics": {
+                "automatic_control": "gym/hvac/control/<roomID>",
+                "alert": "gym/environment/alert/<roomID>"
+            },
+            "last_update": "2024-10-17 13:19:48"
+        },
+        {
+            "service_id": "occupancy",
+            "description": "Handles the occupancy count of the gym and makes prediction about it",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "entries": "gym/occupancy/entry",
+                "exits": "gym/occupancy/exit"
+            },
+            "published_topics": {
+                "current_occupancy": "gym/occupancy/current",
+                "prediction": "gym/occupancy/prediction"
+            },
+            "last_update": "2024-10-17 13:19:52"
+        },
+        {
+            "service_id": "device_connector",
+            "description": "Handles sensors and actuators data",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "resource_catalog": "http://resource_catalog:8081",
+            "endpoint": "http://device_connector:8082",
+            "subscribed_topics": {
+                "automatic_control": "gym/hvac/control/#",
+                "control_commands": "gym/hvac/on_off/#"
+            },
+            "published_topics": {
+                "entries": "gym/occupancy/entry",
+                "exits": "gym/occupancy/exit",
+                "enviroment": "gym/environment/<roomID>",
+                "availability": "gym/availability/<machineID>"
+            },
+            "last_update": "2024-10-17 13:29:28"
+        },
+        {
+            "service_id": "machine_availability",
+            "description": "Handles availability of a single machine and group it with other machines of the same type",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "availability": "gym/availability/#"
+            },
+            "published_topics": {
+                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
+            },
+            "last_update": "2024-10-17 13:29:28"
+        },
+        {
+            "service_id": "thingspeak_adaptor",
+            "description": "Handles ThingSpeak data uploads and CSV generation",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "endpoint": "http://thingspeak_adaptor:8089/?channel=entrance",
+            "subscribed_topics": {
+                "current_occupancy": "gym/occupancy/current",
+                "enviroments": "gym/environment/<roomID>",
+                "machine_availability": "gym/group_availability/<machine_type>"
+            },
+            "published_topics": null,
+            "last_update": "2024-10-17 13:29:28"
+        },
+        {
+            "service_id": "hvac_control",
+            "description": "HVAC management and control",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "enviroment": "gym/environment/#",
+                "desired_temperature": "gym/desired_temperature/#",
+                "current_occupancy": "gym/occupancy/current",
+                "control_commands": "gym/hvac/on_off/#"
+            },
+            "published_topics": {
+                "automatic_control": "gym/hvac/control/<roomID>",
+                "alert": "gym/environment/alert/<roomID>"
+            },
+            "last_update": "2024-10-17 13:29:29"
+        },
+        {
+            "service_id": "occupancy",
+            "description": "Handles the occupancy count of the gym and makes prediction about it",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "entries": "gym/occupancy/entry",
+                "exits": "gym/occupancy/exit"
+            },
+            "published_topics": {
+                "current_occupancy": "gym/occupancy/current",
+                "prediction": "gym/occupancy/prediction"
+            },
+            "last_update": "2024-10-17 13:29:32"
+        },
+        {
             "service_id": "device_connector",
             "description": "Handles sensors and actuators data",
             "status": "active",
@@ -193,7 +565,119 @@
                 "enviroment": "gym/environment/<roomID>",
                 "availability": "gym/availability/<machineID>"
             },
-            "last_update": "2024-10-15 12:42:30"
+            "last_update": "2024-10-17 15:37:02"
+        },
+        {
+            "service_id": "machine_availability",
+            "description": "Handles availability of a single machine and group it with other machines of the same type",
+            "status": "active",
+            "service_catalog": "http://localhost:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "availability": "gym/availability/#"
+            },
+            "published_topics": {
+                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
+            },
+            "last_update": "2024-10-17 15:39:43"
+        },
+        {
+            "service_id": "machine_availability",
+            "description": "Handles availability of a single machine and group it with other machines of the same type",
+            "status": "active",
+            "service_catalog": "http://localhost:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "availability": "gym/availability/#"
+            },
+            "published_topics": {
+                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
+            },
+            "last_update": "2024-10-17 15:40:45"
+        },
+        {
+            "service_id": "machine_availability",
+            "description": "Handles availability of a single machine and group it with other machines of the same type",
+            "status": "active",
+            "service_catalog": "http://localhost:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "availability": "gym/availability/#"
+            },
+            "published_topics": {
+                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
+            },
+            "last_update": "2024-10-17 15:43:54"
+        },
+        {
+            "service_id": "machine_availability",
+            "description": "Handles availability of a single machine and group it with other machines of the same type",
+            "status": "active",
+            "service_catalog": "http://localhost:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "availability": "gym/availability/#"
+            },
+            "published_topics": {
+                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
+            },
+            "last_update": "2024-10-17 15:46:58"
+        },
+        {
+            "service_id": "machine_availability",
+            "description": "Handles availability of a single machine and group it with other machines of the same type",
+            "status": "active",
+            "service_catalog": "http://localhost:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "availability": "gym/availability/#"
+            },
+            "published_topics": {
+                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
+            },
+            "last_update": "2024-10-17 15:47:46"
+        },
+        {
+            "service_id": "machine_availability",
+            "description": "Handles availability of a single machine and group it with other machines of the same type",
+            "status": "active",
+            "service_catalog": "http://localhost:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "availability": "gym/availability/#"
+            },
+            "published_topics": {
+                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
+            },
+            "last_update": "2024-10-17 15:49:23"
+        },
+        {
+            "service_id": "machine_availability",
+            "description": "Handles availability of a single machine and group it with other machines of the same type",
+            "status": "active",
+            "service_catalog": "http://localhost:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "availability": "gym/availability/#"
+            },
+            "published_topics": {
+                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
+            },
+            "last_update": "2024-10-17 15:52:32"
+        },
+        {
+            "service_id": "machine_availability",
+            "description": "Handles availability of a single machine and group it with other machines of the same type",
+            "status": "active",
+            "service_catalog": "http://localhost:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "availability": "gym/availability/#"
+            },
+            "published_topics": {
+                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
+            },
+            "last_update": "2024-10-17 15:59:04"
         },
         {
             "service_id": "device_connector",
@@ -212,151 +696,7 @@
                 "enviroment": "gym/environment/<roomID>",
                 "availability": "gym/availability/<machineID>"
             },
-            "last_update": "2024-10-15 12:43:04"
-        },
-        {
-            "service_id": "machine_availability",
-            "description": "Handles availability of a single machine and group it with other machines of the same type",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "availability": "gym/availability/#"
-            },
-            "published_topics": {
-                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
-            },
-            "last_update": "2024-10-15 10:48:22"
-        },
-        {
-            "service_id": "hvac_control",
-            "description": "HVAC management and control",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "enviroment": "gym/environment/#",
-                "desired_temperature": "gym/desired_temperature/#",
-                "current_occupancy": "gym/occupancy/current",
-                "control_commands": "gym/hvac/on_off/#"
-            },
-            "published_topics": {
-                "automatic_control": "gym/hvac/control/<roomID>",
-                "alert": "gym/environment/alert/<roomID>"
-            },
-            "last_update": "2024-10-15 10:48:23"
-        },
-        {
-            "service_id": "occupancy",
-            "description": "Handles the occupancy count of the gym and makes prediction about it",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "entries": "gym/occupancy/entry",
-                "exits": "gym/occupancy/exit"
-            },
-            "published_topics": {
-                "current_occupancy": "gym/occupancy/current",
-                "prediction": "gym/occupancy/prediction"
-            },
-            "last_update": "2024-10-15 10:48:24"
-        },
-        {
-            "service_id": "machine_availability",
-            "description": "Handles availability of a single machine and group it with other machines of the same type",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "availability": "gym/availability/#"
-            },
-            "published_topics": {
-                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
-            },
-            "last_update": "2024-10-15 10:53:02"
-        },
-        {
-            "service_id": "hvac_control",
-            "description": "HVAC management and control",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "enviroment": "gym/environment/#",
-                "desired_temperature": "gym/desired_temperature/#",
-                "current_occupancy": "gym/occupancy/current",
-                "control_commands": "gym/hvac/on_off/#"
-            },
-            "published_topics": {
-                "automatic_control": "gym/hvac/control/<roomID>",
-                "alert": "gym/environment/alert/<roomID>"
-            },
-            "last_update": "2024-10-15 10:53:03"
-        },
-        {
-            "service_id": "occupancy",
-            "description": "Handles the occupancy count of the gym and makes prediction about it",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "entries": "gym/occupancy/entry",
-                "exits": "gym/occupancy/exit"
-            },
-            "published_topics": {
-                "current_occupancy": "gym/occupancy/current",
-                "prediction": "gym/occupancy/prediction"
-            },
-            "last_update": "2024-10-15 10:53:05"
-        },
-        {
-            "service_id": "machine_availability",
-            "description": "Handles availability of a single machine and group it with other machines of the same type",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "availability": "gym/availability/#"
-            },
-            "published_topics": {
-                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
-            },
-            "last_update": "2024-10-15 13:09:28"
-        },
-        {
-            "service_id": "hvac_control",
-            "description": "HVAC management and control",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "enviroment": "gym/environment/#",
-                "desired_temperature": "gym/desired_temperature/#",
-                "current_occupancy": "gym/occupancy/current",
-                "control_commands": "gym/hvac/on_off/#"
-            },
-            "published_topics": {
-                "automatic_control": "gym/hvac/control/<roomID>",
-                "alert": "gym/environment/alert/<roomID>"
-            },
-            "last_update": "2024-10-15 13:09:28"
-        },
-        {
-            "service_id": "occupancy",
-            "description": "Handles the occupancy count of the gym and makes prediction about it",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "entries": "gym/occupancy/entry",
-                "exits": "gym/occupancy/exit"
-            },
-            "published_topics": {
-                "current_occupancy": "gym/occupancy/current",
-                "prediction": "gym/occupancy/prediction"
-            },
-            "last_update": "2024-10-15 13:09:32"
+            "last_update": "2024-10-17 16:04:11"
         },
         {
             "service_id": "device_connector",
@@ -375,7 +715,200 @@
                 "enviroment": "gym/environment/<roomID>",
                 "availability": "gym/availability/<machineID>"
             },
-            "last_update": "2024-10-15 18:02:24"
+            "last_update": "2024-10-17 16:04:37"
+        },
+        {
+            "service_id": "device_connector",
+            "description": "Handles sensors and actuators data",
+            "status": "active",
+            "service_catalog": "http://localhost:8080",
+            "resource_catalog": "http://localhost:8081",
+            "endpoint": "http://localhost:8082",
+            "subscribed_topics": {
+                "automatic_control": "gym/hvac/control/#",
+                "control_commands": "gym/hvac/on_off/#"
+            },
+            "published_topics": {
+                "entries": "gym/occupancy/entry",
+                "exits": "gym/occupancy/exit",
+                "enviroment": "gym/environment/<roomID>",
+                "availability": "gym/availability/<machineID>"
+            },
+            "last_update": "2024-10-17 16:05:51"
+        },
+        {
+            "service_id": "device_connector",
+            "description": "Handles sensors and actuators data",
+            "status": "active",
+            "service_catalog": "http://localhost:8080",
+            "resource_catalog": "http://localhost:8081",
+            "endpoint": "http://localhost:8082",
+            "subscribed_topics": {
+                "automatic_control": "gym/hvac/control/#",
+                "control_commands": "gym/hvac/on_off/#"
+            },
+            "published_topics": {
+                "entries": "gym/occupancy/entry",
+                "exits": "gym/occupancy/exit",
+                "enviroment": "gym/environment/<roomID>",
+                "availability": "gym/availability/<machineID>"
+            },
+            "last_update": "2024-10-17 16:07:00"
+        },
+        {
+            "service_id": "device_connector",
+            "description": "Handles sensors and actuators data",
+            "status": "active",
+            "service_catalog": "http://localhost:8080",
+            "resource_catalog": "http://localhost:8081",
+            "endpoint": "http://localhost:8082",
+            "subscribed_topics": {
+                "automatic_control": "gym/hvac/control/#",
+                "control_commands": "gym/hvac/on_off/#"
+            },
+            "published_topics": {
+                "entries": "gym/occupancy/entry",
+                "exits": "gym/occupancy/exit",
+                "enviroment": "gym/environment/<roomID>",
+                "availability": "gym/availability/<machineID>"
+            },
+            "last_update": "2024-10-17 16:15:58"
+        },
+        {
+            "service_id": "device_connector",
+            "description": "Handles sensors and actuators data",
+            "status": "active",
+            "service_catalog": "http://localhost:8080",
+            "resource_catalog": "http://localhost:8081",
+            "endpoint": "http://localhost:8082",
+            "subscribed_topics": {
+                "automatic_control": "gym/hvac/control/#",
+                "control_commands": "gym/hvac/on_off/#"
+            },
+            "published_topics": {
+                "entries": "gym/occupancy/entry",
+                "exits": "gym/occupancy/exit",
+                "enviroment": "gym/environment/<roomID>",
+                "availability": "gym/availability/<machineID>"
+            },
+            "last_update": "2024-10-17 16:18:10"
+        },
+        {
+            "service_id": "device_connector",
+            "description": "Handles sensors and actuators data",
+            "status": "active",
+            "service_catalog": "http://localhost:8080",
+            "resource_catalog": "http://localhost:8081",
+            "endpoint": "http://localhost:8082",
+            "subscribed_topics": {
+                "automatic_control": "gym/hvac/control/#",
+                "control_commands": "gym/hvac/on_off/#"
+            },
+            "published_topics": {
+                "entries": "gym/occupancy/entry",
+                "exits": "gym/occupancy/exit",
+                "enviroment": "gym/environment/<roomID>",
+                "availability": "gym/availability/<machineID>"
+            },
+            "last_update": "2024-10-17 16:25:14"
+        },
+        {
+            "service_id": "machine_availability",
+            "description": "Handles availability of a single machine and group it with other machines of the same type",
+            "status": "active",
+            "service_catalog": "http://localhost:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "availability": "gym/availability/#"
+            },
+            "published_topics": {
+                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
+            },
+            "last_update": "2024-10-17 16:26:06"
+        },
+        {
+            "service_id": "machine_availability",
+            "description": "Handles availability of a single machine and group it with other machines of the same type",
+            "status": "active",
+            "service_catalog": "http://localhost:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "availability": "gym/availability/#"
+            },
+            "published_topics": {
+                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
+            },
+            "last_update": "2024-10-17 16:27:47"
+        },
+        {
+            "service_id": "machine_availability",
+            "description": "Handles availability of a single machine and group it with other machines of the same type",
+            "status": "active",
+            "service_catalog": "http://localhost:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "availability": "gym/availability/#"
+            },
+            "published_topics": {
+                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
+            },
+            "last_update": "2024-10-17 16:28:53"
+        },
+        {
+            "service_id": "machine_availability",
+            "description": "Handles availability of a single machine and group it with other machines of the same type",
+            "status": "active",
+            "service_catalog": "http://localhost:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "availability": "gym/availability/#"
+            },
+            "published_topics": {
+                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
+            },
+            "last_update": "2024-10-17 16:31:47"
+        },
+        {
+            "service_id": "machine_availability",
+            "description": "Handles availability of a single machine and group it with other machines of the same type",
+            "status": "active",
+            "service_catalog": "http://localhost:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "availability": "gym/availability/#"
+            },
+            "published_topics": {
+                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
+            },
+            "last_update": "2024-10-17 16:33:40"
+        },
+        {
+            "service_id": "machine_availability",
+            "description": "Handles availability of a single machine and group it with other machines of the same type",
+            "status": "active",
+            "service_catalog": "http://localhost:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "availability": "gym/availability/#"
+            },
+            "published_topics": {
+                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
+            },
+            "last_update": "2024-10-17 16:34:20"
+        },
+        {
+            "service_id": "machine_availability",
+            "description": "Handles availability of a single machine and group it with other machines of the same type",
+            "status": "active",
+            "service_catalog": "http://localhost:8080",
+            "endpoint": null,
+            "subscribed_topics": {
+                "availability": "gym/availability/#"
+            },
+            "published_topics": {
+                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
+            },
+            "last_update": "2024-10-17 16:38:13"
         },
         {
             "service_id": "device_connector",
@@ -394,21 +927,7 @@
                 "enviroment": "gym/environment/<roomID>",
                 "availability": "gym/availability/<machineID>"
             },
-            "last_update": "2024-10-15 16:05:16"
-        },
-        {
-            "service_id": "machine_availability",
-            "description": "Handles availability of a single machine and group it with other machines of the same type",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "availability": "gym/availability/#"
-            },
-            "published_topics": {
-                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
-            },
-            "last_update": "2024-10-15 16:05:17"
+            "last_update": "2024-10-17 14:43:34"
         },
         {
             "service_id": "hvac_control",
@@ -426,7 +945,21 @@
                 "automatic_control": "gym/hvac/control/<roomID>",
                 "alert": "gym/environment/alert/<roomID>"
             },
-            "last_update": "2024-10-15 16:05:18"
+            "last_update": "2024-10-17 14:43:34"
+        },
+        {
+            "service_id": "thingspeak_adaptor",
+            "description": "Handles ThingSpeak data uploads and CSV generation",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "endpoint": "http://thingspeak_adaptor:8089/?channel=entrance",
+            "subscribed_topics": {
+                "current_occupancy": "gym/occupancy/current",
+                "enviroments": "gym/environment/<roomID>",
+                "machine_availability": "gym/group_availability/<machine_type>"
+            },
+            "published_topics": null,
+            "last_update": "2024-10-17 14:43:35"
         },
         {
             "service_id": "occupancy",
@@ -442,343 +975,8 @@
                 "current_occupancy": "gym/occupancy/current",
                 "prediction": "gym/occupancy/prediction"
             },
-            "last_update": "2024-10-15 16:05:22"
-        },
-        {
-            "service_id": "device_connector",
-            "description": "Handles sensors and actuators data",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "resource_catalog": "http://resource_catalog:8081",
-            "endpoint": "http://device_connector:8082",
-            "subscribed_topics": {
-                "automatic_control": "gym/hvac/control/#",
-                "control_commands": "gym/hvac/on_off/#"
-            },
-            "published_topics": {
-                "entries": "gym/occupancy/entry",
-                "exits": "gym/occupancy/exit",
-                "enviroment": "gym/environment/<roomID>",
-                "availability": "gym/availability/<machineID>"
-            },
-            "last_update": "2024-10-16 16:22:16"
-        },
-        {
-            "service_id": "machine_availability",
-            "description": "Handles availability of a single machine and group it with other machines of the same type",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "availability": "gym/availability/#"
-            },
-            "published_topics": {
-                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
-            },
-            "last_update": "2024-10-16 16:22:16"
-        },
-        {
-            "service_id": "hvac_control",
-            "description": "HVAC management and control",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "enviroment": "gym/environment/#",
-                "desired_temperature": "gym/desired_temperature/#",
-                "current_occupancy": "gym/occupancy/current",
-                "control_commands": "gym/hvac/on_off/#"
-            },
-            "published_topics": {
-                "automatic_control": "gym/hvac/control/<roomID>",
-                "alert": "gym/environment/alert/<roomID>"
-            },
-            "last_update": "2024-10-16 16:22:16"
-        },
-        {
-            "service_id": "occupancy",
-            "description": "Handles the occupancy count of the gym and makes prediction about it",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "entries": "gym/occupancy/entry",
-                "exits": "gym/occupancy/exit"
-            },
-            "published_topics": {
-                "current_occupancy": "gym/occupancy/current",
-                "prediction": "gym/occupancy/prediction"
-            },
-            "last_update": "2024-10-16 16:22:23"
-        },
-        {
-            "service_id": "device_connector",
-            "description": "Handles sensors and actuators data",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "resource_catalog": "http://resource_catalog:8081",
-            "endpoint": "http://device_connector:8082",
-            "subscribed_topics": {
-                "automatic_control": "gym/hvac/control/#",
-                "control_commands": "gym/hvac/on_off/#"
-            },
-            "published_topics": {
-                "entries": "gym/occupancy/entry",
-                "exits": "gym/occupancy/exit",
-                "enviroment": "gym/environment/<roomID>",
-                "availability": "gym/availability/<machineID>"
-            },
-            "last_update": "2024-10-16 16:25:30"
-        },
-        {
-            "service_id": "machine_availability",
-            "description": "Handles availability of a single machine and group it with other machines of the same type",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "availability": "gym/availability/#"
-            },
-            "published_topics": {
-                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
-            },
-            "last_update": "2024-10-16 16:25:31"
-        },
-        {
-            "service_id": "hvac_control",
-            "description": "HVAC management and control",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "enviroment": "gym/environment/#",
-                "desired_temperature": "gym/desired_temperature/#",
-                "current_occupancy": "gym/occupancy/current",
-                "control_commands": "gym/hvac/on_off/#"
-            },
-            "published_topics": {
-                "automatic_control": "gym/hvac/control/<roomID>",
-                "alert": "gym/environment/alert/<roomID>"
-            },
-            "last_update": "2024-10-16 16:25:32"
-        },
-        {
-            "service_id": "occupancy",
-            "description": "Handles the occupancy count of the gym and makes prediction about it",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "entries": "gym/occupancy/entry",
-                "exits": "gym/occupancy/exit"
-            },
-            "published_topics": {
-                "current_occupancy": "gym/occupancy/current",
-                "prediction": "gym/occupancy/prediction"
-            },
-            "last_update": "2024-10-16 16:25:35"
-        },
-        {
-            "service_id": "device_connector",
-            "description": "Handles sensors and actuators data",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "resource_catalog": "http://resource_catalog:8081",
-            "endpoint": "http://device_connector:8082",
-            "subscribed_topics": {
-                "automatic_control": "gym/hvac/control/#",
-                "control_commands": "gym/hvac/on_off/#"
-            },
-            "published_topics": {
-                "entries": "gym/occupancy/entry",
-                "exits": "gym/occupancy/exit",
-                "enviroment": "gym/environment/<roomID>",
-                "availability": "gym/availability/<machineID>"
-            },
-            "last_update": "2024-10-16 19:10:02"
-        },
-        {
-            "service_id": "hvac_control",
-            "description": "HVAC management and control",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "enviroment": "gym/environment/#",
-                "desired_temperature": "gym/desired_temperature/#",
-                "current_occupancy": "gym/occupancy/current",
-                "control_commands": "gym/hvac/on_off/#"
-            },
-            "published_topics": {
-                "automatic_control": "gym/hvac/control/<roomID>",
-                "alert": "gym/environment/alert/<roomID>"
-            },
-            "last_update": "2024-10-16 19:10:03"
-        },
-        {
-            "service_id": "machine_availability",
-            "description": "Handles availability of a single machine and group it with other machines of the same type",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "availability": "gym/availability/#"
-            },
-            "published_topics": {
-                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
-            },
-            "last_update": "2024-10-16 19:10:03"
-        },
-        {
-            "service_id": "occupancy",
-            "description": "Handles the occupancy count of the gym and makes prediction about it",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "entries": "gym/occupancy/entry",
-                "exits": "gym/occupancy/exit"
-            },
-            "published_topics": {
-                "current_occupancy": "gym/occupancy/current",
-                "prediction": "gym/occupancy/prediction"
-            },
-            "last_update": "2024-10-16 19:10:05"
-        },
-        {
-            "service_id": "device_connector",
-            "description": "Handles sensors and actuators data",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "resource_catalog": "http://resource_catalog:8081",
-            "endpoint": "http://device_connector:8082",
-            "subscribed_topics": {
-                "automatic_control": "gym/hvac/control/#",
-                "control_commands": "gym/hvac/on_off/#"
-            },
-            "published_topics": {
-                "entries": "gym/occupancy/entry",
-                "exits": "gym/occupancy/exit",
-                "enviroment": "gym/environment/<roomID>",
-                "availability": "gym/availability/<machineID>"
-            },
-            "last_update": "2024-10-16 19:11:55"
-        },
-        {
-            "service_id": "hvac_control",
-            "description": "HVAC management and control",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "enviroment": "gym/environment/#",
-                "desired_temperature": "gym/desired_temperature/#",
-                "current_occupancy": "gym/occupancy/current",
-                "control_commands": "gym/hvac/on_off/#"
-            },
-            "published_topics": {
-                "automatic_control": "gym/hvac/control/<roomID>",
-                "alert": "gym/environment/alert/<roomID>"
-            },
-            "last_update": "2024-10-16 19:11:55"
-        },
-        {
-            "service_id": "machine_availability",
-            "description": "Handles availability of a single machine and group it with other machines of the same type",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "availability": "gym/availability/#"
-            },
-            "published_topics": {
-                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
-            },
-            "last_update": "2024-10-16 19:11:56"
-        },
-        {
-            "service_id": "occupancy",
-            "description": "Handles the occupancy count of the gym and makes prediction about it",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "entries": "gym/occupancy/entry",
-                "exits": "gym/occupancy/exit"
-            },
-            "published_topics": {
-                "current_occupancy": "gym/occupancy/current",
-                "prediction": "gym/occupancy/prediction"
-            },
-            "last_update": "2024-10-16 19:11:58"
-        },
-        {
-            "service_id": "device_connector",
-            "description": "Handles sensors and actuators data",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "resource_catalog": "http://resource_catalog:8081",
-            "endpoint": "http://device_connector:8082",
-            "subscribed_topics": {
-                "automatic_control": "gym/hvac/control/#",
-                "control_commands": "gym/hvac/on_off/#"
-            },
-            "published_topics": {
-                "entries": "gym/occupancy/entry",
-                "exits": "gym/occupancy/exit",
-                "enviroment": "gym/environment/<roomID>",
-                "availability": "gym/availability/<machineID>"
-            },
-            "last_update": "2024-10-16 19:15:41"
-        },
-        {
-            "service_id": "machine_availability",
-            "description": "Handles availability of a single machine and group it with other machines of the same type",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "availability": "gym/availability/#"
-            },
-            "published_topics": {
-                "group_availability_x_machine_type": "gym/group_availability/<machine_type>"
-            },
-            "last_update": "2024-10-16 19:15:41"
-        },
-        {
-            "service_id": "hvac_control",
-            "description": "HVAC management and control",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "enviroment": "gym/environment/#",
-                "desired_temperature": "gym/desired_temperature/#",
-                "current_occupancy": "gym/occupancy/current",
-                "control_commands": "gym/hvac/on_off/#"
-            },
-            "published_topics": {
-                "automatic_control": "gym/hvac/control/<roomID>",
-                "alert": "gym/environment/alert/<roomID>"
-            },
-            "last_update": "2024-10-16 19:15:42"
-        },
-        {
-            "service_id": "occupancy",
-            "description": "Handles the occupancy count of the gym and makes prediction about it",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
-            "subscribed_topics": {
-                "entries": "gym/occupancy/entry",
-                "exits": "gym/occupancy/exit"
-            },
-            "published_topics": {
-                "current_occupancy": "gym/occupancy/current",
-                "prediction": "gym/occupancy/prediction"
-            },
-            "last_update": "2024-10-16 19:15:44"
+            "last_update": "2024-10-17 14:43:39"
         }
     ],
-    "lastUpdate": "2024-10-16 19:15:44"
+    "lastUpdate": "2024-10-17 14:43:39"
 }

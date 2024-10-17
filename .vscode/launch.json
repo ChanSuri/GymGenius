@@ -8,7 +8,7 @@
             "name": "Debugger Python: File corrente",
             "type": "debugpy",
             "request": "launch",
-            "program": "C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\device_connector\\device_connector.py",
+            "program": "C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\Machine_availability\\machine_availability.py",
             "console": "integratedTerminal"
         }
     ]
