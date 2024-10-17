@@ -3,7 +3,7 @@ import time
 import requests
 import signal
 import paho.mqtt.client as mqtt
-from registration_functions import register_service, delete_service
+from registration_functions import *
 
 class ThingspeakAdaptor:
     def __init__(self, config):
@@ -220,23 +220,23 @@ def initialize_service(config_dict):
 
 def stop_service(signum, frame):
     """Unregister and stop the service."""
-    with open('config_thingspeak_adaptor.json') as config_file:
-        config_dict = json.load(config_file)
     print("Stopping service...")
     delete_service("thingspeak_adaptor", config_dict['service_catalog'])
+    
     adaptor.stop()
 
 if __name__ == "__main__":
     # Load configuration from config_thingspeak_adaptor.json
     with open('config_thingspeak_adaptor.json') as config_file:
-        config = json.load(config_file)
+        config_dict = json.load(config_file)
 
     # Initialize the service with the loaded configuration
-    adaptor = ThingspeakAdaptor(config)
-    initialize_service(config)
+    initialize_service(config_dict)
 
     # Signal handler for clean stop
     signal.signal(signal.SIGINT, stop_service)
+
+    adaptor = ThingspeakAdaptor(config_dict)
 
     # Start the MQTT client loop
     adaptor.client.loop_start()
