@@ -220,12 +220,11 @@ def initialize_service(config_dict):
 
 def stop_service(signum, frame):
     """Unregister and stop the service."""
-    with open('config_thingspeak_adaptor.json') as config_file:
-        config_dict = json.load(config_file)
     print("Stopping service...")
     delete_service("thingspeak_adaptor", config_dict['service_catalog'])
     
     adaptor.stop()
+
 
 if __name__ == "__main__":
     # Load configuration from config_thingspeak_adaptor.json
