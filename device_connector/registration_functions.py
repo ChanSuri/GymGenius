@@ -1,15 +1,25 @@
 import requests
 from datetime import datetime
 
-# Function to register services
+# Function to register or update services
 def register_service(config_dict, service_catalog_url):
     service = config_dict
     service["last_update"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
+
     try:
         response = requests.post(service_catalog_url, json=service)
         if response.status_code == 200:
             print(f"Service {service['service_id']} registered successfully.")
+        elif response.status_code == 409:  # Conflict, service already exists
+            try:
+                # Perform PUT request to update the service
+                response = requests.put(service_catalog_url, json=service)
+                if response.status_code == 200:
+                    print(f"Service {service['service_id']} updated successfully.")
+                else:
+                    print(f"Error updating the service: {response.status_code} - {response.text}")
+            except requests.exceptions.RequestException as e:
+                print(f"Connection error during service update: {e}")
         else:
             print(f"Error registering the service: {response.status_code} - {response.text}")
     except requests.exceptions.RequestException as e:

@@ -156,7 +156,7 @@ class MachineAvailabilityService:
 
 def initialize_service(config_dict):
     # Register the service at startup
-    register_service(config_dict,service.service_catalog_url)
+    register_service(config_dict,config_dict["service_catalog"])
     print("Machine Availability Service Initialized and Registered")
 
 def stop_service(signum, frame):

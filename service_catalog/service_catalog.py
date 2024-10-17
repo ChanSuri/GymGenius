@@ -46,27 +46,53 @@ class ServiceCatalog:
         body = cherrypy.request.body.read().decode('utf-8')
         input_data = json.loads(body)
         service_id = input_data.get("service_id")
-        
+
         # Ensure service_id is present
         if not service_id:
             raise cherrypy.HTTPError(400, "service_id is required")
-        
+
         # Build a dictionary for quick lookup
         services_by_id = {service["service_id"]: service for service in service_registry.get("services", [])}
 
-        # Check if the device already exists
+        # Check if the service already exists
         if service_id in services_by_id:
             existing_service = services_by_id[service_id]
             if input_data == existing_service:
                 raise cherrypy.HTTPError(304, "Service already registered with the same data")
+            else:
+                raise cherrypy.HTTPError(409, "Service exists but data differs. Update required.")
 
-        # Add the device to the registry
+        # Add the service to the registry
         service_registry["services"].append(input_data)
-        
-        # update last update of the whole register 
+
+        # Update last update of the whole register
         service_registry["lastUpdate"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         save_service_registry(service_registry)
         return json.dumps({"status": "success", "message": "Service registered successfully"})
+    
+    def PUT(self, *uri, **params):
+        # Read and decode the request body
+        body = cherrypy.request.body.read().decode('utf-8')
+        input_data = json.loads(body)
+        service_id = input_data.get("service_id")
+
+        # Ensure service_id is present
+        if not service_id:
+            raise cherrypy.HTTPError(400, "service_id is required")
+
+        # Simply update the service in the registry
+        for i, service in enumerate(service_registry["services"]):
+            if service["service_id"] == service_id:
+                service_registry["services"][i] = input_data
+                break
+        else:
+            raise cherrypy.HTTPError(404, "Service not found")
+
+        # Update last update of the whole register
+        service_registry["lastUpdate"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        save_service_registry(service_registry)
+
+        return json.dumps({"status": "success", "message": "Service updated successfully"})
 
     def DELETE(self, *uri, **params):
         # Ensure service_id is provided in the URI
