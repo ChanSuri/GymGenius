@@ -214,9 +214,9 @@ class ThingspeakAdaptor:
 
 # Service initialization and signal handling
 
-def initialize_service(adaptor):
+def initialize_service(config_dict):
     """Register the service at startup."""
-    register_service(adaptor.config, adaptor.service_catalog_url)
+    register_service(config_dict, adaptor.service_catalog_url)
     print("Thingspeak Adaptor Service Initialized and Registered")
 
 def stop_service(signum, frame):
@@ -232,7 +232,7 @@ if __name__ == "__main__":
 
     # Initialize the service with the loaded configuration
     adaptor = ThingspeakAdaptor(config)
-    initialize_service(adaptor)
+    initialize_service(config)
 
     # Signal handler for clean stop
     signal.signal(signal.SIGINT, stop_service)
