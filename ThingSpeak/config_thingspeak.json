@@ -2,7 +2,7 @@
     "ThingspeakURL_write": "https://api.thingspeak.com/update?",
     "ThingspeakURL_read": "https://api.thingspeak.com/channels/",
     "channels": {
-        "Entrance": {
+        "entrance": {
             "channel_id": "2636342",
             "read_api_key": "2H9M0VEEDRZL1AD6",
             "writeAPIkey": "ATZ8HIS29W2XUSZU",
@@ -12,7 +12,7 @@
                 "humidity": 3      
             }
         },
-        "Changing Room": {
+        "changing_room": {
             "channel_id": "2636345",
             "read_api_key": "UQW0ZL69P60NYQHR",
             "writeAPIkey": "FACTC4ABRZWURCVE",
@@ -21,7 +21,7 @@
                 "humidity": 2      
             }
         },
-        "Cardio Room": {
+        "cardio_room": {
             "channel_id": "2636348",
             "read_api_key": "IIZQCXQPG1NW8MWS",
             "writeAPIkey": "T6471GETYN84WHXJ",
@@ -34,7 +34,7 @@
                 "rowing_machine": 6
             }
         },
-        "Lifting Room": {
+        "lifting_room": {
             "channel_id": "2636351",
             "read_api_key": "7I1GDLMWZFNI9VLT",
             "writeAPIkey": "D2FRMVBWV1Q3SJ3R",

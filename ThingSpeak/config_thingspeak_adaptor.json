@@ -6,8 +6,8 @@
     "endpoint": "http://thingspeak_adaptor:8089/?channel=entrance",
     "subscribed_topics": {
         "current_occupancy": "gym/occupancy/current",
-        "enviroments": "gym/environment/{room_name}",
-        "machine_availability": "gym/group_availability/#"
+        "enviroments": "gym/environment/<roomID>",
+        "machine_availability": "gym/group_availability/<machine_type>"
     },
     "published_topics": null,
     "last_update": null
