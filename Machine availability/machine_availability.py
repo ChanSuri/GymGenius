@@ -174,8 +174,8 @@ def stop_service(signum, frame):
 
 if __name__ == "__main__":
     # Load configuration from config.json
-    with open('C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\Machine_availability\\config.json') as config_file:
-    # with open('config.json') as config_file:
+    # with open('C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\Machine_availability\\config.json') as config_file:
+    with open('config.json') as config_file:
         config = json.load(config_file)
 
     # Initialize the service with the loaded configuration

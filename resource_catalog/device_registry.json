@@ -11,7 +11,23 @@
             "status": "active",
             "endpoint": "GymGenius/Occupancy/Entrance",
             "last_update": "2024-10-22 12:46:36"
+        },
+        {
+            "device_id": "ExitSensor001",
+            "type": "push-button-exit",
+            "location": "entrance",
+            "status": "active",
+            "endpoint": "GymGenius/Occupancy/Exit",
+            "last_update": "2024-10-25 13:35:56"
+        },
+        {
+            "device_id": "simulated_stationary_bike_3",
+            "type": "stationary_bike",
+            "location": "cardio room",
+            "status": "active",
+            "endpoint": "GymGenius/Occupancy/Availability/stationary_bike/3",
+            "last_update": "2024-10-25 13:35:59"
         }
     ],
-    "lastUpdate": "2024-10-22 12:46:51"
+    "lastUpdate": "2024-10-25 13:35:59"
 }
