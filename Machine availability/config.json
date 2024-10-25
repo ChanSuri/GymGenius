@@ -2,7 +2,7 @@
         "service_id": "machine_availability",
         "description": "Handles availability of a single machine and group it with other machines of the same type",
         "status": "active",
-        "service_catalog": "http://localhost:8080",
+        "service_catalog": "http://service_catalog:8080",
         "endpoint": null,
         "subscribed_topics": {
             "availability": "gym/availability/#"
