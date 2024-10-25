@@ -3,7 +3,7 @@
     "description": "Handles ThingSpeak data uploads and CSV generation",
     "status": "active",
     "service_catalog": "http://service_catalog:8080",
-    "endpoint": "http://thingspeak_adaptor8089/thingspeak_adaptor/?channel=entrance",
+    "endpoint": "http://thingspeak_adaptor:8089/thingspeak_adaptor/?channel=entrance",
     "subscribed_topics": {
         "current_occupancy": "gym/occupancy/current",
         "enviroments": "gym/environment/<roomID>",
