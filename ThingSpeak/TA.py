@@ -11,7 +11,7 @@ class ThingspeakAdaptor:
         self.service_catalog_url = config['service_catalog']
 
         # Get MQTT broker, port, roomsID, and machinesID from the service catalog
-        self.mqtt_broker, self.mqtt_port, self.roomsID, self.machinesID = self.get_info_from_service_catalog()
+        self.mqtt_broker, self.mqtt_port, self.roomsID, self.machinesID = self.get_info_from_service_catalog() #eccezione
 
         # Load ThingSpeak configuration from config_thingspeak.json
         self.thingspeak_config = self.load_thingspeak_config()
@@ -44,6 +44,7 @@ class ThingspeakAdaptor:
     def load_thingspeak_config(self):
         """Load the ThingSpeak configuration from a local JSON file."""
         try:
+            # with open('C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\ThingSpeak\\config_thingspeak.json') as f:
             with open('config_thingspeak.json') as f:
                 return json.load(f)
         except FileNotFoundError as e:
@@ -53,8 +54,9 @@ class ThingspeakAdaptor:
     def connect_mqtt(self):
         """Connect to the MQTT broker."""
         try:
+            print(self.mqtt_broker, self.mqtt_port)
             if self.mqtt_broker:
-                self.client.connect(self.mqtt_broker, self.mqtt_port, 60)
+                self.client.connect(self.mqtt_broker, self.mqtt_port, 540)
                 print("MQTT connected successfully.")
             else:
                 print("No MQTT broker information found.")
@@ -127,6 +129,7 @@ class ThingspeakAdaptor:
         try:
             occupancy_data = payload['message']['data']
             current_occupancy = occupancy_data.get('current_occupancy')
+            print(f"Received occupancy data: {current_occupancy}")
             if current_occupancy is not None:
                 self.update_cache('entrance', 'current_occupancy', current_occupancy)
                 self.upload_to_thingspeak('entrance')
@@ -172,6 +175,7 @@ class ThingspeakAdaptor:
         """Update the cache for a specific field in a room."""
         if room in self.field_cache and field_name in self.field_cache[room]:
             self.field_cache[room][field_name] = value
+            print(f"Cache updated for {room} - {field_name}: {value}")
 
     def upload_to_thingspeak(self, room):
         """Upload data to ThingSpeak for the specified room."""
@@ -228,6 +232,7 @@ def stop_service(signum, frame):
 
 if __name__ == "__main__":
     # Load configuration from config_thingspeak_adaptor.json
+    # with open('C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\ThingSpeak\\config_thingspeak_adaptor.json') as config_file:
     with open('config_thingspeak_adaptor.json') as config_file:
         config_dict = json.load(config_file)
 

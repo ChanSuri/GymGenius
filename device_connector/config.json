@@ -12,7 +12,7 @@
     "published_topics": {
         "entries": "gym/occupancy/entry",
         "exits": "gym/occupancy/exit",
-        "enviroment": "gym/environment/<roomID>",
+        "environment": "gym/environment/<roomID>",
         "availability": "gym/availability/<machineID>"
     },
     "last_update": null

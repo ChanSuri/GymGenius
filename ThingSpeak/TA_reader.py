@@ -6,6 +6,7 @@ import cherrypy
 import os
 
 # Load configuration from config_thingspeak.json
+# with open('C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\ThingSpeak\\config_thingspeak.json') as f:
 with open('config_thingspeak.json') as f:
     config = json.load(f)
 
@@ -95,6 +96,6 @@ if __name__ == "__main__":
     })
 
     # Start CherryPy and map the thingspeak_adaptor method to '/thingspeak_adaptor'
-    cherrypy.quickstart(TS, '/thingspeak_adaptor/')
+    cherrypy.quickstart(TS)
 
 

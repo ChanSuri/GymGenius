@@ -8,6 +8,8 @@ import requests
 from sklearn.linear_model import LinearRegression
 from registration_functions import *
 import signal
+import pandas as pd
+import io
 
 # Global variables
 current_occupancy = 0
@@ -30,17 +32,18 @@ class OccupancyService:
 
         # Calculate min_training_samples based on the number of time slots and days in a week
         global min_training_samples
-        min_training_samples = 2 * len(self.time_slots) * 7  # 2 data points per slot-hour/day combination
+        #min_training_samples = 2 * len(self.time_slots) * 7  # 2 data points per slot-hour/day combination
+        min_training_samples = 2
 
         # Initialize the prediction matrix (dynamic based on time slots)
         self.prediction_matrix = np.zeros((len(self.time_slots), 7))
 
         # MQTT client configuration
         self.client = mqtt.Client()
+        self.client.connect(self.mqtt_broker, self.mqtt_port, 60)
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
-        self.client.connect(self.mqtt_broker, self.mqtt_port, 60)
-        self.client.loop_start()
+        # self.client.loop_start()
 
     def get_mqtt_info_from_service_catalog(self):
         """Retrieve MQTT broker and port information from the service catalog."""
@@ -71,24 +74,37 @@ class OccupancyService:
             return {}
 
     def get_thingspeak_url_from_service_catalog(self):
-        """Retrieve ThingSpeak URL by requesting the service catalog with a specific service ID."""
+        """Retrieve ThingSpeak URL by looking for the service with serviceid 'thingspeak_adaptor'."""
         try:
-            # Use the service ID directly in the request to get only the thingspeak_adaptor service
-            response = requests.get(f"{self.service_catalog_url}/thingspeak_adaptor")
+            # Get the full catalog from the service catalog URL
+            response = requests.get(self.service_catalog_url)
             if response.status_code == 200:
-                service_info = response.json().get("service", {})
-                return service_info.get('endpoint', None)
+                service_catalog = response.json()
+                catalog = service_catalog.get('catalog', {})
+                services = catalog.get('services', [])
+                
+                # Find the service with serviceid = "thingspeak_adaptor"
+                for service in services:
+                    if service.get("service_id") == "thingspeak_adaptor":
+                        return service.get("endpoint", None)  # Return the endpoint if found
+
+                # If the service is not found, return None or raise an exception
+                raise Exception(f"Service 'thingspeak_adaptor' not found in the service catalog.")
             else:
-                raise Exception(f"Failed to get ThingSpeak service: {response.status_code}")
+                raise Exception(f"Failed to fetch services from catalog: {response.status_code}")
         except requests.exceptions.RequestException as e:
             print(f"Error retrieving ThingSpeak URL: {e}")
             return None
 
     def on_connect(self, client, userdata, flags, rc):
-        print("Connected to MQTT broker with result: " + str(rc))
-        for topic_key, topic_value in self.config["subscribed_topics"].items():
-            client.subscribe(topic_value)
-            print(f"Subscribed to topic: {topic_value}")
+        print(rc)
+        print(self.mqtt_broker, self.mqtt_port)
+        if rc == 0: #rc = 5 perchè?
+            for topic_key, topic_value in self.config["subscribed_topics"].items():
+                client.subscribe(topic_value)
+                print(f"Subscribed to topic: {topic_value}")
+        else:
+            (f"failed to connect to MQTT broker. Return code: {rc}")
 
     def on_message(self, client, userdata, msg):
         global current_occupancy
@@ -103,7 +119,7 @@ class OccupancyService:
         self.fetch_historical_data()
 
         # Check if we can train the model
-        if len(X_train) >= min_training_samples:
+        if len(X_train) >= min_training_samples: #non entra nell'if
             self.train_model()
             self.update_prediction()
 
@@ -128,6 +144,7 @@ class OccupancyService:
 
     def fetch_historical_data(self):
         """Fetch historical data from ThingSpeak."""
+        print(self.thing_speak_url)
         if not self.thing_speak_url:
             print("ThingSpeak URL not available.")
             return
@@ -135,7 +152,7 @@ class OccupancyService:
         response = requests.get(self.thing_speak_url)
         if response.status_code == 200:
             data = response.content.decode('utf-8')
-            df = pd.read_csv(pd.compat.StringIO(data))
+            df = pd.read_csv(io.StringIO(data)) #errore 
 
             for index, row in df.iterrows():
                 timestamp = pd.to_datetime(row['created_at'])
@@ -176,7 +193,7 @@ class OccupancyService:
         self.publish_prediction()
 
     def publish_current_occupancy(self):
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S") #datetime.now errore
         message = {
             "topic": self.config["published_topics"]["current_occupancy"],
             "message": {
@@ -192,7 +209,7 @@ class OccupancyService:
         print(f"Published current occupancy: {current_occupancy}")
 
     def publish_prediction(self):
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         message = {
             "topic": self.config["published_topics"]["prediction"],
             "message": {
@@ -224,6 +241,7 @@ def stop_service(signum, frame):
 
 if __name__ == '__main__':
     # Open config.json once and pass it to both functions
+    # with open('C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\Occupancy_monitoring_and_access_control\\config.json') as f:
     with open('config.json') as f:
         config_dict = json.load(f)
 

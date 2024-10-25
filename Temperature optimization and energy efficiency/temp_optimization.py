@@ -17,13 +17,16 @@ class TempOptimizationService:
         self.gym_schedule = self.get_gym_schedule_from_service_catalog()  # Get gym schedule from service catalog
 
         self.client = mqtt.Client()
-        self.client.on_connect = self.on_connect
+        try:
+            self.client.on_connect = self.on_connect
+        except Exception as e:
+            print(f"Error in MQTT loop: {e}")
         self.client.on_disconnect = self.on_disconnect
         self.client.on_message = self.on_message
         self.connect_mqtt()
 
         # Subscribe to topics from config.json
-        self.subscribe_to_topics()
+        # self.subscribe_to_topics()
 
         self.hvac_state = {room: 'off' for room in self.thresholds.keys()}
         self.current_occupancy = 0
@@ -120,7 +123,7 @@ class TempOptimizationService:
         """Connect to the MQTT broker."""
         try:
             if self.mqtt_broker:
-                self.client.connect(self.mqtt_broker, self.mqtt_port, 60)
+                self.client.connect(self.mqtt_broker, self.mqtt_port, keepalive=60)
                 print("MQTT connected successfully.")
             else:
                 print("No MQTT broker information found.")
@@ -133,6 +136,7 @@ class TempOptimizationService:
         """Handle MQTT connection."""
         if rc == 0:
             print("Connected to MQTT broker.")
+            self.subscribe_to_topics()
         else:
             print(f"Failed to connect to MQTT broker. Return code: {rc}")
 
@@ -224,6 +228,8 @@ class TempOptimizationService:
 
     def control_hvac(self, room, temperature, humidity):
         """Control the HVAC system based on temperature, humidity, and occupancy."""
+        ### DA CAPIRE PERCHE' DI DEFAULT OFF O ON
+        print(self.current_command[room])
         if self.current_command[room] == "OFF" or self.current_command[room] == "ON":
             print(f"[{room}] Automatic HVAC control disabled by administrator.")
             return
@@ -333,6 +339,7 @@ def stop_service(signum, frame):
 
 if __name__ == "__main__":
     # Load configuration from config.json
+    # with open('C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\Temperature_optimization_and_energy_efficiency\\config.json') as config_file:
     with open('config.json') as config_file:
         config = json.load(config_file)
 

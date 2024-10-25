@@ -205,7 +205,9 @@ class DeviceConnector:
                         entry["v"] = modified_temperature
 
             # Convert the record to JSON and publish it to the MQTT topic
-            self.client.publish(self.config["published_topics"]["environment"].replace('<roomID>', room), json.dumps(senml_record))
+            topic = self.config["published_topics"]["environment"].replace('<roomID>', room)
+            print(f"Publishing to topic: {topic}")
+            self.client.publish(topic, json.dumps(senml_record))
             return json.dumps({"status": "success", "message": "Environment data published to MQTT"})
 
         except Exception as e:

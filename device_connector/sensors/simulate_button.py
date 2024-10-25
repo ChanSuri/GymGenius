@@ -7,7 +7,7 @@ import datetime
 import random
 
 # URL del Device Connector
-#device_connector_url = "http://localhost:8082"
+# device_connector_url = "http://localhost:8082"
 device_connector_url = "http://device_connector:8082"
 
 # Contatori per i pulsanti di ingresso e uscita

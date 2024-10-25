@@ -15,7 +15,7 @@ rooms = {
 }
 
 # URL del Device Connector
-#device_connector_url = "http://localhost:8082"
+# device_connector_url = "http://localhost:8082"
 device_connector_url = "http://device_connector:8082"
 
 def gradual_change(current_value, min_value, max_value, step=0.5):
@@ -72,7 +72,7 @@ def simulate_dht11_sensors():
             # Invia i dati al Device Connector
             send_data_to_device_connector(room, temperature, humidity)
 
-        time.sleep(300)  # Simula un intervallo di 5 minuti tra le letture
+        time.sleep(30)  # Simula un intervallo di 5 minuti tra le letture
 
 if __name__ == "__main__":
     try:

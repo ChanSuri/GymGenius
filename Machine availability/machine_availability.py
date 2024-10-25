@@ -107,9 +107,12 @@ class MachineAvailabilityService:
 
             # Extract machine type from topic, e.g., "gym/availability/treadmill/1"
             topic_parts = machine_topic.split('/')
-            machine_type = topic_parts[2]  # Extract "treadmill", "elliptical_trainer", etc.
+            machine_type = topic_parts[3]  # Extract "treadmill", "elliptical_trainer", etc.
 
-            if machine_type in self.machines:
+            print(machine_type)
+            print(self.machines)
+
+            if machine_type in self.machines: # non entra qui
                 self.update_availability(machine_type, availability)
         except (json.JSONDecodeError, TypeError, KeyError) as e:
             print(f"Failed to decode machine availability data: {e}")
@@ -171,8 +174,8 @@ def stop_service(signum, frame):
 
 if __name__ == "__main__":
     # Load configuration from config.json
-    # with open('C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\Machine_availability\\config.json') as config_file:
-    with open('config.json') as config_file:
+    with open('C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\Machine_availability\\config.json') as config_file:
+    # with open('config.json') as config_file:
         config = json.load(config_file)
 
     # Initialize the service with the loaded configuration
