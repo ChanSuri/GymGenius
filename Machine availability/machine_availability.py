@@ -101,7 +101,7 @@ class MachineAvailabilityService:
     def on_message(self, client, userdata, message):
         try:
             payload = json.loads(message.payload.decode())
-            print(payload)
+            # print(payload)
             availability = payload['e'][0]['v']  # Extract availability status (0 = available, 1 = occupied)
             machine_topic = payload['bn']  # Extract machine base name from 'bn'
 
@@ -109,8 +109,8 @@ class MachineAvailabilityService:
             topic_parts = machine_topic.split('/')
             machine_type = topic_parts[3]  # Extract "treadmill", "elliptical_trainer", etc.
 
-            print(machine_type)
-            print(self.machines)
+            # print(machine_type)
+            # print(self.machines)
 
             if machine_type in self.machines: # non entra qui
                 self.update_availability(machine_type, availability)

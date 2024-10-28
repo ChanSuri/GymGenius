@@ -72,6 +72,7 @@ services:
       - thingspeak_reader
     environment:
       - SERVICE_CATALOG_URL=http://service_catalog:8080
+    restart: always
 
   # Machine Availability Service
   machine_availability:
@@ -139,6 +140,12 @@ services:
     environment:
       - SERVICE_CATALOG_URL=http://service_catalog:8080
     command: python TA.py
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8089/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # Thingspeak Reader Service
   thingspeak_reader:
