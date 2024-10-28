@@ -8,9 +8,9 @@ from datetime import datetime, timezone
 
 # Definizione delle stanze e della loro temperatura/umidità simulata
 rooms = {
-    "entrance": {"type": "simulated", "temperature": 22.0, "humidity": 50.0},
-    "cardio_room": {"type": "simulated", "temperature": 22.0, "humidity": 50.0},
-    "lifting_room": {"type": "simulated", "temperature": 23.0, "humidity": 52.0},
+    "entrance": {"type": "simulated", "temperature": 16.5, "humidity": 50.0},
+    "cardio_room": {"type": "simulated", "temperature": 20.0, "humidity": 50.0},
+    "lifting_room": {"type": "simulated", "temperature": 20.0, "humidity": 52.0},
     "changing_room": {"type": "simulated", "temperature": 24.0, "humidity": 55.0}
 }
 
@@ -62,7 +62,7 @@ def send_data_to_device_connector(room, temperature, humidity):
 def simulate_dht11_sensors():
     while True:
         for room, sensor_info in rooms.items():
-            temperature = gradual_change(sensor_info["temperature"], 18, 30)
+            temperature = gradual_change(sensor_info["temperature"], 13, 30)
             humidity = gradual_change(sensor_info["humidity"], 40, 70)
 
             # Aggiorna i valori simulati
