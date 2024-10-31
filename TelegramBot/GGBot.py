@@ -341,11 +341,11 @@ class Telegrambot():
         })
         self.client.myPublish(self.switchTopic + room, payload)
         print(f"[{room}] Sent HVAC command: {command} with mode {mode}")
-
+    #self.notifier.notify (msg.topic, msg.payload)
     def notify(self,topic,msg):
         print(msg)
-        message=json.loads(msg.payload.decode('utf-8'))
-        topic = message["topic"]
+        message=json.loads(msg.decode('utf-8')) #json.loads(msg.payload.decode('utf-8'))
+        #topic = message["topic"] #Not sure if its necessary
         if topic.startswith(self.overtempTopic):
             room = topic.split('/')[-1]
             tosend=f"{message["message"]["data"]["alert"]}. Please check it and do some operations in {room}!"
@@ -372,7 +372,13 @@ class Telegrambot():
             else:
                 chat_id = self.chat_ids.get(machine)
                 if chat_id:
-                    tosend = f"Situation for {machine} machine:\n Available num: {data["available"]}\n Occupied num: {data["busy"]}\n Total num: {data["total"]}\n"
+                    tosend = (
+                        f"Situation for {machine} machine:\n"
+                        f"Available num: {data['available']}\n"
+                        f"Occupied num: {data['busy']}\n"
+                        f"Total num: {data['total']}\n"
+                    )
+                    #tosend = f"Situation for {machine} machine:\n Available num: {data["available"]}\n Occupied num: {data["busy"]}\n Total num: {data["total"]}\n"
                     self.bot.sendMessage(chat_id, tosend)
         
 
