@@ -3,7 +3,7 @@
     "description": "Generates historical records on occupancy, usage, and conditions for each room",
     "status": "active",
     "service_catalog": "http://localhost:8080",
-    "endpoint": "http://thingspeak_adaptor:8089/?channel=entrance",
+    "endpoint": "http://thingspeak_adaptor:8089/thingspeak_adaptor/?channel=entrance",
     "subscribed_topics": null,
     "published_topics": null,
     "last_update": null
