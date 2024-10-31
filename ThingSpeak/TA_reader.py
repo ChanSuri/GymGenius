@@ -4,18 +4,27 @@ from io import StringIO
 import json
 import cherrypy
 import os
+import signal
+from registration_functions import *
 
-# Load configuration from config_thingspeak.json
-# with open('C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\ThingSpeak\\config_thingspeak.json') as f:
+# Load configuration for ThingSpeak
 with open('config_thingspeak.json') as f:
-    config = json.load(f)
+    thingspeak_config = json.load(f)
 
-THINGSPEAK_URL = config['ThingspeakURL_read']
-CHANNELS = config['channels']
+# Load configuration for service registration
+with open('config_thingspeak_reader.json') as f:
+    service_config = json.load(f)
+
+THINGSPEAK_URL = thingspeak_config['ThingspeakURL_read']
+CHANNELS = thingspeak_config['channels']
 
 class ThingspeakAdaptor:
-    def __init__(self):
+    exposed = True  # Make this CherryPy class accessible via HTTP
+
+    def __init__(self, thingspeak_config, service_config):
         """Initialize the ThingSpeak Adaptor with channel info from config."""
+        self.thingspeak_config = thingspeak_config
+        self.service_config = service_config
         self.channels = CHANNELS
 
     def readCSV(self, channel_name, read_api_key, channel_id, fields):
@@ -60,9 +69,9 @@ class ThingspeakAdaptor:
                 saved_files.append(file_name)
         return saved_files
 
-    @cherrypy.expose
-    def thingspeak_adaptor(self, channel=None):
+    def GET(self, *uri, **params):
         """Serve a CSV file for the requested channel."""
+        channel = params.get('channel')
         if not channel:
             cherrypy.response.status = 400
             return "Error: 'channel' parameter is required in the query string."
@@ -82,20 +91,41 @@ class ThingspeakAdaptor:
             cherrypy.response.status = 404
             return f"Error: CSV file for channel '{channel}' not found. Please make sure to run the data fetching process first."
 
+# Service initialization and signal handling
+
+def initialize_service(service_config):
+    """Register the service at startup."""
+    register_service(service_config, service_config['service_catalog'])
+    print("Thingspeak Adaptor Service Initialized and Registered")
+
+def stop_service(signum, frame):
+    """Unregister and stop the service."""
+    print("Stopping service...")
+    delete_service("thingspeak_adaptor", service_config['service_catalog'])
+    cherrypy.engine.exit()  # Stop the CherryPy engine
+
 if __name__ == "__main__":
     # Create the ThingspeakAdaptor instance
-    TS = ThingspeakAdaptor()
+    TS = ThingspeakAdaptor(thingspeak_config, service_config)
 
     # Fetch data from ThingSpeak and save as CSV
     TS.read_all_channels()
 
+    # Initialize service
+    initialize_service(service_config)
+
+    # Set up signal handling for graceful shutdown
+    signal.signal(signal.SIGINT, stop_service)
+    signal.signal(signal.SIGTERM, stop_service)
+
     # Configure and start CherryPy server
     cherrypy.config.update({
         'server.socket_host': '0.0.0.0',  # Listen on all interfaces
-        'server.socket_port': 8089,       # Listen on port 8080
+        'server.socket_port': 8089,       # Listen on port 8089
     })
 
-    # Start CherryPy and map the thingspeak_adaptor method to '/thingspeak_adaptor'
+    # Start CherryPy and map the ThingspeakAdaptor class to the root
     cherrypy.quickstart(TS)
+
 
 
