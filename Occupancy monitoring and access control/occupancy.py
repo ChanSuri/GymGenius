@@ -86,6 +86,7 @@ class OccupancyService:
                 # Find the service with serviceid = "thingspeak_adaptor"
                 for service in services:
                     if service.get("service_id") == "thingspeak_adaptor":
+                        print(service.get("endpoint", None))
                         return service.get("endpoint", None)  # Return the endpoint if found
 
                 # If the service is not found, return None or raise an exception

@@ -1,5 +1,3 @@
-#This is script is used only to test the service without the raspberry
-
 import time
 import json
 import requests
@@ -94,13 +92,30 @@ def send_exit_event():
         except Exception as e:
             print(f"Errore: {e}")
 
-# Funzione principale per simulare ingressi ed uscite
+# Funzione principale per simulare ingressi ed uscite in modo casuale
 def simulate_button_events():
     while True:
-        send_entry_event()  # Simula un ingresso
-        time.sleep(random.uniform(1, 5))  # Simula una pausa tra 1 e 5 secondi
-        send_exit_event()  # Simula un'uscita
-        time.sleep(random.uniform(5, 10))  # Simula una pausa tra 5 e 10 secondi
+        # Determina casualmente quanti ingressi o uscite consecutive generare
+        if entrance_count > exit_count:  # Solo se ci sono ingressi maggiori delle uscite, si può scegliere di uscire
+            action = random.choice(["entry", "exit"])
+        else:
+            action = "entry"  # Forza l'ingresso se le uscite hanno raggiunto o superato gli ingressi
+
+        consecutive_events = random.randint(1, 5)  # Numero di eventi consecutivi tra 1 e 5
+
+        if action == "entry":
+            for _ in range(consecutive_events):
+                send_entry_event()
+                time.sleep(random.uniform(1, 3))  # Pausa tra gli ingressi
+        else:
+            for _ in range(consecutive_events):
+                if exit_count < entrance_count:  # Assicura che le uscite non superino gli ingressi
+                    send_exit_event()
+                    time.sleep(random.uniform(1, 3))  # Pausa tra le uscite
+                else:
+                    break  # Ferma le uscite se superano gli ingressi
+
+        time.sleep(random.uniform(5, 10))  # Pausa tra i blocchi di eventi
 
 if __name__ == "__main__":
     try:
