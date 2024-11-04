@@ -83,9 +83,9 @@ class OccupancyService:
                 catalog = service_catalog.get('catalog', {})
                 services = catalog.get('services', [])
                 
-                # Find the service with serviceid = "thingspeak_adaptor"
+                # Find the service with serviceid = "thingspeak_reader"
                 for service in services:
-                    if service.get("service_id") == "thingspeak_adaptor":
+                    if service.get("service_id") == "thingspeak_reader": #before was thingspeak_adaptor
                         print(service.get("endpoint", None))
                         return service.get("endpoint", None)  # Return the endpoint if found
 
