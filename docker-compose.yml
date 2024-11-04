@@ -147,9 +147,9 @@ services:
   # Thingspeak Reader Service
   thingspeak_reader:
     build:
-      context: ./ThingSpeak  
+      context: ./thingspeak_reader
     volumes:
-      - ./ThingSpeak:/app
+      - ./thingspeak_reader:/app
     networks:
       - gym-genius-network
     depends_on:

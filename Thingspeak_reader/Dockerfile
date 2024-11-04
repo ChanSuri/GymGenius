@@ -6,4 +6,6 @@ COPY . .
 
 RUN pip install cherrypy pandas requests paho-mqtt
 
-CMD ["python", "TA.py"]
+EXPOSE 8089
+
+CMD ["python", "TA_reader.py"]
