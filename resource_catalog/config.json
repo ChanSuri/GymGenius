@@ -1,0 +1,10 @@
+{
+    "service_id": "resource_catalog",
+    "description": "RESTful API for managing a device catalog, allowing device registration, retrieval, updates, and deletion.",
+    "status": "active",
+    "service_catalog": "http://service_catalog:8080",
+    "endpoint": null,
+    "subscribed_topics":null,
+    "published_topics": null,
+    "last_update": null
+}
