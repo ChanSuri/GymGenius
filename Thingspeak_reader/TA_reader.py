@@ -101,7 +101,7 @@ def initialize_service(service_config):
 def stop_service(signum, frame):
     """Unregister and stop the service."""
     print("Stopping service...")
-    delete_service("thingspeak_adaptor_reader", service_config['service_catalog'])
+    delete_service("thingspeak_reader", service_config['service_catalog'])
     cherrypy.engine.exit()  # Stop the CherryPy engine
 
 if __name__ == "__main__":
