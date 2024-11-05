@@ -2,10 +2,15 @@ import cherrypy
 import json
 import os
 from datetime import datetime
+from registration_functions import *
 
 # Path to the device_registry.json file
 # DEVICE_REGISTRY_FILE = 'C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\resource_catalog\\device_registry.json'
 DEVICE_REGISTRY_FILE = 'device_registry.json'
+
+# Load configuration for service registration
+with open('config.json') as f:
+    service_config = json.load(f)
 
 def load_device_registry():
     """Loads the device registry from the file."""
@@ -25,6 +30,9 @@ device_registry = load_device_registry()
 class ResourceCatalog:
     exposed = True
 
+    def __init__(self,service_config):
+        self.service_config = service_config
+    
     def GET(self, *uri, **params):
         # If device_id is provided in the URI, return the specific device
         if len(uri) > 0:
@@ -114,8 +122,28 @@ class ResourceCatalog:
         # If no matching device was found
         raise cherrypy.HTTPError(404, "Device not found")
 
+# Service initialization and signal handling
+
+def initialize_service(service_config):
+    """Register the service at startup."""
+    register_service(service_config, service_config['service_catalog'])
+    print("Resource catalog Service Initialized and Registered")
+
+def stop_service(signum, frame):
+    """Unregister and stop the service."""
+    print("Stopping service...")
+    delete_service("resource_catalog", service_config['service_catalog'])
+    cherrypy.engine.exit()  # Stop the CherryPy engine
+
+
 
 if __name__ == '__main__':
+
+    service = ResourceCatalog(service_config)
+
+    # Initialize service
+    initialize_service(service_config)
+    
     # Configure the MethodDispatcher and session management
     conf = {
         '/': {
