@@ -90,7 +90,7 @@ class OccupancyService:
                         return service.get("endpoint", None)  # Return the endpoint if found
 
                 # If the service is not found, return None or raise an exception
-                raise Exception(f"Service 'thingspeak_adaptor' not found in the service catalog.")
+                raise Exception(f"Service 'thingspeak_reader' not found in the service catalog.")
             else:
                 raise Exception(f"Failed to fetch services from catalog: {response.status_code}")
         except requests.exceptions.RequestException as e:

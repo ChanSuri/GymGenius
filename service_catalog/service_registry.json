@@ -172,7 +172,7 @@
                 "current_occupancy": "gym/occupancy/current",
                 "prediction": "gym/occupancy/prediction"
             },
-            "last_update": "2024-11-04 19:30:36"
+            "last_update": "2024-11-05 11:49:25"
         },
         {
             "service_id": "device_connector",
@@ -191,7 +191,7 @@
                 "environment": "gym/environment/<roomID>",
                 "availability": "gym/availability/<machineID>"
             },
-            "last_update": "2024-11-04 19:29:24"
+            "last_update": "2024-11-05 11:47:25"
         },
         {
             "service_id": "hvac_control",
@@ -209,7 +209,7 @@
                 "automatic_control": "gym/hvac/control/<roomID>",
                 "alert": "gym/environment/alert/<roomID>"
             },
-            "last_update": "2024-11-04 19:29:25"
+            "last_update": "2024-11-05 11:47:26"
         },
         {
             "service_id": "thingspeak_adaptor",
@@ -223,18 +223,18 @@
                 "machine_availability": "gym/group_availability/<machine_type>"
             },
             "published_topics": null,
-            "last_update": "2024-11-04 19:29:25"
+            "last_update": "2024-11-05 11:47:26"
         },
         {
-            "service_id": "thingspeak_reader",
-            "description": "Generates historical records on occupancy, usage, and conditions for each room",
+            "service_id": "resource_catalog",
+            "description": "RESTful API for managing a device catalog, allowing device registration, retrieval, updates, and deletion.",
             "status": "active",
             "service_catalog": "http://service_catalog:8080",
-            "endpoint": "http://thingspeak_adaptor:8089/thingspeak_adaptor/?channel=entrance",
+            "endpoint": null,
             "subscribed_topics": null,
             "published_topics": null,
-            "last_update": "2024-11-04 19:29:29"
+            "last_update": "2024-11-05 11:05:06"
         }
     ],
-    "lastUpdate": "2024-11-04 19:30:36"
+    "lastUpdate": "2024-11-05 11:49:52"
 }

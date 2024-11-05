@@ -26,6 +26,7 @@ class ThingspeakAdaptor:
         self.thingspeak_config = thingspeak_config
         self.service_config = service_config
         self.channels = CHANNELS
+        self.read_all_channels()
 
     def readCSV(self, channel_name, read_api_key, channel_id, fields):
         """Read data in CSV format from ThingSpeak and structure it based on fields."""
@@ -108,8 +109,15 @@ if __name__ == "__main__":
     # Create the ThingspeakAdaptor instance
     TS = ThingspeakAdaptor(thingspeak_config, service_config)
 
+    conf = {
+        '/': {
+            'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+            'tools.sessions.on': True
+        }
+    }
+
     # Fetch data from ThingSpeak and save as CSV
-    TS.read_all_channels()
+    #TS.read_all_channels()
 
     # Initialize service
     initialize_service(service_config)
@@ -123,8 +131,14 @@ if __name__ == "__main__":
         'server.socket_host': '0.0.0.0',  # Listen on all interfaces
         'server.socket_port': 8089,       # Listen on port 8089
     })
+    # Mount the ResourceCatalog class using MethodDispatcher
+    cherrypy.tree.mount(TS, '/', conf)
+    
+    # Start the CherryPy server
+    cherrypy.engine.start()
+    cherrypy.engine.block()
 
     # Start CherryPy and map the ThingspeakAdaptor class to the root
-    cherrypy.quickstart(TS)
+    #cherrypy.quickstart(TS)
 
 
