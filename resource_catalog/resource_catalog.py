@@ -8,10 +8,6 @@ from registration_functions import *
 # DEVICE_REGISTRY_FILE = 'C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\resource_catalog\\device_registry.json'
 DEVICE_REGISTRY_FILE = 'device_registry.json'
 
-# Load configuration for service registration
-with open('config.json') as f:
-    service_config = json.load(f)
-
 def load_device_registry():
     """Loads the device registry from the file."""
     if os.path.exists(DEVICE_REGISTRY_FILE):
@@ -138,7 +134,10 @@ def stop_service(signum, frame):
 
 
 if __name__ == '__main__':
-
+    # Load configuration for service registration
+    with open('config.json') as f:
+        service_config = json.load(f)
+        
     service = ResourceCatalog(service_config)
 
     # Initialize service
