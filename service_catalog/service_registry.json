@@ -172,7 +172,7 @@
                 "current_occupancy": "gym/occupancy/current",
                 "prediction": "gym/occupancy/prediction"
             },
-            "last_update": "2024-11-05 11:49:25"
+            "last_update": "2024-11-08 19:04:29"
         },
         {
             "service_id": "device_connector",
@@ -191,7 +191,7 @@
                 "environment": "gym/environment/<roomID>",
                 "availability": "gym/availability/<machineID>"
             },
-            "last_update": "2024-11-05 11:47:25"
+            "last_update": "2024-11-08 19:04:08"
         },
         {
             "service_id": "hvac_control",
@@ -209,7 +209,7 @@
                 "automatic_control": "gym/hvac/control/<roomID>",
                 "alert": "gym/environment/alert/<roomID>"
             },
-            "last_update": "2024-11-05 11:47:26"
+            "last_update": "2024-11-08 19:04:08"
         },
         {
             "service_id": "thingspeak_adaptor",
@@ -223,18 +223,18 @@
                 "machine_availability": "gym/group_availability/<machine_type>"
             },
             "published_topics": null,
-            "last_update": "2024-11-05 11:47:26"
+            "last_update": "2024-11-08 19:04:08"
         },
         {
             "service_id": "resource_catalog",
             "description": "RESTful API for managing a device catalog, allowing device registration, retrieval, updates, and deletion.",
             "status": "active",
             "service_catalog": "http://service_catalog:8080",
-            "endpoint": null,
+            "endpoint": "http://resource_catalog:8081",
             "subscribed_topics": null,
             "published_topics": null,
-            "last_update": "2024-11-05 11:05:06"
+            "last_update": "2024-11-08 19:04:07"
         }
     ],
-    "lastUpdate": "2024-11-05 11:49:52"
+    "lastUpdate": "2024-11-08 19:04:39"
 }

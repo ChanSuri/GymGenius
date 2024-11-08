@@ -2,6 +2,7 @@ import cherrypy
 import json
 import os
 from datetime import datetime
+from registration_functions import *
 
 # Path to the device_registry.json file
 # DEVICE_REGISTRY_FILE = 'C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\resource_catalog\\device_registry.json'
@@ -25,6 +26,10 @@ device_registry = load_device_registry()
 class ResourceCatalog:
     exposed = True
     
+    def __init__(self, config):
+        self.config = config
+        self.service_catalog_url = config['service_catalog']  # Get service catalog URL from config.json
+
     def GET(self, *uri, **params):
         # If device_id is provided in the URI, return the specific device
         if len(uri) > 0:
@@ -113,11 +118,29 @@ class ResourceCatalog:
         
         # If no matching device was found
         raise cherrypy.HTTPError(404, "Device not found")
+    
+def initialize_service(config_dict):
+    # Register the service at startup
+    register_service(config_dict,service.service_catalog_url)
+    print("Machine Availability Service Initialized and Registered")
+
+def stop_service(signum, frame):
+    print("Stopping service...")
+    delete_service("machine_availability",service.service_catalog_url)
+
+    # Clean stop of the MQTT client
+    service.stop()
 
 
 
 if __name__ == '__main__':
- 
+
+    # with open('C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\resource_catalog\\config.json') as config_file:
+    with open('config.json') as config_file:
+        config = json.load(config_file)
+    
+    service = ResourceCatalog(config)
+    initialize_service(config)
     
     # Configure the MethodDispatcher and session management
     conf = {
@@ -131,7 +154,7 @@ if __name__ == '__main__':
     cherrypy.config.update({'server.socket_port': 8081, 'server.socket_host': '0.0.0.0'})
     
     # Mount the ResourceCatalog class using MethodDispatcher
-    cherrypy.tree.mount(ResourceCatalog(), '/', conf)
+    cherrypy.tree.mount(service, '/', conf)
     
     # Start the CherryPy server
     cherrypy.engine.start()

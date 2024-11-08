@@ -3,7 +3,7 @@
     "description": "RESTful API for managing a device catalog, allowing device registration, retrieval, updates, and deletion.",
     "status": "active",
     "service_catalog": "http://service_catalog:8080",
-    "endpoint": null,
+    "endpoint": "http://resource_catalog:8081",
     "subscribed_topics":null,
     "published_topics": null,
     "last_update": null
