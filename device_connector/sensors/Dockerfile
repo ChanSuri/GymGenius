@@ -15,4 +15,4 @@ COPY . .
 RUN pip install requests
 
 # Define the default command (this will be overwritten for each container in docker-compose.yml)
-CMD ["python", "simulate_button.py"]
+CMD ["python", "button_class.py"]

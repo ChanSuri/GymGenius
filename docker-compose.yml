@@ -44,9 +44,9 @@ services:
   # Temperature Optimization Service
   temperature_optimization:
     build:
-      context: ./Temperature optimization and energy efficiency
+      context: ./Temperature_optimization_and_energy_efficiency
     volumes:
-      - ./Temperature optimization and energy efficiency:/app
+      - ./Temperature_optimization_and_energy_efficiency:/app
     networks:
       - gym-genius-network
     depends_on:
@@ -59,9 +59,9 @@ services:
   # Occupancy Monitoring Service
   occupancy:
     build:
-      context: ./Occupancy monitoring and access control
+      context: ./Occupancy_monitoring_and_access_control
     volumes:
-      - ./Occupancy monitoring and access control:/app
+      - ./Occupancy_monitoring_and_access_control:/app
     networks:
       - gym-genius-network
     depends_on:
@@ -78,9 +78,9 @@ services:
   # Machine Availability Service
   machine_availability:
     build:
-      context: ./Machine availability
+      context: ./Machine_availability
     volumes:
-      - ./Machine availability:/app
+      - ./Machine_availability:/app
     networks:
       - gym-genius-network
     depends_on:
@@ -90,41 +90,41 @@ services:
     environment:
       - SERVICE_CATALOG_URL=http://service_catalog:8080
 
-  # Button Sensor (real and simulated)
-  button_sensor:
-    build:
-      context: ./device_connector/sensors
-    command: python simulate_button.py
-    volumes:
-      - ./device_connector/sensors:/app
-    networks:
-      - gym-genius-network
-    depends_on:
-      - device_connector
+  # # Button Sensor (real and simulated)
+  # button_sensor:
+  #   build:
+  #     context: ./device_connector/sensors
+  #   command: python button_class.py
+  #   volumes:
+  #     - ./device_connector/sensors:/app
+  #   networks:
+  #     - gym-genius-network
+  #   depends_on:
+  #     - device_connector
 
-  # DHT11 Sensor (real and simulated)
-  dht11_sensor:
-    build:
-      context: ./device_connector/sensors
-    command: python simulate_dht11.py
-    volumes:
-      - ./device_connector/sensors:/app
-    networks:
-      - gym-genius-network
-    depends_on:
-      - device_connector
+  # # DHT11 Sensor (real and simulated)
+  # dht11_sensor:
+  #   build:
+  #     context: ./device_connector/sensors
+  #   command: python dht11_class.py
+  #   volumes:
+  #     - ./device_connector/sensors:/app
+  #   networks:
+  #     - gym-genius-network
+  #   depends_on:
+  #     - device_connector
 
-  # PIR Sensor (real and simulated)
-  pir_sensor:
-    build:
-      context: ./device_connector/sensors
-    command: python simulate_PIR.py
-    volumes:
-      - ./device_connector/sensors:/app
-    networks:
-      - gym-genius-network
-    depends_on:
-      - device_connector
+  # # PIR Sensor (real and simulated)
+  # pir_sensor:
+  #   build:
+  #     context: ./device_connector/sensors
+  #   command: python PIR_class.py
+  #   volumes:
+  #     - ./device_connector/sensors:/app
+  #   networks:
+  #     - gym-genius-network
+  #   depends_on:
+  #     - device_connector
 
   # Thingspeak Adaptor Service
   thingspeak_adaptor:

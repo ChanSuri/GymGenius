@@ -1,10 +1,10 @@
 {
-    "service_id": "device_connector",
+    "service_id": "device_connector_1",
     "description": "Handles sensors and actuators data",
     "status": "active",
     "service_catalog": "http://service_catalog:8080",
     "resource_catalog": "http://resource_catalog:8081",
-    "endpoint": "http://device_connector:8082",
+    "endpoint": "http://device_connector_1:8082",
     "subscribed_topics": {
         "automatic_control": "gym/hvac/control/#",
         "control_commands": "gym/hvac/on_off/#"
@@ -14,6 +14,13 @@
         "exits": "gym/occupancy/exit",
         "environment": "gym/environment/<roomID>",
         "availability": "gym/availability/<machineID>"
+    },
+    "simulation_parameters": {
+        "dht11_seconds": 5,
+        "pir_machine_type": "cardio",
+        "pir_machines_per_type": 2,
+        "pir_seconds": 1,
+        "button_seconds": 1
     },
     "last_update": null
 }

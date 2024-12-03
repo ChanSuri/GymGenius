@@ -172,15 +172,15 @@
                 "current_occupancy": "gym/occupancy/current",
                 "prediction": "gym/occupancy/prediction"
             },
-            "last_update": "2024-11-08 19:04:29"
+            "last_update": "2024-12-03 16:01:09"
         },
         {
             "service_id": "device_connector",
             "description": "Handles sensors and actuators data",
             "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "resource_catalog": "http://resource_catalog:8081",
-            "endpoint": "http://device_connector:8082",
+            "service_catalog": "http://localhost:8080",
+            "resource_catalog": "http://localhost:8081",
+            "endpoint": "http://localhost:8082",
             "subscribed_topics": {
                 "automatic_control": "gym/hvac/control/#",
                 "control_commands": "gym/hvac/on_off/#"
@@ -191,7 +191,14 @@
                 "environment": "gym/environment/<roomID>",
                 "availability": "gym/availability/<machineID>"
             },
-            "last_update": "2024-11-08 19:04:08"
+            "simulation_parameters": {
+                "dht11_seconds": 5,
+                "pir_machine_type": "cardio",
+                "pir_machines_per_type": 2,
+                "pir_seconds": 1,
+                "button_seconds": 1
+            },
+            "last_update": "2024-12-03 11:47:42"
         },
         {
             "service_id": "hvac_control",
@@ -209,7 +216,7 @@
                 "automatic_control": "gym/hvac/control/<roomID>",
                 "alert": "gym/environment/alert/<roomID>"
             },
-            "last_update": "2024-11-08 19:04:08"
+            "last_update": "2024-12-03 16:00:35"
         },
         {
             "service_id": "thingspeak_adaptor",
@@ -223,7 +230,7 @@
                 "machine_availability": "gym/group_availability/<machine_type>"
             },
             "published_topics": null,
-            "last_update": "2024-11-08 19:04:08"
+            "last_update": "2024-12-03 16:00:35"
         },
         {
             "service_id": "resource_catalog",
@@ -233,8 +240,34 @@
             "endpoint": "http://resource_catalog:8081",
             "subscribed_topics": null,
             "published_topics": null,
-            "last_update": "2024-11-08 19:04:07"
+            "last_update": "2024-12-03 16:00:34"
+        },
+        {
+            "service_id": "device_connector_1",
+            "description": "Handles sensors and actuators data",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "resource_catalog": "http://resource_catalog:8081",
+            "endpoint": "http://device_connector_1:8082",
+            "subscribed_topics": {
+                "automatic_control": "gym/hvac/control/#",
+                "control_commands": "gym/hvac/on_off/#"
+            },
+            "published_topics": {
+                "entries": "gym/occupancy/entry",
+                "exits": "gym/occupancy/exit",
+                "environment": "gym/environment/<roomID>",
+                "availability": "gym/availability/<machineID>"
+            },
+            "simulation_parameters": {
+                "dht11_seconds": 5,
+                "pir_machine_type": "cardio",
+                "pir_machines_per_type": 2,
+                "pir_seconds": 1,
+                "button_seconds": 1
+            },
+            "last_update": "2024-12-03 16:00:35"
         }
     ],
-    "lastUpdate": "2024-11-08 19:04:39"
+    "lastUpdate": "2024-12-03 16:01:40"
 }
