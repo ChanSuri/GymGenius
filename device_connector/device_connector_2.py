@@ -50,7 +50,6 @@ class DeviceConnector:
         # Initialize sensors
         self.dht11_sensor = SimulatedDHT11Sensor()
         self.pir_sensor = SimulatedPIRSensor()
-        self.button_sensor = SimulatedButtonSensor()
 
         # Perform device checks at initialization
         self.check_and_delete_inactive_devices()
@@ -386,8 +385,8 @@ def initialize_service(config_dict):
 if __name__ == '__main__':
     try:
         # Load configuration from config.json
-        # with open('C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\device_connector\\config_device_connector_1.json') as config_file:
-        with open('config_device_connector_1.json') as config_file:
+        # with open('C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\device_connector\\config_device_connector_2.json') as config_file:
+        with open('config_device_connector_2.json') as config_file:
             config = json.load(config_file)
 
         # Initialize the service
@@ -397,7 +396,7 @@ if __name__ == '__main__':
         service.start_simulation_thread()
 
         # CherryPy configuration with port and host settings
-        cherrypy.config.update({'server.socket_port': 8082, 'server.socket_host': '0.0.0.0'})
+        cherrypy.config.update({'server.socket_port': 8092, 'server.socket_host': '0.0.0.0'})
 
         # Signal handler for clean stop
         # signal.signal(signal.SIGINT, stop_service)
