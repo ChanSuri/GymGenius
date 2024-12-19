@@ -242,8 +242,8 @@ def stop_service(signum, frame):
 
 if __name__ == '__main__':
     # Open config.json once and pass it to both functions
-    # with open('C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\Occupancy_monitoring_and_access_control\\config.json') as f:
-    with open('config.json') as f:
+    # with open('C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\Occupancy_monitoring_and_access_control\\config_occupancy.json') as f:
+    with open('config_occupancy.json') as f:
         config_dict = json.load(f)
 
     # Initialize the service with the loaded configuration

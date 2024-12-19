@@ -8,10 +8,12 @@ import signal
 from registration_functions import *
 
 # Load configuration for ThingSpeak
-with open('config_thingspeak.json') as f:
+# with open('C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\Thingspeak_reader\\config_thingspeak.json') as f:
+with open('config_thingspeak.json') as f:   
     thingspeak_config = json.load(f)
 
 # Load configuration for service registration
+# with open('C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\Thingspeak_reader\\config_thingspeak_reader.json') as f:
 with open('config_thingspeak_reader.json') as f:
     service_config = json.load(f)
 

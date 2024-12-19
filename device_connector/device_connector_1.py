@@ -335,8 +335,8 @@ def initialize_service(config_dict):
 if __name__ == '__main__':
     try:
         # Load configuration from config.json
-        # with open('C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\device_connector\\config.json') as config_file:
-        with open('config.json') as config_file:
+        # with open('C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\device_connector\\config_device_connector_1.json') as config_file:
+        with open('config_device_connector_1.json') as config_file:
             config = json.load(config_file)
 
         # Initialize the service

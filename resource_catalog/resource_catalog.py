@@ -135,8 +135,8 @@ def stop_service(signum, frame):
 
 if __name__ == '__main__':
 
-    # with open('C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\resource_catalog\\config.json') as config_file:
-    with open('config.json') as config_file:
+    # with open('C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\resource_catalog\\config_resource_catalog.json') as config_file:
+    with open('config_resource_catalog.json') as config_file:
         config = json.load(config_file)
     
     service = ResourceCatalog(config)
