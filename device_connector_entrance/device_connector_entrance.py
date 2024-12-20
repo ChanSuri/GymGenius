@@ -3,8 +3,7 @@ import json
 import requests
 import paho.mqtt.client as mqtt
 from datetime import datetime, timedelta
-from device_connector.sensors.dht11_class_rooms import SimulatedDHT11Sensor
-from sensors.PIR_class import SimulatedPIRSensor
+from sensors.dht11_class import SimulatedDHT11Sensor
 from sensors.button_class import SimulatedButtonSensor
 from registration_functions import *
 import time

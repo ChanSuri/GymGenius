@@ -1,0 +1,20 @@
+{
+    "service_id": "device_connector_changing_room",
+    "description": "Handles changing room's sensors and actuators data",
+    "status": "active",
+    "service_catalog": "http://service_catalog:8080",
+    "resource_catalog": "http://resource_catalog:8081",
+    "endpoint": "http://device_connector_changing_room:8082", 
+    "location": "changing_room",
+    "subscribed_topics": {
+        "automatic_control": "gym/hvac/control/changing_room",
+        "control_commands": "gym/hvac/on_off/chamging_room"
+    },
+    "published_topics": {
+        "environment": "gym/environment/<roomID>"
+    },
+    "simulation_parameters": {
+        "dht11_seconds": 5
+    },
+    "last_update": null
+}
