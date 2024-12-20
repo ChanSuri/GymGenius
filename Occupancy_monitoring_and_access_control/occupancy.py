@@ -86,7 +86,7 @@ class OccupancyService:
                 # Find the service with serviceid = "thingspeak_reader"
                 for service in services:
                     if service.get("service_id") == "thingspeak_reader": #before was thingspeak_adaptor
-                        print(service.get("endpoint", None))
+                        #print(service.get("endpoint", None))
                         return service.get("endpoint", None)  # Return the endpoint if found
 
                 # If the service is not found, return None or raise an exception
@@ -94,7 +94,7 @@ class OccupancyService:
             else:
                 raise Exception(f"Failed to fetch services from catalog: {response.status_code}")
         except requests.exceptions.RequestException as e:
-            print(f"Error retrieving ThingSpeak URL: {e}")
+            #print(f"Error retrieving ThingSpeak URL: {e}")
             return None
 
     def on_connect(self, client, userdata, flags, rc):
@@ -143,9 +143,35 @@ class OccupancyService:
         else:
             print("Occupancy is already zero, cannot decrement.")
 
+    ### Original function in which NaN weren't dropped
+
+    # def fetch_historical_data(self):
+    #     """Fetch historical data from ThingSpeak."""
+    #     #print(self.thing_speak_url)
+    #     if not self.thing_speak_url:
+    #         print("ThingSpeak URL not available.")
+    #         return
+
+    #     response = requests.get(self.thing_speak_url)
+    #     if response.status_code == 200:
+    #         data = response.content.decode('utf-8')
+    #         df = pd.read_csv(io.StringIO(data)) #errore 
+
+    #         for index, row in df.iterrows():
+    #             timestamp = pd.to_datetime(row['created_at'])
+    #             hour_slot = self.get_time_slot(timestamp.hour)
+    #             day_of_week = timestamp.weekday()
+    #             occupancy = row['current_occupancy']
+
+    #             # Update training data
+    #             X_train.append([hour_slot, day_of_week])
+    #             Y_train.append(occupancy)
+    #             #print(f"Loaded data from ThingSpeak: Slot {hour_slot}, Day {day_of_week}, Occupancy: {occupancy}")
+    #     else:
+    #         print(f"Failed to fetch data from ThingSpeak, status code: {response.status_code}")
+    
     def fetch_historical_data(self):
         """Fetch historical data from ThingSpeak."""
-        print(self.thing_speak_url)
         if not self.thing_speak_url:
             print("ThingSpeak URL not available.")
             return
@@ -153,7 +179,10 @@ class OccupancyService:
         response = requests.get(self.thing_speak_url)
         if response.status_code == 200:
             data = response.content.decode('utf-8')
-            df = pd.read_csv(io.StringIO(data)) #errore 
+            df = pd.read_csv(io.StringIO(data))
+
+            # Rimuovere righe con NaN in `current_occupancy`
+            df.dropna(subset=['current_occupancy'], inplace=True)
 
             for index, row in df.iterrows():
                 timestamp = pd.to_datetime(row['created_at'])
@@ -161,10 +190,11 @@ class OccupancyService:
                 day_of_week = timestamp.weekday()
                 occupancy = row['current_occupancy']
 
-                # Update training data
+                # Aggiungere i dati a X_train e Y_train
                 X_train.append([hour_slot, day_of_week])
                 Y_train.append(occupancy)
-                print(f"Loaded data from ThingSpeak: Slot {hour_slot}, Day {day_of_week}, Occupancy: {occupancy}")
+
+            print(f"Caricati {len(X_train)} campioni dopo aver rimosso i NaN.")
         else:
             print(f"Failed to fetch data from ThingSpeak, status code: {response.status_code}")
 
@@ -185,13 +215,23 @@ class OccupancyService:
         model.fit(X_train_np, Y_train_np)
         print("Model trained with regression")
 
+    # def update_prediction(self):
+    #     global model
+    #     for hour_slot in range(len(self.time_slots)):
+    #         for day in range(7):
+    #             self.prediction_matrix[hour_slot, day] = model.predict([[hour_slot, day]])
+    #     print(f"Prediction matrix updated: \n{self.prediction_matrix}")
+    #     self.publish_prediction()
+    
     def update_prediction(self):
         global model
         for hour_slot in range(len(self.time_slots)):
             for day in range(7):
-                self.prediction_matrix[hour_slot, day] = model.predict([[hour_slot, day]])
+                # Accedere al primo elemento dell'array per evitare il warning
+                self.prediction_matrix[hour_slot, day] = model.predict([[hour_slot, day]])[0]
         print(f"Prediction matrix updated: \n{self.prediction_matrix}")
         self.publish_prediction()
+
 
     def publish_current_occupancy(self):
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S") #datetime.now errore

@@ -5,7 +5,6 @@ import paho.mqtt.client as mqtt
 from datetime import datetime, timedelta
 from sensors.dht11_class import SimulatedDHT11Sensor
 from sensors.PIR_class import SimulatedPIRSensor
-from sensors.button_class import SimulatedButtonSensor
 from registration_functions import *
 import time
 import signal
@@ -108,12 +107,6 @@ class DeviceConnector:
                 pir_events = self.pir_sensor.simulate_usage(machine_type=pir_machine_type, machines_per_type=pir_machines_per_type, seconds=pir_seconds)
                 for event in pir_events:
                     self.register_and_publish(event, "availability")
-
-                # Simulate Button sensor readings (entry/exit)
-                button_seconds = self.simulation_params.get("button_seconds", 1)  # Default to 1 second
-                button_events = self.button_sensor.simulate_events(seconds=button_seconds)
-                for event in button_events:
-                    self.register_and_publish(event, event["event_type"])
 
                 time.sleep(5)
             except KeyboardInterrupt:
@@ -385,7 +378,7 @@ def initialize_service(config_dict):
 if __name__ == '__main__':
     try:
         # Load configuration from config.json
-        # with open('C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\device_connector\\config_device_connector_2.json') as config_file:
+        # with open('C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\device_connector_2\\config_device_connector_2.json') as config_file:
         with open('config_device_connector_2.json') as config_file:
             config = json.load(config_file)
 

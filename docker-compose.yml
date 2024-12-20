@@ -13,6 +13,20 @@ services:
       - service_catalog
       - resource_catalog
 
+    # Device Connector Service
+  device_connector_2:
+    build:
+      context: ./device_connector_2
+    ports:
+      - "8092:8092"
+    volumes:
+      - ./device_connector_2:/app
+    networks:
+      - gym-genius-network
+    depends_on:
+      - service_catalog
+      - resource_catalog
+
   # Resource Catalog
   resource_catalog:
     build:
