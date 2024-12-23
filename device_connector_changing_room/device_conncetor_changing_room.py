@@ -167,6 +167,52 @@ class DeviceConnector:
         except Exception as e:
             print(f"Error in publishing environment data: {e}")
 
+    def publish_data_occupancy(self, input_data, topic_type):
+        """Publish data to MQTT."""
+        try:
+            if topic_type == "entry":
+                topic = self.config["published_topics"]["entries"]
+            elif topic_type == "exit":
+                topic = self.config["published_topics"]["exits"]
+            else:
+                topic = self.config["published_topics"].get(topic_type, "")
+                topic = topic.replace('<roomID>', input_data.get("location", ""))
+
+            print(f"Publishing to topic: {topic}")
+            self.client.publish(topic, json.dumps(input_data["senml_record"]))
+            print(f"Published data to topic: {topic}")
+        except Exception as e:
+            print(f"Error in publishing data: {e}")  
+
+    def publish_environment_data(self, input_data):
+        """Publish temperature and humidity data to MQTT, considering HVAC state and residual effects."""
+        try:
+            # Extract temperature and humidity from the sensor data
+            senml_record = input_data.get("senml_record", {})
+            temperature = next((e["v"] for e in senml_record["e"] if e["n"] == "temperature"), None)
+            room = input_data.get("location")
+
+            if temperature is not None:
+                self.real_temperature[room] = temperature  # Update the actual temperature from the sensor
+
+                # Modify temperature based on HVAC status and residual effect
+                modified_temperature = self.update_simulated_temperature(room)
+
+                # Update the SenML record with the modified temperature
+                for entry in senml_record["e"]:
+                    if entry["n"] == "temperature":
+                        entry["v"] = modified_temperature
+
+            # Convert the record to JSON and publish it to the MQTT topic
+            topic = self.config["published_topics"]["environment"].replace('<roomID>', room)
+            print(f"Publishing to topic: {topic}")
+            self.client.publish(topic, json.dumps(senml_record))
+            return json.dumps({"status": "success", "message": "Environment data published to MQTT"})
+
+        except Exception as e:
+            print(f"Error in publishing environment data: {e}")
+            return json.dumps({"status": "error", "message": str(e)})              
+
     def update_simulated_temperature(self):
         """Update the simulated temperature based on HVAC state and residual effects."""
         if self.simulated_temperature is None:
@@ -288,16 +334,48 @@ class DeviceConnector:
 
         return {"status": "error", "message": f"Unknown endpoint: {uri[0]}"}
 
+    def start_simulation_thread(self):
+        """Start the thread for sensors' simulation"""
+        self.simulation_thread = threading.Thread(target=self.simulate_and_publish_sensors)
+        self.simulation_thread.daemon = True  # Thread closes when the main program ends.
+        self.simulation_thread.start()
+
     def stop(self):
         self.client.loop_stop()
         print("MQTT client stopped")
 
+def initialize_service(config_dict):
+    """Initialize and register the service."""
+    register_service(config_dict, config_dict["service_catalog"])
+    print("Device Connector Service Initialized and Registered")        
+
 if __name__ == '__main__':
-    with open('config_device_connector_entrance.json') as config_file:
-        config = json.load(config_file)
-    service = DeviceConnector(config)
-    threading.Thread(target=service.simulate_and_publish_sensors, daemon=True).start()
-    cherrypy.config.update({'server.socket_port': 8083})
-    cherrypy.tree.mount(service, '/', {'/': {'tools.sessions.on': True}})
-    cherrypy.engine.start()
-    cherrypy.engine.block()
+    try:
+        with open('config_device_connector_entrance.json') as config_file:
+            config = json.load(config_file)
+
+        service = DeviceConnector(config)
+        initialize_service(config)
+
+        service.start_simulation_thread()
+
+        # CherryPy configuration with port and host settings
+        cherrypy.config.update({'server.socket_port': 8093, 'server.socket_host': '0.0.0.0'})
+
+        # Mount the DeviceConnector using MethodDispatcher
+        conf = {
+            '/': {
+                'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+                'tools.sessions.on': True
+            }
+        }
+
+        # Start the CherryPy server
+        cherrypy.tree.mount(service, '/', conf)
+        cherrypy.engine.start()
+        cherrypy.engine.block()
+
+    except Exception as e:
+        print(f"Error in the main execution: {e}")
+    # finally:
+    #     service.stop()
