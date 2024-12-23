@@ -1,23 +1,30 @@
 {
     "service_id": "device_connector_entrance",
-    "description": "Handles entrance's sensors and actuators data",
+    "description": "Handles sensors and actuators data for the entrance area",
     "status": "active",
     "service_catalog": "http://service_catalog:8080",
     "resource_catalog": "http://resource_catalog:8081",
-    "endpoint": "http://device_connector_entrance:8082",
+    "endpoint": "http://device_connector_entrance:8094",
     "location": "entrance",
     "subscribed_topics": {
-        "automatic_control": "gym/hvac/control/entrance",
-        "control_commands": "gym/hvac/on_off/entrance"
+        "automatic_control": "gym/hvac/control/#",
+        "control_commands": "gym/hvac/on_off/#"
     },
     "published_topics": {
         "entries": "gym/occupancy/entry",
         "exits": "gym/occupancy/exit",
         "environment": "gym/environment/<roomID>",
+        "availability": "gym/availability/<machineID>"
     },
     "simulation_parameters": {
         "dht11_seconds": 5,
+        "pir_machine_type": null,
+        "pir_machines_per_type": null,
+        "pir_seconds": null,
         "button_seconds": 1
     },
+    "enable_dht11": true,
+    "enable_pir": false,
+    "enable_button": true,
     "last_update": null
 }
