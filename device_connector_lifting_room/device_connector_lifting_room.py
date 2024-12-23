@@ -21,6 +21,14 @@ class DeviceConnector:
         self.simulation_params = self.config.get("simulation_parameters", {})
         self.location = self.config.get("location", "unknown")
 
+        # HVAC states and sensors
+        self.hvac_state = 'off'  # HVAC is initially off
+        self.hvac_mode = None  # No mode when HVAC is off
+        self.hvac_last_turned_on = None
+
+        self.real_temperature = None  # Actual temperature from sensors
+        self.simulated_temperature = None  # Adjusted temperature
+
         self.mqtt_broker, self.mqtt_port = self.get_mqtt_info_from_service_catalog()
         self.client = mqtt.Client()
         self.client.on_message = self.on_message
@@ -32,9 +40,12 @@ class DeviceConnector:
         self.client.loop_start()
 
         self.subscribe_to_topics()
-        
+
         # Enable required sensors
         self.enable_sensors()
+
+        # Perform device checks at initialization
+        self.check_and_delete_inactive_devices()
 
     def get_mqtt_info_from_service_catalog(self):
         try:
@@ -72,25 +83,55 @@ class DeviceConnector:
                 if "dht11" in self.sensors:
                     events = self.sensors["dht11"].simulate_dht11_sensor(seconds=self.simulation_params.get("dht11_seconds", 5))
                     for event in events:
-                        self.publish_data(event, "environment")
+                        self.register_and_publish(event, "environment")
 
                 if "pir" in self.sensors:
                     events = self.sensors["pir"].simulate_usage(
-                        machine_type=self.simulation_params.get("pir_machine_type", "unkown"),
+                        machine_type=self.simulation_params.get("pir_machine_type", "unknown"),
                         machines_per_type=self.simulation_params.get("pir_machines_per_type", 1),
                         seconds=self.simulation_params.get("pir_seconds", 5))
                     for event in events:
-                        self.publish_data(event, "availability")
+                        self.register_and_publish(event, "availability")
 
                 if "button" in self.sensors:
                     events = self.sensors["button"].simulate_events(seconds=self.simulation_params.get("button_seconds", 5))
                     for event in events:
-                        self.publish_data(event, event["event_type"])
+                        self.register_and_publish(event, event["event_type"])
 
                 time.sleep(5)
             except KeyboardInterrupt:
                 print("Simulation interrupted")
                 break
+
+    def register_and_publish(self, input_data, topic_type):
+        """Register device and publish data to MQTT."""
+        registration_response = self.register_device(input_data)
+        registration_data = json.loads(registration_response)
+
+        if registration_data["status"] == "success" or registration_data["message"] == "Device registered/updated successfully":
+            if topic_type == "environment":
+                self.publish_environment_data(input_data)
+            else:
+                self.publish_data(input_data, topic_type)
+        else:
+            print(f"Device registration failed: {registration_data}")
+
+    def register_device(self, input_data):
+        """Register or update device in the Resource Catalog."""
+        device_id = input_data.get("device_id")
+        device_type = input_data.get("type")
+        status = input_data.get("status")
+        endpoint = input_data.get("endpoint")
+        time = input_data.get("time")
+
+        if not device_id or not device_type or not status or not endpoint:
+            raise ValueError("Missing required fields for device registration")
+
+        try:
+            register_device(device_id, device_type, self.location, status, endpoint, time, self.resource_catalog_url)
+            return json.dumps({"status": "success", "message": "Device registered/updated successfully"})
+        except Exception as e:
+            return json.dumps({"status": "error", "message": str(e)})
 
     def publish_data(self, data, topic_type):
         try:
@@ -100,12 +141,152 @@ class DeviceConnector:
         except Exception as e:
             print(f"Error in publishing: {e}")
 
+    def publish_environment_data(self, input_data):
+        """Publish temperature and humidity data to MQTT, considering HVAC state and residual effects."""
+        try:
+            # Extract temperature and humidity from the sensor data
+            senml_record = input_data.get("senml_record", {})
+            temperature = next((e["v"] for e in senml_record["e"] if e["n"] == "temperature"), None)
+
+            if temperature is not None:
+                self.real_temperature = temperature  # Update the actual temperature from the sensor
+
+                # Modify temperature based on HVAC status and residual effect
+                modified_temperature = self.update_simulated_temperature()
+
+                # Update the SenML record with the modified temperature
+                for entry in senml_record["e"]:
+                    if entry["n"] == "temperature":
+                        entry["v"] = modified_temperature
+
+            # Convert the record to JSON and publish it to the MQTT topic
+            topic = self.config["published_topics"]["environment"].replace("<roomID>", self.location)
+            self.client.publish(topic, json.dumps(senml_record))
+            print(f"Published environment data to topic: {topic}")
+
+        except Exception as e:
+            print(f"Error in publishing environment data: {e}")
+
+    def update_simulated_temperature(self):
+        """Update the simulated temperature based on HVAC state and residual effects."""
+        if self.simulated_temperature is None:
+            # Initialize simulated temperature to real temperature
+            self.simulated_temperature = self.real_temperature
+
+        if self.hvac_state == 'on' and self.hvac_last_turned_on:
+            elapsed_time = datetime.now() - self.hvac_last_turned_on
+            minutes_running = elapsed_time.total_seconds() / 60
+
+            # Apply HVAC effects: e.g., 0.5 degrees per 15 minutes
+            temp_change = (minutes_running // 15) * 0.5
+
+            if self.hvac_mode == 'cool':
+                self.simulated_temperature -= temp_change
+            elif self.hvac_mode == 'heat':
+                self.simulated_temperature += temp_change
+        else:
+            # Gradual return to real temperature
+            if self.simulated_temperature < self.real_temperature:
+                self.simulated_temperature += 0.1
+            elif self.simulated_temperature > self.real_temperature:
+                self.simulated_temperature -= 0.1
+
+        # Clamp temperature to realistic bounds
+        self.simulated_temperature = max(min(self.simulated_temperature, 35), 15)
+        return round(self.simulated_temperature, 2)
+
+    def check_and_delete_inactive_devices(self):
+        """Checks for inactive devices and removes them."""
+        try:
+            response = requests.get(self.resource_catalog_url)
+            if response.status_code == 200:
+                device_registry = response.json().get("devices", [])
+                current_time = datetime.now()
+
+                for device in device_registry:
+                    last_update_str = device.get("lastUpdate")
+                    if last_update_str:
+                        last_update = datetime.strptime(last_update_str, "%Y-%m-%d %H:%M:%S")
+                        if current_time - last_update > timedelta(days=3):
+                            self.delete_device(device.get("device_id"))
+            else:
+                print(f"Error retrieving device registry: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            print(f"Error during GET request to Resource Catalog: {e}")
+
+    def delete_device(self, device_id):
+        """Deletes an inactive device from the Resource Catalog."""
+        if device_id:
+            try:
+                response = requests.delete(f"{self.resource_catalog_url}/{device_id}")
+                if response.status_code == 200:
+                    print(f"Device {device_id} successfully deleted.")
+                else:
+                    print(f"Error deleting device {device_id}: {response.status_code}")
+            except requests.exceptions.RequestException as e:
+                print(f"Error during DELETE request: {e}")
+        else:
+            print("Invalid device_id for deletion.")
+
     def on_message(self, client, userdata, message):
-        print(f"Received message: {message.payload.decode()}")
+        try:
+            payload = json.loads(message.payload.decode())
+            print(f"Received payload: {payload}")
+            topic = message.topic
+
+            if f"gym/hvac/control/{self.location}" in topic:
+                control_command = payload.get('control_command')
+                mode = payload.get('mode', self.hvac_mode)
+
+                if control_command == 'turn_on':
+                    if self.hvac_state == 'off':
+                        self.hvac_state = 'on'
+                        self.hvac_last_turned_on = datetime.now()
+                        self.hvac_mode = mode
+                        print(f"HVAC turned ON in {self.hvac_mode} mode.")
+                elif control_command == 'turn_off':
+                    if self.hvac_state == 'on':
+                        self.hvac_state = 'off'
+                        self.hvac_last_turned_on = None
+                        self.hvac_mode = None
+                        print("HVAC turned OFF.")
+                else:
+                    print(f"Unknown HVAC command: {control_command}")
+        except Exception as e:
+            print(f"Error processing message: {e}")
 
     @cherrypy.tools.json_out()
     def GET(self, *uri, **params):
-        return {"status": "success", "location": self.location}
+        if len(uri) == 0:
+            return {"status": "error", "message": "No endpoint specified."}
+
+        if uri[0] == "environment":
+            temperature = self.simulated_temperature
+            humidity = self.real_temperature
+
+            if temperature is None or humidity is None:
+                return {"status": "error", "message": "No data available."}
+
+            return {
+                "status": "success",
+                "senml_record": {
+                    "e": [
+                        {"n": "temperature", "u": "Cel", "v": temperature},
+                        {"n": "humidity", "u": "%", "v": humidity}
+                    ]
+                },
+                "location": self.location
+            }
+
+        if uri[0] == "hvac_status":
+            return {
+                "status": "success",
+                "hvac_state": self.hvac_state,
+                "hvac_mode": self.hvac_mode,
+                "location": self.location
+            }
+
+        return {"status": "error", "message": f"Unknown endpoint: {uri[0]}"}
 
     def stop(self):
         self.client.loop_stop()
