@@ -1,26 +1,78 @@
 services:
   # Device Connector Service
-  device_connector:
+  # device_connector:
+  #   build:
+  #     context: ./device_connector
+  #   ports:
+  #     - "8082:8082"
+  #   volumes:
+  #     - ./device_connector:/app
+  #   networks:
+  #     - gym-genius-network
+  #   depends_on:
+  #     - service_catalog
+  #     - resource_catalog
+
+    # Device Connector Service
+  # device_connector_2:
+  #   build:
+  #     context: ./device_connector_2
+  #   ports:
+  #     - "8092:8092"
+  #   volumes:
+  #     - ./device_connector_2:/app
+  #   networks:
+  #     - gym-genius-network
+  #   depends_on:
+  #     - service_catalog
+  #     - resource_catalog
+
+  device_connector_cardio_room:
     build:
-      context: ./device_connector
+      context: ./device_connector_cardio_room
     ports:
-      - "8082:8082"
+      - "8092:8092"
     volumes:
-      - ./device_connector:/app
+      - ./device_connector_cardio_room:/app
+    networks:
+      - gym-genius-network
+    depends_on:
+      - service_catalog
+      - resource_catalog
+    
+  device_connector_changing_room:
+    build:
+      context: ./device_connector_changing_room
+    ports:
+      - "8093:8093"
+    volumes:
+      - ./device_connector_changing_room:/app
     networks:
       - gym-genius-network
     depends_on:
       - service_catalog
       - resource_catalog
 
-    # Device Connector Service
-  device_connector_2:
+  device_connector_entrance:
     build:
-      context: ./device_connector_2
+      context: ./device_connector_entrance
     ports:
-      - "8092:8092"
+      - "8094:8094"
     volumes:
-      - ./device_connector_2:/app
+      - ./device_connector_entrance:/app
+    networks:
+      - gym-genius-network
+    depends_on:
+      - service_catalog
+      - resource_catalog
+
+  device_connector_lifting_room:
+    build:
+      context: ./device_connector_lifting_room
+    ports:
+      - "8095:8095"
+    volumes:
+      - ./device_connector_lifting_room:/app
     networks:
       - gym-genius-network
     depends_on:
@@ -64,7 +116,10 @@ services:
     networks:
       - gym-genius-network
     depends_on:
-      - device_connector
+      - device_connector_cardio_room
+      - device_connector_changing_room
+      - device_connector_entrance
+      - device_connector_lifting_room
       - service_catalog
       - resource_catalog
     environment:
@@ -79,7 +134,7 @@ services:
     networks:
       - gym-genius-network
     depends_on:
-      - device_connector
+      - device_connector_entrance
       - service_catalog
       - resource_catalog
       - thingspeak_adaptor
@@ -98,47 +153,12 @@ services:
     networks:
       - gym-genius-network
     depends_on:
-      - device_connector
+      - device_connector_cardio_room
+      - device_connector_lifting_room
       - service_catalog
       - resource_catalog
     environment:
       - SERVICE_CATALOG_URL=http://service_catalog:8080
-
-  # # Button Sensor (real and simulated)
-  # button_sensor:
-  #   build:
-  #     context: ./device_connector/sensors
-  #   command: python button_class.py
-  #   volumes:
-  #     - ./device_connector/sensors:/app
-  #   networks:
-  #     - gym-genius-network
-  #   depends_on:
-  #     - device_connector
-
-  # # DHT11 Sensor (real and simulated)
-  # dht11_sensor:
-  #   build:
-  #     context: ./device_connector/sensors
-  #   command: python dht11_class.py
-  #   volumes:
-  #     - ./device_connector/sensors:/app
-  #   networks:
-  #     - gym-genius-network
-  #   depends_on:
-  #     - device_connector
-
-  # # PIR Sensor (real and simulated)
-  # pir_sensor:
-  #   build:
-  #     context: ./device_connector/sensors
-  #   command: python PIR_class.py
-  #   volumes:
-  #     - ./device_connector/sensors:/app
-  #   networks:
-  #     - gym-genius-network
-  #   depends_on:
-  #     - device_connector
 
   # Thingspeak Adaptor Service
   thingspeak_adaptor:
@@ -149,7 +169,10 @@ services:
     networks:
       - gym-genius-network
     depends_on:
-      - device_connector
+      - device_connector_cardio_room
+      - device_connector_changing_room
+      - device_connector_entrance
+      - device_connector_lifting_room
       - service_catalog
       - resource_catalog
     environment:
@@ -167,7 +190,10 @@ services:
     networks:
       - gym-genius-network
     depends_on:
-      - device_connector
+      - device_connector_cardio_room
+      - device_connector_changing_room
+      - device_connector_entrance
+      - device_connector_lifting_room
       - thingspeak_adaptor
       - service_catalog
       - resource_catalog
@@ -187,50 +213,6 @@ services:
   #   depends_on:
   #     - device_connector
 
-  # # Button Sensor (real and simulated)
-  # button_sensor:
-  #   build:
-  #     context: C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\device_connector\sensors  # Path to the Dockerfile in sensors directory
-  #   command: python button.py  # Command to run the button.py script
-  #   volumes:
-  #     - ./sensors:/app  # Mount the local sensors folder to the container
-  #   networks:
-  #     - gym-genius-network
-  #   depends_on:
-  #     - device_connector
-  #   # Test with raspberry
-  #   # devices:
-  #   #   - "/dev/mem:/dev/mem"  # Needed for GPIO access on Raspberry Pi
-
-  # # DHT11 Sensor (real and simulated)
-  # dht11_sensor:
-  #   build:
-  #     context: C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\device_connector\sensors  # Path to the Dockerfile in sensors directory
-  #   command: python dht11.py  # Command to run the dht11.py script
-  #   volumes:
-  #     - ./sensors:/app  # Mount the local sensors folder to the container
-  #   networks:
-  #     - gym-genius-network
-  #   depends_on:
-  #     - device_connector
-  #   # Test with raspberry
-  #   # devices:
-  #   #   - "/dev/mem:/dev/mem"  # Needed for GPIO access on Raspberry Pi
-
-  # # PIR Sensor (real and simulated)
-  # pir_sensor:
-  #   build:
-  #     context: C:\Users\feder\OneDrive\Desktop\Uni\IoT\Gym_Genius\device_connector\sensors  # Path to the Dockerfile in sensors directory
-  #   command: python PIR_sensor.py  # Command to run the PIR_sensor.py script
-  #   volumes:
-  #     - ./sensors:/app  # Mount the local sensors folder to the container
-  #   networks:
-  #     - gym-genius-network
-  #   depends_on:
-  #     - device_connector
-  #   # Test with raspberry
-  #   # devices:
-  #   #   - "/dev/mem:/dev/mem"  # Needed for GPIO access on Raspberry Pi
 
 networks:
   gym-genius-network:

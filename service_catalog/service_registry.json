@@ -172,7 +172,7 @@
                 "current_occupancy": "gym/occupancy/current",
                 "prediction": "gym/occupancy/prediction"
             },
-            "last_update": "2024-12-20 14:24:15"
+            "last_update": "2024-12-27 09:45:24"
         },
         {
             "service_id": "hvac_control",
@@ -190,7 +190,7 @@
                 "automatic_control": "gym/hvac/control/<roomID>",
                 "alert": "gym/environment/alert/<roomID>"
             },
-            "last_update": "2024-12-20 14:24:08"
+            "last_update": "2024-12-27 09:45:20"
         },
         {
             "service_id": "thingspeak_adaptor",
@@ -204,7 +204,7 @@
                 "machine_availability": "gym/group_availability/<machine_type>"
             },
             "published_topics": null,
-            "last_update": "2024-12-20 14:24:08"
+            "last_update": "2024-12-27 09:45:20"
         },
         {
             "service_id": "resource_catalog",
@@ -214,15 +214,16 @@
             "endpoint": "http://resource_catalog:8081",
             "subscribed_topics": null,
             "published_topics": null,
-            "last_update": "2024-12-20 14:24:06"
+            "last_update": "2024-12-27 09:45:19"
         },
         {
-            "service_id": "device_connector_1",
-            "description": "Handles sensors and actuators data",
+            "service_id": "device_connector_cardio_room",
+            "description": "Handles sensors and actuators data for the cardio room",
             "status": "active",
             "service_catalog": "http://service_catalog:8080",
             "resource_catalog": "http://resource_catalog:8081",
-            "endpoint": "http://device_connector_1:8082",
+            "endpoint": "http://device_connector_cardio_room:8092",
+            "location": "cardio_room",
             "subscribed_topics": {
                 "automatic_control": "gym/hvac/control/#",
                 "control_commands": "gym/hvac/on_off/#"
@@ -236,36 +237,115 @@
             "simulation_parameters": {
                 "dht11_seconds": 5,
                 "pir_machine_type": "cardio",
-                "pir_machines_per_type": 2,
-                "pir_seconds": 1,
-                "button_seconds": 1
+                "pir_machines_per_type": 4,
+                "pir_seconds": 2,
+                "button_seconds": null
             },
-            "last_update": "2024-12-20 14:24:08"
+            "enable_dht11": true,
+            "enable_pir": true,
+            "enable_button": false,
+            "last_update": "2024-12-27 09:45:20"
         },
         {
-            "service_id": "device_connector_2",
-            "description": "Handles sensors and actuators data for lifting room",
+            "service_id": "device_connector_entrance",
+            "description": "Handles sensors and actuators data for the entrance area",
             "status": "active",
             "service_catalog": "http://service_catalog:8080",
             "resource_catalog": "http://resource_catalog:8081",
-            "endpoint": "http://device_connector_2:8092",
+            "endpoint": "http://device_connector_entrance:8094",
+            "location": "entrance",
             "subscribed_topics": {
                 "automatic_control": "gym/hvac/control/#",
                 "control_commands": "gym/hvac/on_off/#"
             },
             "published_topics": {
+                "entries": "gym/occupancy/entry",
+                "exits": "gym/occupancy/exit",
                 "environment": "gym/environment/<roomID>",
                 "availability": "gym/availability/<machineID>"
             },
             "simulation_parameters": {
                 "dht11_seconds": 5,
-                "pir_machine_type": "lifting",
-                "pir_machines_per_type": 3,
-                "pir_seconds": 1,
+                "pir_machine_type": null,
+                "pir_machines_per_type": null,
+                "pir_seconds": null,
                 "button_seconds": 1
             },
-            "last_update": "2024-12-20 14:24:08"
+            "enable_dht11": true,
+            "enable_pir": false,
+            "enable_button": true,
+            "last_update": "2024-12-27 09:45:20"
+        },
+        {
+            "service_id": "device_connector_changing_room",
+            "description": "Handles sensors and actuators data for the changing room",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "resource_catalog": "http://resource_catalog:8081",
+            "endpoint": "http://device_connector_changing_room:8093",
+            "location": "changing_room",
+            "subscribed_topics": {
+                "automatic_control": "gym/hvac/control/#",
+                "control_commands": "gym/hvac/on_off/#"
+            },
+            "published_topics": {
+                "entries": "gym/occupancy/entry",
+                "exits": "gym/occupancy/exit",
+                "environment": "gym/environment/<roomID>",
+                "availability": "gym/availability/<machineID>"
+            },
+            "simulation_parameters": {
+                "dht11_seconds": 5,
+                "pir_machine_type": null,
+                "pir_machines_per_type": null,
+                "pir_seconds": null,
+                "button_seconds": null
+            },
+            "enable_dht11": true,
+            "enable_pir": false,
+            "enable_button": false,
+            "last_update": "2024-12-27 09:45:19"
+        },
+        {
+            "service_id": "device_connector_lifting_room",
+            "description": "Handles sensors and actuators data for the lifting room",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "resource_catalog": "http://resource_catalog:8081",
+            "endpoint": "http://device_connector_lifting_room:8095",
+            "location": "lifting_room",
+            "subscribed_topics": {
+                "automatic_control": "gym/hvac/control/#",
+                "control_commands": "gym/hvac/on_off/#"
+            },
+            "published_topics": {
+                "entries": "gym/occupancy/entry",
+                "exits": "gym/occupancy/exit",
+                "environment": "gym/environment/<roomID>",
+                "availability": "gym/availability/<machineID>"
+            },
+            "simulation_parameters": {
+                "dht11_seconds": 10,
+                "pir_machine_type": "lifting",
+                "pir_machines_per_type": 4,
+                "pir_seconds": 1,
+                "button_seconds": null
+            },
+            "enable_dht11": true,
+            "enable_pir": true,
+            "enable_button": false,
+            "last_update": "2024-12-27 09:45:20"
+        },
+        {
+            "service_id": "thingspeak_reader",
+            "description": "Generates historical records on occupancy, usage, and conditions for each room",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "endpoint": "http://thingspeak_reader:8089/thingspeak_adaptor/?channel=entrance",
+            "subscribed_topics": null,
+            "published_topics": null,
+            "last_update": "2024-12-27 09:45:23"
         }
     ],
-    "lastUpdate": "2024-12-20 14:26:41"
+    "lastUpdate": "2024-12-27 09:45:24"
 }

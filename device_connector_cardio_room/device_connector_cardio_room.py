@@ -26,8 +26,8 @@ class DeviceConnector:
         self.hvac_mode = None  # No mode when HVAC is off
         self.hvac_last_turned_on = None
 
-        self.real_temperature = None  # Actual temperature from sensors
-        self.simulated_temperature = None  # Adjusted temperature
+        self.real_temperature = {}  # Actual temperature from sensors
+        self.simulated_temperature = {}  # Adjusted temperature
 
         self.mqtt_broker, self.mqtt_port = self.get_mqtt_info_from_service_catalog()
         self.client = mqtt.Client()
@@ -111,8 +111,10 @@ class DeviceConnector:
         if registration_data["status"] == "success" or registration_data["message"] == "Device registered/updated successfully":
             if topic_type == "environment":
                 self.publish_environment_data(input_data)
-            else:
+            elif topic_type == "availability":
                 self.publish_data(input_data, topic_type)
+            else:
+                self.publish_data_occupancy(input_data, topic_type)
         else:
             print(f"Device registration failed: {registration_data}")
 
@@ -133,39 +135,21 @@ class DeviceConnector:
         except Exception as e:
             return json.dumps({"status": "error", "message": str(e)})
 
-    def publish_data(self, data, topic_type):
+    def publish_data(self, input_data, topic_type):
         try:
-            topic = self.config["published_topics"].get(topic_type, "").replace("<roomID>", self.location)
-            self.client.publish(topic, json.dumps(data))
-            print(f"Published to {topic}: {data}")
-        except Exception as e:
-            print(f"Error in publishing: {e}")
+            topic = self.config["published_topics"].get(topic_type, "")
+            topic = topic.replace('<machineID>', input_data.get("device_id", "unknown"))
+            topic = topic.replace('<roomID>', input_data.get("location", "unknown"))
+            
+            senml_record = input_data.get("senml_record")
+            if senml_record is None:
+                print("Error: Missing 'senml_record' in input_data.")
+                return
 
-    def publish_environment_data(self, input_data):
-        """Publish temperature and humidity data to MQTT, considering HVAC state and residual effects."""
-        try:
-            # Extract temperature and humidity from the sensor data
-            senml_record = input_data.get("senml_record", {})
-            temperature = next((e["v"] for e in senml_record["e"] if e["n"] == "temperature"), None)
-
-            if temperature is not None:
-                self.real_temperature = temperature  # Update the actual temperature from the sensor
-
-                # Modify temperature based on HVAC status and residual effect
-                modified_temperature = self.update_simulated_temperature()
-
-                # Update the SenML record with the modified temperature
-                for entry in senml_record["e"]:
-                    if entry["n"] == "temperature":
-                        entry["v"] = modified_temperature
-
-            # Convert the record to JSON and publish it to the MQTT topic
-            topic = self.config["published_topics"]["environment"].replace("<roomID>", self.location)
             self.client.publish(topic, json.dumps(senml_record))
-            print(f"Published environment data to topic: {topic}")
-
+            print(f"Published data to topic: {topic}")
         except Exception as e:
-            print(f"Error in publishing environment data: {e}")
+            print(f"Error in publishing data to topic '{topic_type}': {e}")
 
     def publish_data_occupancy(self, input_data, topic_type):
         """Publish data to MQTT."""
@@ -192,7 +176,7 @@ class DeviceConnector:
             temperature = next((e["v"] for e in senml_record["e"] if e["n"] == "temperature"), None)
             room = input_data.get("location")
 
-            if temperature is not None:
+            if room and temperature is not None:
                 self.real_temperature[room] = temperature  # Update the actual temperature from the sensor
 
                 # Modify temperature based on HVAC status and residual effect
@@ -203,21 +187,25 @@ class DeviceConnector:
                     if entry["n"] == "temperature":
                         entry["v"] = modified_temperature
 
-            # Convert the record to JSON and publish it to the MQTT topic
-            topic = self.config["published_topics"]["environment"].replace('<roomID>', room)
-            print(f"Publishing to topic: {topic}")
-            self.client.publish(topic, json.dumps(senml_record))
-            return json.dumps({"status": "success", "message": "Environment data published to MQTT"})
+                # Convert the record to JSON and publish it to the MQTT topic
+                topic = self.config["published_topics"]["environment"].replace('<roomID>', room)
+                print(f"Publishing to topic: {topic}")
+                self.client.publish(topic, json.dumps(senml_record))
+                return json.dumps({"status": "success", "message": "Environment data published to MQTT"})
+
+            else:
+                raise ValueError("Missing room or temperature data.")
 
         except Exception as e:
             print(f"Error in publishing environment data: {e}")
-            return json.dumps({"status": "error", "message": str(e)})              
+            return json.dumps({"status": "error", "message": str(e)})
+              
 
-    def update_simulated_temperature(self):
-        """Update the simulated temperature based on HVAC state and residual effects."""
-        if self.simulated_temperature is None:
-            # Initialize simulated temperature to real temperature
-            self.simulated_temperature = self.real_temperature
+    def update_simulated_temperature(self, room):
+        """Update the simulated temperature for a specific room based on HVAC state and residual effects."""
+        if room not in self.simulated_temperature:
+            # Initialize simulated temperature for the room
+            self.simulated_temperature[room] = self.real_temperature.get(room, 20.0)
 
         if self.hvac_state == 'on' and self.hvac_last_turned_on:
             elapsed_time = datetime.now() - self.hvac_last_turned_on
@@ -227,38 +215,43 @@ class DeviceConnector:
             temp_change = (minutes_running // 15) * 0.5
 
             if self.hvac_mode == 'cool':
-                self.simulated_temperature -= temp_change
+                self.simulated_temperature[room] -= temp_change
             elif self.hvac_mode == 'heat':
-                self.simulated_temperature += temp_change
+                self.simulated_temperature[room] += temp_change
         else:
             # Gradual return to real temperature
-            if self.simulated_temperature < self.real_temperature:
-                self.simulated_temperature += 0.1
-            elif self.simulated_temperature > self.real_temperature:
-                self.simulated_temperature -= 0.1
+            if self.simulated_temperature[room] < self.real_temperature.get(room, 20.0):
+                self.simulated_temperature[room] += 0.1
+            elif self.simulated_temperature[room] > self.real_temperature.get(room, 20.0):
+                self.simulated_temperature[room] -= 0.1
 
         # Clamp temperature to realistic bounds
-        self.simulated_temperature = max(min(self.simulated_temperature, 35), 15)
-        return round(self.simulated_temperature, 2)
+        self.simulated_temperature[room] = max(min(self.simulated_temperature[room], 35), 15)
+        return round(self.simulated_temperature[room], 2)
+
 
     def check_and_delete_inactive_devices(self):
-        """Checks for inactive devices and removes them."""
+        """Checks for inactive devices and deletes them if they haven't been updated in the last 3 days."""
         try:
-            response = requests.get(self.resource_catalog_url)
+            response = requests.get(self.resource_catalog_url)  # URL for resource catalog is loaded from config 
             if response.status_code == 200:
                 device_registry = response.json().get("devices", [])
+                response = requests.get(self.resource_catalog_url)
                 current_time = datetime.now()
 
-                for device in device_registry:
+                for device in device_registry["devices"]:
                     last_update_str = device.get("lastUpdate")
                     if last_update_str:
                         last_update = datetime.strptime(last_update_str, "%Y-%m-%d %H:%M:%S")
                         if current_time - last_update > timedelta(days=3):
+                            # Device inactive for more than 3 days, send DELETE request
                             self.delete_device(device.get("device_id"))
+
             else:
-                print(f"Error retrieving device registry: {response.status_code}")
+                print(f"Error retrieving the device registry: {response.status_code} - {response.text}")
+
         except requests.exceptions.RequestException as e:
-            print(f"Error during GET request to Resource Catalog: {e}")
+            print(f"Connection error during GET request to the Resource Catalog: {e}")
 
     def delete_device(self, device_id):
         """Deletes an inactive device from the Resource Catalog."""
@@ -351,7 +344,8 @@ def initialize_service(config_dict):
 
 if __name__ == '__main__':
     try:
-        with open('config_device_connector_entrance.json') as config_file:
+        # with open('C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\device_connector_cardio_room\\config_device_connector_cardio_room.json') as config_file:
+        with open('config_device_connector_cardio_room.json') as config_file:
             config = json.load(config_file)
 
         service = DeviceConnector(config)

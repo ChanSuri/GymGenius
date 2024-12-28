@@ -153,8 +153,8 @@ The service simulates temperature changes in each room by applying HVAC effects 
 ## Service Configuration
 The service is configured via a `config.json` file. The configuration includes settings for:
 
-- **Service Catalog URL**: The URL of the Service Catalog from which the service retrieves the MQTT broker, port, and room configurations. By default, it is set to `http://service_catalog:8080` and `http://localhost:8081/devices`, respectively.
-- **Service Catalog URL**: The URL of the Resource Catalog where devices are registered. By default, it is set to `http://localhost:8081/devices`
+- **Service Catalog URL**: The URL of the Service Catalog from which the service retrieves the MQTT broker, port, and room configurations. By default, it is set to `http://service_catalog:8080`.
+- **Resource Catalog URL**: The URL of the Resource Catalog where devices are registered. By default, it is set to `http://resource_catalog:8081`
 - **Subscribed Topics**: Lists MQTT topics the service listens to (e.g., HVAC control).
 - **Published Topics**: Specifies the topics to publish data (e.g., environment data, machine availability).
 

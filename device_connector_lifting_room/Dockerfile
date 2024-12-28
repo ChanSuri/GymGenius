@@ -6,6 +6,6 @@ COPY . .
 
 RUN pip install cherrypy requests paho-mqtt
 
-EXPOSE 8092
+EXPOSE 8095
 
-CMD ["python", "device_connector_2.py"]
+CMD ["python", "device_connector_lifting_room.py"]
