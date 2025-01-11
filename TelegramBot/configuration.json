@@ -2,7 +2,7 @@
     "service_id": "Telegram_bot",
     "description": "Connects the proposed infrastructure to the cloud-based instant messaging platform Telegram",
     "status": "active",
-    "service_catalog": "http://localhost:8080",
+    "service_catalog": "http://service_catalog:8080",
     "endpoint": null,
     "subscribed_topics": {
                             "crowdTopic":"gym/occupancy/current",
@@ -16,6 +16,11 @@
     },
     "token": "6961607644:AAFCNHwGsNI67k5m53VjFY48b5O9DlCNgZg",
     "webServerAddress":"https://api.thingspeak.com/channels/",
-    "device_connector":"http://device_connector:8082",
+    "device_connector": {
+        "cardio_room": "http://device_connector_cardio_room:8092",
+        "changing_room": "http://device_connector_changing_room:8093",
+        "entrance": "http://device_connector_entrance:8094",
+        "lifting_room": "http://device_connector_lifting_room:8095"
+    },
     "last_update": null
 }

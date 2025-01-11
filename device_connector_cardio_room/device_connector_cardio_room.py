@@ -345,7 +345,7 @@ def initialize_service(config_dict):
 if __name__ == '__main__':
     try:
         # with open('C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\device_connector_cardio_room\\config_device_connector_cardio_room.json') as config_file:
-        with open('config_device_connector_cardio_room.json') as config_file:
+        with open('device_connector_cardio_room/config_device_connector_cardio_room.json') as config_file:
             config = json.load(config_file)
 
         service = DeviceConnector(config)

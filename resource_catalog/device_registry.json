@@ -1,7 +1,7 @@
 {
     "projectOwner": "group 22",
     "projectName": "GymGenius",
-    "brokerIP": "test.moquitto.org",
+    "brokerIP": "broker.hivemq.com",
     "brokerPort": 1883,
     "devices": [
         {

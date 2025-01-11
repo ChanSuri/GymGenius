@@ -200,18 +200,26 @@ services:
     command: python TA_reader.py
 
 
-  # Telegram Bot Service
-  # telegram_bot:
-  #   build:
-  #     context: ./telegramBot  # Path to the Dockerfile in telegramBot directory
-  #   ports:
-  #     - "8086:8086"
-  #   volumes:
-  #     - ./telegramBot:/app
-  #   networks:
-  #     - gym-genius-network
-  #   depends_on:
-  #     - device_connector
+#  Telegram Bot Service
+  telegram_bot:
+    build:
+      context: ./telegramBot  # Path to the Dockerfile in telegramBot directory
+    ports:
+      - "8086:8086"
+    volumes:
+      - ./telegramBot:/app
+    networks:
+      - gym-genius-network
+    depends_on:
+      - device_connector_cardio_room
+      - device_connector_changing_room
+      - device_connector_entrance
+      - device_connector_lifting_room
+      - thingspeak_adaptor
+      - service_catalog
+      - resource_catalog
+    environment:
+      - SERVICE_CATALOG_URL=http://service_catalog:8080
 
 
 networks:
