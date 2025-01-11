@@ -26,6 +26,13 @@ services:
   #   depends_on:
   #     - service_catalog
   #     - resource_catalog
+  
+  # version: '3'
+  # services:
+  #   mosquitto_sub:
+  #     image: eclipse-mosquitto
+  #     command: mosquitto_sub -h broker.hivemq.com -t gym/# -p 1883 -v -d
+  #     network_mode: "host"
 
   device_connector_cardio_room:
     build:

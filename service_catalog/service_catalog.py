@@ -5,7 +5,7 @@ from datetime import datetime
 
 # Path to the service_registry.json file
 # SERVICE_REGISTRY_FILE = 'C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\service_catalog\\service_registry.json'
-SERVICE_REGISTRY_FILE = 'service_catalog/service_registry.json'
+SERVICE_REGISTRY_FILE = 'service_registry.json'
 
 def load_registry():
     """Loads the service registry from the file."""

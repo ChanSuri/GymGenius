@@ -151,13 +151,8 @@ class Telegrambot():
     
     #Telegram chat
     def on_chat_message(self,msg):
+        self.notify(msg.topic, msg.payload)
         try:
-            # if 'text' in msg:
-            #     content_type, chat_type, chat_id = telepot.glance(msg)
-            #     message = msg['text']
-            # elif 'data' in msg:  # 当按钮被点击时，msg会包含callback_data
-            #     content_type, chat_type, chat_id = telepot.glance(msg['message'])
-            #     message = msg['data']
             content_type, chat_type, chat_id = telepot.glance(msg)
             message = msg['text']
             print(content_type, chat_type, chat_id)
@@ -442,9 +437,6 @@ class Telegrambot():
 
         except Exception as e:
             print(f"Error processing message: {e}")
-
-            
-
 
     def on_callback_query(self,msg):
         query_id, chat_id, query_data = telepot.glance(msg, flavor='callback_query')
