@@ -65,8 +65,8 @@ class Telegrambot():
             [0,  0,  2,  4,  3, 15,  9]     # 00:00-08:00
         ] #example #example
         self.machines = self.get_machines_from_service_catalog()
-        self.zones = self.get_rooms_from_service_catalog()
-        self.zones.append("All")
+        self.zones = self.get_rooms_from_service_catalog() or [] 
+        self.zones.append('All')
         #self.bot.message_loop(self.on_chat_message)
 
     
@@ -456,7 +456,7 @@ class Telegrambot():
                     query_data = "#"
                 topic = f"{self.availTopic}/{query_data}"
                 self.client.mySubscribe(topic)
-                self.bot.sendMessage(chat_id, f"Subscribed to availability of {query_data.replace('#', "All")}!")
+                self.bot.sendMessage(chat_id, f"Subscribed to availability of {query_data.replace('#', 'All')}!")
             except Exception as e:
                 self.bot.sendMessage(chat_id, f"Failed to subscribe to {query_data}: {str(e)}")
         elif query_data in self.weekdays:
@@ -502,7 +502,7 @@ if __name__ == "__main__":
     # configFile = input("Enter the location of configuration file: ")
     # if len(configFile) == 0:
     #     configFile = "TelegramBot/configuration.json"
-    configFile = "TelegramBot/configuration.json"
+    configFile = "teleconfig.json"
     with open(configFile) as config_file:
         config_dict = json.load(config_file)
     # Register the service at startup
