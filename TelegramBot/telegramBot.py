@@ -11,6 +11,7 @@ import cherrypy
 import threading
 import calendar
 import logging
+from time import time
 
 logging.basicConfig(level=logging.INFO)
 
@@ -39,7 +40,7 @@ class Telegrambot():
         self.overtempTopic = self.subscribed_topics["overtempTopic"]
         self.predictionTopic = self.subscribed_topics["predictionTopic"]
         
-        self.crowdthreshold=30
+        self.crowdthreshold=60
         
         #Predict occupancy for each slot-hour/day combination
         self.timeslot=self.get_time_slots_from_service_catalog()
@@ -67,7 +68,8 @@ class Telegrambot():
         self.machines = self.get_machines_from_service_catalog()
         self.zones = self.get_rooms_from_service_catalog() or [] 
         self.zones.append('All')
-        #self.bot.message_loop(self.on_chat_message)
+        self.availmachines = {machine: {"available": 0, "busy": 0, "total": 0} for machine in self.machines}
+        self.last_alert_time = time()
 
     
     #get info from service catalog   
@@ -151,7 +153,7 @@ class Telegrambot():
     
     #Telegram chat
     def on_chat_message(self,msg):
-        self.notify(msg.topic, msg.payload)
+
         try:
             content_type, chat_type, chat_id = telepot.glance(msg)
             message = msg['text']
@@ -235,7 +237,11 @@ class Telegrambot():
                 # rooms = self.zones
                 # keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=room, callback_data=f"{room}")] for room in rooms])
                 # self.bot.sendMessage(chat_id, parse_mode='Markdown',text='*Please select the room to see the Occupancy:*', reply_markup=keyboard)
-                self.bot.sendMessage(chat_id, text=f"The current gym traffic is {self.current_occupancy}")
+                if self.current_occupancy > self.crowdthreshold:
+                    tosend = f"Alert! Current occupancy is reaching {self.current_occupancy} now. Please manage your plan or consider coming another time."
+                    self.bot.sendMessage(chat_id, text=tosend)
+                else:
+                    self.bot.sendMessage(chat_id, text=f"The current gym traffic is {self.current_occupancy}")
                 mark_up = ReplyKeyboardMarkup(keyboard=[['Occupancy'], ['Availability'],['Forecast']],one_time_keyboard=True)
                 self.bot.sendMessage(chat_id, 'What else would you like to know?', reply_markup=mark_up)
             elif message == "Availability":
@@ -393,7 +399,7 @@ class Telegrambot():
         
     #self.notifier.notify (msg.topic, msg.payload)
     def notify(self, topic, msg):
-        print(msg)
+        #print(msg)
         try:
             message = json.loads(msg.decode('utf-8'))  # Decode and parse the JSON message
             
@@ -407,50 +413,46 @@ class Telegrambot():
 
             elif topic == self.crowdTopic:
                 self.current_occupancy = message["message"]["data"]["current_occupancy"]
-                if self.current_occupancy > self.crowdthreshold:
-                    tosend = f"Alert! Current occupancy is reaching {self.current_occupancy}. Please consider coming another time."
+                current_time = time()  # alert
+                if self.current_occupancy > self.crowdthreshold and current_time - self.last_alert_time >= 3600:
+                    tosend = f"Alert! Current occupancy is reaching {self.current_occupancy} now. Please manage your plan or consider coming another time."
                     for chat_ID in self.chatIDs:
                         self.bot.sendMessage(chat_ID, text=tosend)
+                    self.last_alert_time = current_time
 
             elif topic == self.predictionTopic:
                 self.prediction_matrix = message["message"]["data"]["prediction_matrix"]
 
             elif topic.startswith(self.availTopic):
                 machine = topic.split('/')[-1]
+                data = message["message"]["data"]
+
+                # Update the machine status in self.machines
                 if machine == "#":
                     machine = "ALL"
-                data = message["message"]["data"]
-                if data["available"] == 0:
-                    tosend = f"{machine} machine is full, we suggest you to train something else and come later!"
-                    for chat_ID in self.chatIDs:
-                        self.bot.sendMessage(chat_ID, text=tosend)
-                else:
-                    chat_id = self.chat_ids.get(machine)
-                    if chat_id:
-                        tosend = (
-                            f"Situation for {machine} machine:\n"
-                            f"Available num: {data['available']}\n"
-                            f"Occupied num: {data['busy']}\n"
-                            f"Total num: {data['total']}\n"
-                        )
-                        self.bot.sendMessage(chat_id, tosend)
+                if machine not in self.availmachines:
+                    self.availmachines[machine] = {"available": 0, "busy": 0, "total": 0}
+                self.availmachines[machine]["available"] = data.get("available", 0)
+                self.availmachines[machine]["busy"] = data.get("busy", 0)
+                self.availmachines[machine]["total"] = data.get("total", 0)
 
         except Exception as e:
             print(f"Error processing message: {e}")
 
     def on_callback_query(self,msg):
         query_id, chat_id, query_data = telepot.glance(msg, flavor='callback_query')
-        if query_data in self.machines:
+        if query_data in self.availmachines:
             try: #choose machine: gym/availability/<machineID>
-                # update chat_ids dict for sending users msg by query data
-                self.chat_ids[query_data] = chat_id
-                if query_data == "All":
-                    query_data = "#"
-                topic = f"{self.availTopic}/{query_data}"
-                self.client.mySubscribe(topic)
-                self.bot.sendMessage(chat_id, f"Subscribed to availability of {query_data.replace('#', 'All')}!")
+                machine_data = self.availmachines[query_data]
+                tosend = (
+                    f"Latest situation for {query_data} machine:\n"
+                    f"Available: {machine_data['available']}\n"
+                    f"Busy: {machine_data['busy']}\n"
+                    f"Total: {machine_data['total']}\n"
+                )
+                self.bot.sendMessage(chat_id, tosend)
             except Exception as e:
-                self.bot.sendMessage(chat_id, f"Failed to subscribe to {query_data}: {str(e)}")
+                self.bot.sendMessage(chat_id, "Invalid machine selection.")
         elif query_data in self.weekdays:
             try:
                 day_index = self.weekdays.index(query_data)  # index of selected weekdays
