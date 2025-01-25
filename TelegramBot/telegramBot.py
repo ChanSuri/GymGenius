@@ -11,7 +11,7 @@ import cherrypy
 import threading
 import calendar
 import logging
-from time import time
+from datetime import datetime
 
 logging.basicConfig(level=logging.INFO)
 
@@ -64,12 +64,12 @@ class Telegrambot():
             [5,  7, 17,  5, 20, 22, 25],    # 20:00-22:00
             [15, 7, 11, 12, 12, 26, 39],    # 22:00-24:00
             [0,  0,  2,  4,  3, 15,  9]     # 00:00-08:00
-        ] #example #example
+        ] #example
         self.machines = self.get_machines_from_service_catalog()
         self.zones = self.get_rooms_from_service_catalog() or [] 
         self.zones.append('All')
         self.availmachines = {machine: {"available": 0, "busy": 0, "total": 0} for machine in self.machines}
-        self.last_alert_time = time()
+        self.last_alert_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     
     #get info from service catalog   
@@ -127,7 +127,6 @@ class Telegrambot():
 
             # 使用集合推导式创建机器类型集合
             machines_type = {machine_id.rsplit('_', 1)[0] for machine_id in machines_list}
-            machines_type.add("All")
             # 返回排序后的机器类型列表
             return sorted(machines_type)
 
@@ -387,7 +386,7 @@ class Telegrambot():
             "topic": self.switchTopic + room, #gym/hvac/on_off/#
             "message": {
                 "device_id": "Temperature control",
-                "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "data": {
                     "control_command": command,
                     "mode": mode
@@ -402,7 +401,7 @@ class Telegrambot():
         #print(msg)
         try:
             message = json.loads(msg.decode('utf-8'))  # Decode and parse the JSON message
-            
+            print(f"Received message on topic: {topic}")
             if topic.startswith(self.overtempTopic):
                 room = topic.split('/')[-1]
                 alert_message = message["message"]["data"]["alert"]
@@ -413,7 +412,7 @@ class Telegrambot():
 
             elif topic == self.crowdTopic:
                 self.current_occupancy = message["message"]["data"]["current_occupancy"]
-                current_time = time()  # alert
+                current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # alert
                 if self.current_occupancy > self.crowdthreshold and current_time - self.last_alert_time >= 3600:
                     tosend = f"Alert! Current occupancy is reaching {self.current_occupancy} now. Please manage your plan or consider coming another time."
                     for chat_ID in self.chatIDs:
@@ -423,18 +422,19 @@ class Telegrambot():
             elif topic == self.predictionTopic:
                 self.prediction_matrix = message["message"]["data"]["prediction_matrix"]
 
-            elif topic.startswith(self.availTopic):
+            # 'gym/group_availability/'
+            elif topic.startswith('gym/group_availability/'): 
                 machine = topic.split('/')[-1]
                 data = message["message"]["data"]
-
-                # Update the machine status in self.machines
-                if machine == "#":
-                    machine = "ALL"
+                #print(f"Data for machine {machine}: {data}")
+                
                 if machine not in self.availmachines:
                     self.availmachines[machine] = {"available": 0, "busy": 0, "total": 0}
+                
                 self.availmachines[machine]["available"] = data.get("available", 0)
                 self.availmachines[machine]["busy"] = data.get("busy", 0)
                 self.availmachines[machine]["total"] = data.get("total", 0)
+
 
         except Exception as e:
             print(f"Error processing message: {e}")

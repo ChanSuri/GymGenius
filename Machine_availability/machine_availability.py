@@ -101,34 +101,62 @@ class MachineAvailabilityService:
     def on_message(self, client, userdata, message):
         try:
             payload = json.loads(message.payload.decode())
-            # print(payload)
-            availability = payload['e'][0]['v']  # Extract availability status (0 = available, 1 = occupied)
+            print(payload)
+            availability = payload['v']  # Extract availability status (0 = available, 1 = occupied)
             machine_topic = payload['bn']  # Extract machine base name from 'bn'
 
             # Extract machine type from topic, e.g., "gym/availability/treadmill/1"
             topic_parts = machine_topic.split('/')
-            machine_type = topic_parts[3]  # Extract "treadmill", "elliptical_trainer", etc.
+            machine_type = topic_parts[2]  # Extract "treadmill", "elliptical_trainer", etc.
 
-            # print(machine_type)
-            # print(self.machines)
+            print(machine_type)
+            print(self.machines)
 
             if machine_type in self.machines: # non entra qui
                 self.update_availability(machine_type, availability)
         except (json.JSONDecodeError, TypeError, KeyError) as e:
             print(f"Failed to decode machine availability data: {e}")
 
+    # def update_availability(self, machine_type, availability):
+    #     machine_data = self.machines[machine_type]
+
+    #     if availability == 1:  # Machine is occupied
+    #         machine_data['occupied'] += 1
+    #         machine_data['available'] -= 1
+    #     elif availability == 0:  # Machine is available
+    #         machine_data['occupied'] -= 1
+    #         machine_data['available'] += 1
+
+    #     # Publish the updated availability to MQTT topics
+    #     self.publish_availability(machine_type)
     def update_availability(self, machine_type, availability):
         machine_data = self.machines[machine_type]
 
         if availability == 1:  # Machine is occupied
-            machine_data['occupied'] += 1
-            machine_data['available'] -= 1
+            if machine_data['available'] > 0:  # ensure still has machines available
+                machine_data['occupied'] += 1
+                machine_data['available'] -= 1
+            else:
+                print(f"No available machines of type {machine_type} to occupy.")
         elif availability == 0:  # Machine is available
-            machine_data['occupied'] -= 1
-            machine_data['available'] += 1
+            if machine_data['occupied'] > 0:  # ensure machines can be released
+                machine_data['occupied'] -= 1
+                machine_data['available'] += 1
+            else:
+                print(f"No occupied machines of type {machine_type} to release.")
+
+        # check
+        if machine_data['occupied'] > machine_data['total']:
+            machine_data['occupied'] = machine_data['total']
+            print(f"Corrected 'occupied' for {machine_type} to match 'total'.")
+
+        if machine_data['available'] < 0:
+            machine_data['available'] = 0
+            print(f"Corrected 'available' for {machine_type} to be non-negative.")
 
         # Publish the updated availability to MQTT topics
         self.publish_availability(machine_type)
+
 
     def publish_availability(self, machine_type):
         try:
