@@ -228,6 +228,19 @@ services:
     environment:
       - SERVICE_CATALOG_URL=http://service_catalog:8080
 
+  node_red:
+    image: nodered/node-red
+    ports:
+      - "1880:1880"
+    volumes:
+      - ./node_red_data:/data  #  Node-RED data
+    networks:
+      - gym-genius-network
+    depends_on:
+      - service_catalog
+      - resource_catalog
+    environment:
+      - NODE_RED_ENABLE_PROJECTS=true  # 可选，启用项目功能
 
 networks:
   gym-genius-network:

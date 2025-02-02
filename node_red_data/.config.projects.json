@@ -1,0 +1,8 @@
+{
+    "projects": {
+        "GymGenius": {
+            "credentialSecret": false
+        }
+    },
+    "activeProject": "GymGenius"
+}
