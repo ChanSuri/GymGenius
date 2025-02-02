@@ -54,6 +54,7 @@ module.exports = {
      * property can be used
      */
     //userDir: '/home/nol/.node-red/',
+    userDir: './node_red_data',
 
     /** Node-RED scans the `nodes` directory in the userDir to find local node files.
      * The following property can be used to specify an additional directory to scan.
