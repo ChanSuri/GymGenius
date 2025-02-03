@@ -14,7 +14,7 @@
                              "switchTopic":"gym/hvac/on_off/",
                              "TempTopic": "gym/environment/" 
     },
-    "token": "6961607644:AAFCNHwGsNI67k5m53VjFY48b5O9DlCNgZg",
+    "token": "6961607644:AAGN_aC1t3TjkkuiuR9FAHM53fAFgj-OkPw",
     "webServerAddress":"https://api.thingspeak.com/channels/",
     "device_connector": {
         "cardio_room": "http://device_connector_cardio_room:8092",
