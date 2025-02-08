@@ -6,8 +6,8 @@
     "endpoint": null,
     "subscribed_topics": {
                             "crowdTopic":"gym/occupancy/current",
-                            "availTopic":"gym/group_availability/",
-                            "overtempTopic":"gym/environment/alert/",
+                            "availTopic":"gym/group_availability/#",
+                            "overtempTopic":"gym/environment/alert/#",
                             "predictionTopic": "gym/occupancy/prediction"
                         },
     "published_topics": {

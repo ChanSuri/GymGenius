@@ -1,0 +1,126 @@
+0 verbose cli /usr/local/bin/node /usr/local/bin/npm
+1 info using npm@10.8.2
+2 info using node@v20.18.2
+3 silly config load:file:/usr/local/lib/node_modules/npm/npmrc
+4 silly config load:file:/data/.npmrc
+5 silly config load:file:/usr/src/node-red/.npmrc
+6 silly config load:file:/usr/local/etc/npmrc
+7 verbose title npm remove node-red-node-telegrambot
+8 verbose argv "remove" "--no-audit" "--no-update-notifier" "--no-fund" "--save" "node-red-node-telegrambot"
+9 verbose logfile logs-max:10 dir:/data/.npm/_logs/2025-02-08T18_51_11_974Z-
+10 verbose logfile /data/.npm/_logs/2025-02-08T18_51_11_974Z-debug-0.log
+11 silly packumentCache heap:2197815296 maxSize:549453824 maxEntrySize:274726912
+12 silly logfile done cleaning log files
+13 silly idealTree buildDeps
+14 silly reify mark retired [ '/data/node_modules/@cryptography/aes' ]
+15 silly reify mark retired [ '/data/node_modules/async-mutex' ]
+16 silly reify mark retired [ '/data/node_modules/big-integer' ]
+17 silly reify mark retired [ '/data/node_modules/d' ]
+18 silly reify mark retired [ '/data/node_modules/dom-serializer' ]
+19 silly reify mark retired [ '/data/node_modules/domelementtype' ]
+20 silly reify mark retired [ '/data/node_modules/domhandler' ]
+21 silly reify mark retired [ '/data/node_modules/domutils' ]
+22 silly reify mark retired [ '/data/node_modules/entities' ]
+23 silly reify mark retired [ '/data/node_modules/es5-ext' ]
+24 silly reify mark retired [ '/data/node_modules/es6-iterator' ]
+25 silly reify mark retired [ '/data/node_modules/es6-symbol' ]
+26 silly reify mark retired [ '/data/node_modules/esniff' ]
+27 silly reify mark retired [ '/data/node_modules/event-emitter' ]
+28 silly reify mark retired [ '/data/node_modules/ext' ]
+29 silly reify mark retired [ '/data/node_modules/graceful-fs' ]
+30 silly reify mark retired [ '/data/node_modules/htmlparser2' ]
+31 silly reify mark retired [ '/data/node_modules/imurmurhash' ]
+32 silly reify mark retired [ '/data/node_modules/next-tick' ]
+33 silly reify mark retired [ '/data/node_modules/node-localstorage' ]
+34 silly reify mark retired [ '/data/node_modules/node-red-node-telegrambot' ]
+35 silly reify mark retired [ '/data/node_modules/pako' ]
+36 silly reify mark retired [ '/data/node_modules/path-browserify' ]
+37 silly reify mark retired [ '/data/node_modules/real-cancellable-promise' ]
+38 silly reify mark retired [ '/data/node_modules/slide' ]
+39 silly reify mark retired [ '/data/node_modules/store2' ]
+40 silly reify mark retired [ '/data/node_modules/telegram' ]
+41 silly reify mark retired [ '/data/node_modules/ts-custom-error' ]
+42 silly reify mark retired [ '/data/node_modules/tslib' ]
+43 silly reify mark retired [ '/data/node_modules/type' ]
+44 silly reify mark retired [ '/data/node_modules/typedarray-to-buffer' ]
+45 silly reify mark retired [ '/data/node_modules/websocket' ]
+46 silly reify mark retired [ '/data/node_modules/write-file-atomic' ]
+47 silly reify mark retired [ '/data/node_modules/yaeti' ]
+48 silly reify moves {
+48 silly reify   '/data/node_modules/@cryptography/aes': '/data/node_modules/@cryptography/.aes-fIdWTcCc',
+48 silly reify   '/data/node_modules/async-mutex': '/data/node_modules/.async-mutex-MMhEwngq',
+48 silly reify   '/data/node_modules/big-integer': '/data/node_modules/.big-integer-x81cWXAh',
+48 silly reify   '/data/node_modules/d': '/data/node_modules/.d-55QNZLwA',
+48 silly reify   '/data/node_modules/dom-serializer': '/data/node_modules/.dom-serializer-bAbxsSyG',
+48 silly reify   '/data/node_modules/domelementtype': '/data/node_modules/.domelementtype-fJETCDkc',
+48 silly reify   '/data/node_modules/domhandler': '/data/node_modules/.domhandler-x1Ot3gND',
+48 silly reify   '/data/node_modules/domutils': '/data/node_modules/.domutils-yxIO2HWh',
+48 silly reify   '/data/node_modules/entities': '/data/node_modules/.entities-3aUmZoHF',
+48 silly reify   '/data/node_modules/es5-ext': '/data/node_modules/.es5-ext-CTOHj2Qu',
+48 silly reify   '/data/node_modules/es6-iterator': '/data/node_modules/.es6-iterator-1Goxiy8R',
+48 silly reify   '/data/node_modules/es6-symbol': '/data/node_modules/.es6-symbol-33piah3Z',
+48 silly reify   '/data/node_modules/esniff': '/data/node_modules/.esniff-JfN6G0nY',
+48 silly reify   '/data/node_modules/event-emitter': '/data/node_modules/.event-emitter-9NUgl7ws',
+48 silly reify   '/data/node_modules/ext': '/data/node_modules/.ext-DxT57QzC',
+48 silly reify   '/data/node_modules/graceful-fs': '/data/node_modules/.graceful-fs-k0znLUlP',
+48 silly reify   '/data/node_modules/htmlparser2': '/data/node_modules/.htmlparser2-Dsd1fOZ8',
+48 silly reify   '/data/node_modules/imurmurhash': '/data/node_modules/.imurmurhash-HMCvaMMJ',
+48 silly reify   '/data/node_modules/next-tick': '/data/node_modules/.next-tick-W0WaXro2',
+48 silly reify   '/data/node_modules/node-localstorage': '/data/node_modules/.node-localstorage-vcKvvGf4',
+48 silly reify   '/data/node_modules/node-red-node-telegrambot': '/data/node_modules/.node-red-node-telegrambot-MoaFLkn8',
+48 silly reify   '/data/node_modules/pako': '/data/node_modules/.pako-Plfwl7iI',
+48 silly reify   '/data/node_modules/path-browserify': '/data/node_modules/.path-browserify-z5L15SaU',
+48 silly reify   '/data/node_modules/real-cancellable-promise': '/data/node_modules/.real-cancellable-promise-NtvGpjpY',
+48 silly reify   '/data/node_modules/slide': '/data/node_modules/.slide-dtG5Vm57',
+48 silly reify   '/data/node_modules/store2': '/data/node_modules/.store2-kfuaeNOp',
+48 silly reify   '/data/node_modules/telegram': '/data/node_modules/.telegram-wUplRRmL',
+48 silly reify   '/data/node_modules/ts-custom-error': '/data/node_modules/.ts-custom-error-EucfARdR',
+48 silly reify   '/data/node_modules/tslib': '/data/node_modules/.tslib-6LOZ5WH5',
+48 silly reify   '/data/node_modules/type': '/data/node_modules/.type-wQnauIyE',
+48 silly reify   '/data/node_modules/typedarray-to-buffer': '/data/node_modules/.typedarray-to-buffer-z699nMkb',
+48 silly reify   '/data/node_modules/websocket': '/data/node_modules/.websocket-oSOzqBpQ',
+48 silly reify   '/data/node_modules/write-file-atomic': '/data/node_modules/.write-file-atomic-hEfDciU9',
+48 silly reify   '/data/node_modules/yaeti': '/data/node_modules/.yaeti-zhLOY8Q9'
+48 silly reify }
+49 silly REMOVE node_modules/yaeti
+50 silly REMOVE node_modules/write-file-atomic
+51 silly REMOVE node_modules/websocket
+52 silly REMOVE node_modules/typedarray-to-buffer
+53 silly REMOVE node_modules/type
+54 silly REMOVE node_modules/tslib
+55 silly REMOVE node_modules/ts-custom-error
+56 silly REMOVE node_modules/telegram
+57 silly REMOVE node_modules/telegram/node_modules/mime
+58 silly REMOVE node_modules/telegram/node_modules/buffer
+59 silly REMOVE node_modules/store2
+60 silly REMOVE node_modules/slide
+61 silly REMOVE node_modules/real-cancellable-promise
+62 silly REMOVE node_modules/path-browserify
+63 silly REMOVE node_modules/pako
+64 silly REMOVE node_modules/node-red-node-telegrambot
+65 silly REMOVE node_modules/node-localstorage
+66 silly REMOVE node_modules/next-tick
+67 silly REMOVE node_modules/imurmurhash
+68 silly REMOVE node_modules/htmlparser2
+69 silly REMOVE node_modules/graceful-fs
+70 silly REMOVE node_modules/ext
+71 silly REMOVE node_modules/event-emitter
+72 silly REMOVE node_modules/esniff
+73 silly REMOVE node_modules/es6-symbol
+74 silly REMOVE node_modules/es6-iterator
+75 silly REMOVE node_modules/es5-ext
+76 silly REMOVE node_modules/entities
+77 silly REMOVE node_modules/domutils
+78 silly REMOVE node_modules/domhandler
+79 silly REMOVE node_modules/domelementtype
+80 silly REMOVE node_modules/dom-serializer
+81 silly REMOVE node_modules/d
+82 silly REMOVE node_modules/big-integer
+83 silly REMOVE node_modules/async-mutex
+84 silly REMOVE node_modules/@cryptography/aes
+85 verbose cwd /data
+86 verbose os Linux 6.10.14-linuxkit
+87 verbose node v20.18.2
+88 verbose npm  v10.8.2
+89 verbose exit 0
+90 info ok

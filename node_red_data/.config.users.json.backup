@@ -30,7 +30,7 @@
             "filteredNodes": []
         },
         "menu-deploymenu-item-node": false,
-        "menu-deploymenu-item-full": true,
-        "menu-deploymenu-item-flow": false
+        "menu-deploymenu-item-full": false,
+        "menu-deploymenu-item-flow": true
     }
 }

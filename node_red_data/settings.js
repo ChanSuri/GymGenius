@@ -21,6 +21,9 @@
  **/
 
 module.exports = {
+    // Add this line to set the UI language to English (US)
+    uiLocale: 'en-US',
+
 
 /*******************************************************************************
  * Flow File and User Directory Settings
