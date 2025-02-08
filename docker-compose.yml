@@ -241,6 +241,8 @@ services:
       - resource_catalog
     environment:
       - NODE_RED_ENABLE_PROJECTS=true  # 可选，启用项目功能
+      - TELEGRAM_BOT_TOKEN=6961607644:AAGN_aC1t3TjkkuiuR9FAHM53fAFgj-OkPw
+
 
 networks:
   gym-genius-network:
