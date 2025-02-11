@@ -15,7 +15,7 @@
                              "TempTopic": "gym/environment/" 
     },
     "token": "6961607644:AAGN_aC1t3TjkkuiuR9FAHM53fAFgj-OkPw",
-    "webServerAddress":"https://api.thingspeak.com/channels/",
+    "webServerAddress":"http://127.0.0.1:1880/ui",
     "device_connector": {
         "cardio_room": "http://device_connector_cardio_room:8092",
         "changing_room": "http://device_connector_changing_room:8093",

@@ -299,16 +299,16 @@ class Telegrambot():
         self.bot.sendMessage(chat_id, text='Welcome our gym genius!', reply_markup=mark_up)
         
     def user_message(self, chat_id):
+        mark_up = ReplyKeyboardMarkup(keyboard=[['Occupancy'], ['Availability'],['Forecast']],one_time_keyboard=True)
         self.bot.sendMessage(chat_id,
                         parse_mode='Markdown',
-                        text='*What do you want to know about the Gym?*'
+                        text='*What do you want to know about the Gym?💪*',
+                        reply_markup=mark_up
                         )
         self.bot.sendMessage(chat_id,
                         parse_mode='Markdown',
                         text="[See data]("+self.webServerAddr+")"
                         )
-        mark_up = ReplyKeyboardMarkup(keyboard=[['Occupancy'], ['Availability'],['Forecast']],one_time_keyboard=True)
-        self.bot.sendMessage(chat_id, 'What would you like to know?', reply_markup=mark_up)
 
     def check_auth(self,chat_id):
         try:
