@@ -37,12 +37,12 @@ You will find it at t.me/GeniusGymBot.
 + Admin: Env data, Suggestions checking, Operation:AC, entrance, machines...
 
 > **functions**:
-1. Environment data in ThingSpeak
+1. Environment data from Nodered
 2. Occupancy situation
 3. Available machine: choose a machine to check available number
 4. Predict the future using: Choose day or timeslot way to see the forecast
 5. Suggest us for a better performance and admin can check it
-6. Operate AC,Entrance,Machines by administrator
+6. Operate ACs by administrator
 7. Service registration
 
 ## Shutdown and Cleanup
