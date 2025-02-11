@@ -172,7 +172,7 @@
                 "current_occupancy": "gym/occupancy/current",
                 "prediction": "gym/occupancy/prediction"
             },
-            "last_update": "2024-12-27 09:45:24"
+            "last_update": "2025-02-11 14:35:30"
         },
         {
             "service_id": "hvac_control",
@@ -190,7 +190,7 @@
                 "automatic_control": "gym/hvac/control/<roomID>",
                 "alert": "gym/environment/alert/<roomID>"
             },
-            "last_update": "2024-12-27 09:45:20"
+            "last_update": "2025-02-11 14:35:24"
         },
         {
             "service_id": "thingspeak_adaptor",
@@ -204,7 +204,7 @@
                 "machine_availability": "gym/group_availability/<machine_type>"
             },
             "published_topics": null,
-            "last_update": "2024-12-27 09:45:20"
+            "last_update": "2025-02-11 14:35:24"
         },
         {
             "service_id": "resource_catalog",
@@ -214,7 +214,7 @@
             "endpoint": "http://resource_catalog:8081",
             "subscribed_topics": null,
             "published_topics": null,
-            "last_update": "2024-12-27 09:45:19"
+            "last_update": "2025-02-11 14:35:24"
         },
         {
             "service_id": "device_connector_cardio_room",
@@ -244,7 +244,7 @@
             "enable_dht11": true,
             "enable_pir": true,
             "enable_button": false,
-            "last_update": "2024-12-27 09:45:20"
+            "last_update": "2025-02-11 14:35:25"
         },
         {
             "service_id": "device_connector_entrance",
@@ -274,7 +274,7 @@
             "enable_dht11": true,
             "enable_pir": false,
             "enable_button": true,
-            "last_update": "2025-01-11 21:28:23"
+            "last_update": "2025-02-11 14:35:24"
         },
         {
             "service_id": "device_connector_changing_room",
@@ -304,7 +304,7 @@
             "enable_dht11": true,
             "enable_pir": false,
             "enable_button": false,
-            "last_update": "2024-12-27 09:45:19"
+            "last_update": "2025-02-11 14:35:24"
         },
         {
             "service_id": "device_connector_lifting_room",
@@ -334,17 +334,7 @@
             "enable_dht11": true,
             "enable_pir": true,
             "enable_button": false,
-            "last_update": "2024-12-27 09:45:20"
-        },
-        {
-            "service_id": "thingspeak_reader",
-            "description": "Generates historical records on occupancy, usage, and conditions for each room",
-            "status": "active",
-            "service_catalog": "http://service_catalog:8080",
-            "endpoint": "http://thingspeak_reader:8089/thingspeak_adaptor/?channel=entrance",
-            "subscribed_topics": null,
-            "published_topics": null,
-            "last_update": "2024-12-27 09:45:23"
+            "last_update": "2025-02-11 14:35:24"
         },
         {
             "service_id": "Telegram_bot",
@@ -354,15 +344,15 @@
             "endpoint": null,
             "subscribed_topics": {
                 "crowdTopic": "gym/occupancy/current",
-                "availTopic": "gym/group_availability/",
-                "overtempTopic": "gym/environment/alert/",
+                "availTopic": "gym/group_availability/#",
+                "overtempTopic": "gym/environment/alert/#",
                 "predictionTopic": "gym/occupancy/prediction"
             },
             "published_topics": {
                 "switchTopic": "gym/hvac/on_off/",
                 "TempTopic": "gym/environment/"
             },
-            "token": "6961607644:AAFCNHwGsNI67k5m53VjFY48b5O9DlCNgZg",
+            "token": "6961607644:AAGN_aC1t3TjkkuiuR9FAHM53fAFgj-OkPw",
             "webServerAddress": "https://api.thingspeak.com/channels/",
             "device_connector": {
                 "cardio_room": "http://device_connector_cardio_room:8092",
@@ -370,8 +360,18 @@
                 "entrance": "http://device_connector_entrance:8094",
                 "lifting_room": "http://device_connector_lifting_room:8095"
             },
-            "last_update": "2025-01-11 23:21:21"
+            "last_update": "2025-02-11 14:35:25"
+        },
+        {
+            "service_id": "thingspeak_reader",
+            "description": "Generates historical records on occupancy, usage, and conditions for each room",
+            "status": "active",
+            "service_catalog": "http://service_catalog:8080",
+            "endpoint": "http://thingspeak_reader:8089/thingspeak_adaptor/?channel=entrance",
+            "subscribed_topics": null,
+            "published_topics": null,
+            "last_update": "2025-02-11 14:35:29"
         }
     ],
-    "lastUpdate": "2025-01-11 23:21:21"
+    "lastUpdate": "2025-02-11 14:35:30"
 }
