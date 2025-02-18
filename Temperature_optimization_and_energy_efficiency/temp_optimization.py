@@ -212,7 +212,7 @@ class TempOptimizationService:
         """Handle HVAC on/off commands for a specific room."""
         try:
             command_data = json.loads(message.payload.decode())
-            self.current_command[room] = command_data['message']['data'].get('state', "ON").upper()
+            self.current_command[room] = command_data['message']['data'].get('state', "OFF").upper()
             print(f"[{room}] Received administrator command: {self.current_command[room]}.")
         except (json.JSONDecodeError, TypeError) as e:
             print(f"Failed to decode command data for {room}: {e}")

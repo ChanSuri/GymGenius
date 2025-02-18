@@ -224,6 +224,12 @@ class Telegrambot():
                     self.admin_switch_zone(chat_id)
                 else:
                     self.bot.sendMessage(chat_id, "Please send '/administrator' to login first!")
+            elif message == "AUTO":
+                if self.check_auth(chat_id)==True:
+                    self.switchMode="AUTO"
+                    self.admin_switch_zone(chat_id)
+                else:
+                    self.bot.sendMessage(chat_id, "Please send '/administrator' to login first!")
             elif message == "Logout":
                 if self.check_auth(chat_id)==True:
                     del self.chat_auth[str(chat_id)]
@@ -261,7 +267,7 @@ class Telegrambot():
                 keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=f"{slot['start']} - {slot['end']}", callback_data=key)] for key, slot in self.timeslot.items()])
                 self.bot.sendMessage(chat_id, parse_mode='Markdown',text='*Please select the time slot that you want to predict:*', reply_markup=keyboard)
             else:
-                if self.switchMode == "turn_on" or self.switchMode=="turn_off":
+                if self.switchMode in ["turn_on", "turn_off", "AUTO"]:
                     if self.check_auth(chat_id) ==True:
                         if message in self.zones:
                             self.bot.sendMessage(chat_id, text= f"AC in {message} switched to {self.switchMode} in mode {self.ACMode}")
@@ -357,7 +363,7 @@ class Telegrambot():
             raise Exception(f"Failed to fetch data from DeviceConnector: {response.status_code}")
     
     def admin_operate(self, chat_id):
-        mark_up = ReplyKeyboardMarkup(keyboard=[['Switchon'], ['Switchoff']],one_time_keyboard=True)
+        mark_up = ReplyKeyboardMarkup(keyboard=[['Switchon'], ['Switchoff'], ['AUTO']],one_time_keyboard=True)
         self.bot.sendMessage(chat_id, text='Please select your operation for HVAC...', reply_markup=mark_up)
         
     def admin_switch_zone(self,chat_id):
