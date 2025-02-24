@@ -5,6 +5,8 @@ import json
 import cherrypy
 import os
 import signal
+import threading
+import time
 from registration_functions import *
 
 # Load configuration for ThingSpeak
@@ -23,49 +25,51 @@ CHANNELS = thingspeak_config['channels']
 class ThingspeakAdaptor:
     exposed = True  # Make this CherryPy class accessible via HTTP
 
-    def __init__(self, thingspeak_config, service_config):
-        """Initialize the ThingSpeak Adaptor with channel info from config."""
+    def __init__(self, thingspeak_config, service_config, update_interval=30):
+        """
+        Initialize the ThingSpeak Adaptor with channel info from config.
+        Also starts a thread to periodically update CSV files.
+        :param update_interval: Time in seconds between updates (default: 300s = 5 minutes)
+        """
         self.thingspeak_config = thingspeak_config
         self.service_config = service_config
         self.channels = CHANNELS
-        self.read_all_channels()
+        self.update_interval = update_interval
+
+        # Start the periodic update thread
+        self.update_thread = threading.Thread(target=self.update_csv_periodically, daemon=True)
+        self.update_thread.start()
+
+    def update_csv_periodically(self):
+        """Periodically updates CSV files with new data from ThingSpeak."""
+        while True:
+            print("Updating CSV files...")
+            self.read_all_channels()
+            print(f"CSV files updated! Next update in {self.update_interval} seconds.")
+            time.sleep(self.update_interval)  # Wait before the next update
 
     def readCSV(self, channel_name, read_api_key, channel_id, fields):
-        """Read data in CSV format from ThingSpeak and structure it based on fields."""
+        """Retrieve CSV data from ThingSpeak and structure it based on defined fields."""
         url = f"{THINGSPEAK_URL}{channel_id}/feeds.csv?api_key={read_api_key}&results=5000"
         
-        # HTTP request to get CSV data from ThingSpeak
         response = requests.get(url)
         if response.status_code == 200:
-            csv_data = response.text
-            df = pd.read_csv(StringIO(csv_data))
-
-            # Structure the DataFrame based on the required fields
-            columns_to_keep = ['created_at', 'entry_id']
-            for field_name, field_number in fields.items():
-                columns_to_keep.append(f'field{field_number}')
-
-            df = df[columns_to_keep]  # Keep only relevant columns
-            df.columns = ['created_at', 'entry_id'] + list(fields.keys())  # Rename columns to actual field names
-
+            df = pd.read_csv(StringIO(response.text))
+            columns_to_keep = ['created_at', 'entry_id'] + [f'field{num}' for num in fields.values()]
+            df = df[columns_to_keep]
+            df.columns = ['created_at', 'entry_id'] + list(fields.keys())
             print(f"Data successfully retrieved from ThingSpeak for {channel_name}!")
             return df
         else:
-            print(f"Failed to retrieve data from ThingSpeak for {channel_name}. Status code: {response.status_code}")
+            print(f"Failed to retrieve data from ThingSpeak for {channel_name}. Status: {response.status_code}")
             return None
 
     def read_all_channels(self):
         """Read data from all configured channels and save them as CSV."""
         saved_files = []
         for channel_name, channel_info in self.channels.items():
-            read_api_key = channel_info['read_api_key']
-            channel_id = channel_info['channel_id']
-            fields = channel_info['fields']
-            
-            # Read CSV data for the channel
-            df = self.readCSV(channel_name, read_api_key, channel_id, fields)
+            df = self.readCSV(channel_name, channel_info['read_api_key'], channel_info['channel_id'], channel_info['fields'])
             if df is not None:
-                # Save each DataFrame as a CSV file
                 file_name = f"thingspeak_data_{channel_name.replace(' ', '_')}.csv"
                 df.to_csv(file_name, index=False)
                 print(f"Data for {channel_name} saved as {file_name}")
@@ -73,29 +77,24 @@ class ThingspeakAdaptor:
         return saved_files
 
     def GET(self, *uri, **params):
-        """Serve a CSV file for the requested channel."""
+        """Serve the CSV file for the requested channel."""
         channel = params.get('channel')
         if not channel:
             cherrypy.response.status = 400
-            return "Error: 'channel' parameter is required in the query string."
+            return "Error: 'channel' parameter is required."
 
-        # Check if the CSV file for the requested channel exists
         file_name = f"thingspeak_data_{channel.replace(' ', '_')}.csv"
         if os.path.exists(file_name):
-            # Serve the file
             cherrypy.response.headers['Content-Type'] = 'text/csv'
             cherrypy.response.headers['Content-Disposition'] = f'attachment; filename="{file_name}"'
-            
             with open(file_name, 'r') as f:
                 return f.read()
         else:
-            # Log error in the terminal
             print(f"CSV file '{file_name}' not found.")
             cherrypy.response.status = 404
-            return f"Error: CSV file for channel '{channel}' not found. Please make sure to run the data fetching process first."
+            return f"Error: CSV file for channel '{channel}' not found. Please ensure data fetching has run."
 
 # Service initialization and signal handling
-
 def initialize_service(service_config):
     """Register the service at startup."""
     register_service(service_config, service_config['service_catalog'])
@@ -105,7 +104,7 @@ def stop_service(signum, frame):
     """Unregister and stop the service."""
     print("Stopping service...")
     delete_service("thingspeak_reader", service_config['service_catalog'])
-    cherrypy.engine.exit()  # Stop the CherryPy engine
+    cherrypy.engine.exit()
 
 if __name__ == "__main__":
     # Create the ThingspeakAdaptor instance
@@ -117,9 +116,6 @@ if __name__ == "__main__":
             'tools.sessions.on': True
         }
     }
-
-    # Fetch data from ThingSpeak and save as CSV
-    #TS.read_all_channels()
 
     # Initialize service
     initialize_service(service_config)
@@ -133,14 +129,12 @@ if __name__ == "__main__":
         'server.socket_host': '0.0.0.0',  # Listen on all interfaces
         'server.socket_port': 8089,       # Listen on port 8089
     })
-    # Mount the ResourceCatalog class using MethodDispatcher
+    # Mount the ThingspeakAdaptor class using MethodDispatcher
     cherrypy.tree.mount(TS, '/', conf)
     
     # Start the CherryPy server
     cherrypy.engine.start()
     cherrypy.engine.block()
 
-    # Start CherryPy and map the ThingspeakAdaptor class to the root
-    #cherrypy.quickstart(TS)
 
 
