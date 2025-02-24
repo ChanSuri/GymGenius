@@ -30,6 +30,7 @@ class TempOptimizationService:
 
         self.hvac_state = {room: 'off' for room in self.thresholds.keys()}
         self.current_occupancy = 0
+        self.hvac_mode = {room: None for room in self.thresholds.keys()} # da vedere
         self.current_command = {room: "AUTOMATIC" for room in self.thresholds.keys()}  # Default command state is ON for each room
 
     def get_mqtt_info_from_service_catalog(self):
@@ -157,7 +158,7 @@ class TempOptimizationService:
     def on_message(self, client, userdata, message):
         """Handle received MQTT messages."""
         for room in self.thresholds.keys():
-            if message.topic.startswith(self.config['subscribed_topics']['enviroment'].replace('#', room)):
+            if message.topic.startswith(self.config['subscribed_topics']['environment'].replace('#', room)):
                 self.handle_environment_data(room, message)
             elif message.topic.startswith(self.config['subscribed_topics']['desired_temperature'].replace('#', room)):
                 self.handle_desired_temperature(room, message)
@@ -226,43 +227,123 @@ class TempOptimizationService:
         except (json.JSONDecodeError, TypeError) as e:
             print(f"Failed to decode occupancy data: {e}")
 
+    # def control_hvac(self, room, temperature, humidity):
+    #     """Control the HVAC system based on temperature, humidity, and occupancy."""
+    #     ### DA CAPIRE PERCHE' DI DEFAULT OFF O ON
+    #     print(self.current_command[room])
+    #     if self.current_command[room] == "OFF" or self.current_command[room] == "ON":
+    #         print(f"[{room}] Automatic HVAC control disabled by administrator.")
+    #         return
+
+    #     current_time = datetime.now()
+    #     is_open = self.gym_schedule['open'] <= current_time.time() <= self.gym_schedule['close']
+
+    #     # Turn on HVAC in advance to prepare the gym environment
+    #     advance_time = timedelta(minutes=30)
+    #     open_time_with_advance = (datetime.combine(datetime.today(), self.gym_schedule['open']) - advance_time).time()
+
+    #     if open_time_with_advance <= current_time.time() <= self.gym_schedule['close']:
+    #         is_open = True
+
+    #     close_time_with_advance = (datetime.combine(datetime.today(), self.gym_schedule['close']) - advance_time).time()
+    #     if current_time.time() >= close_time_with_advance and self.current_occupancy == 0:
+    #         if self.hvac_state[room] == 'on':
+    #             print(f"[{room}] No clients present 30 minutes before closing. Turning off HVAC.")
+    #             self.hvac_state[room] = 'off'
+    #             self.send_hvac_command(room, 'turn_off')
+    #         return
+
+    #     # Control based on temperature and gym hours
+    #     if is_open and self.hvac_state[room] == 'off':
+    #         if temperature > self.thresholds[room]['upper']:
+    #             self.hvac_state[room] = 'on'
+    #             self.send_hvac_command(room, 'turn_on', 'cool')
+    #         elif temperature < self.thresholds[room]['lower']:
+    #             self.hvac_state[room] = 'on'
+    #             self.send_hvac_command(room, 'turn_on', 'heat')
+    #     elif not is_open and self.hvac_state[room] == 'on':
+    #         self.hvac_state[room] = 'off'
+    #         self.send_hvac_command(room, 'turn_off')
+
     def control_hvac(self, room, temperature, humidity):
-        """Control the HVAC system based on temperature, humidity, and occupancy."""
-        ### DA CAPIRE PERCHE' DI DEFAULT OFF O ON
-        print(self.current_command[room])
-        if self.current_command[room] == "OFF" or self.current_command[room] == "ON":
+        """
+        Automatic HVAC control with the old functionalities PLUS hysteresis:
+
+        1) If T > upper, turn_on (cool).
+        2) If T < lower, turn_on (heat).
+        3) Turn off at midpoint with a +/- hysteresis to avoid oscillations.
+        4) If the gym is closed, turn off.
+        5) If an admin has forced ON or OFF, disable auto control.
+
+        We also keep the 30-minute early startup logic and occupancy-based shutoff
+        if it's 30 minutes before closing and no users are present.
+        """
+
+        # ---- 1) Manual override check ----
+        if self.current_command[room] in ["OFF", "ON"]:
             print(f"[{room}] Automatic HVAC control disabled by administrator.")
             return
 
         current_time = datetime.now()
         is_open = self.gym_schedule['open'] <= current_time.time() <= self.gym_schedule['close']
 
-        # Turn on HVAC in advance to prepare the gym environment
+        # ---- 2) 30-minute early opening logic ----
         advance_time = timedelta(minutes=30)
         open_time_with_advance = (datetime.combine(datetime.today(), self.gym_schedule['open']) - advance_time).time()
-
         if open_time_with_advance <= current_time.time() <= self.gym_schedule['close']:
             is_open = True
 
+        # ---- 3) Turn off if it's 30 minutes to close & no occupancy ----
         close_time_with_advance = (datetime.combine(datetime.today(), self.gym_schedule['close']) - advance_time).time()
         if current_time.time() >= close_time_with_advance and self.current_occupancy == 0:
             if self.hvac_state[room] == 'on':
                 print(f"[{room}] No clients present 30 minutes before closing. Turning off HVAC.")
                 self.hvac_state[room] = 'off'
+                self.hvac_mode[room] = None
                 self.send_hvac_command(room, 'turn_off')
             return
 
-        # Control based on temperature and gym hours
-        if is_open and self.hvac_state[room] == 'off':
-            if temperature > self.thresholds[room]['upper']:
-                self.hvac_state[room] = 'on'
-                self.send_hvac_command(room, 'turn_on', 'cool')
-            elif temperature < self.thresholds[room]['lower']:
-                self.hvac_state[room] = 'on'
-                self.send_hvac_command(room, 'turn_on', 'heat')
-        elif not is_open and self.hvac_state[room] == 'on':
+        # ---- 4) If gym is closed, turn off if still on ----
+        if not is_open and self.hvac_state[room] == 'on':
             self.hvac_state[room] = 'off'
+            self.hvac_mode[room] = None
             self.send_hvac_command(room, 'turn_off')
+            return
+
+        # ---- 5) Temperature thresholds & hysteresis ----
+        upper = self.thresholds[room]['upper']  # e.g. 22
+        lower = self.thresholds[room]['lower']  # e.g. 18
+        midpoint = (upper + lower) / 2.0        # e.g. 20
+        hysteresis = 0.5                        # e.g. 0.5 °C half-band
+
+        # ---- 5a) Turn ON if we are open & currently off ----
+        if is_open and self.hvac_state[room] == 'off':
+            if temperature > upper:
+                self.hvac_state[room] = 'on'
+                self.hvac_mode[room] = 'cool'
+                self.send_hvac_command(room, 'turn_on', 'cool')
+            elif temperature < lower:
+                self.hvac_state[room] = 'on'
+                self.hvac_mode[room] = 'heat'
+                self.send_hvac_command(room, 'turn_on', 'heat')
+
+        # ---- 5b) Turn OFF at midpoint +/- hysteresis ----
+
+        # If we're cooling, turn off if temperature <= midpoint - hysteresis
+        if self.hvac_state[room] == 'on' and self.hvac_mode[room] == 'cool':
+            if temperature <= (midpoint - hysteresis):
+                self.hvac_state[room] = 'off'
+                self.hvac_mode[room] = None
+                self.send_hvac_command(room, 'turn_off')
+
+        # If we're heating, turn off if temperature >= midpoint + hysteresis
+        if self.hvac_state[room] == 'on' and self.hvac_mode[room] == 'heat':
+            if temperature >= (midpoint + hysteresis):
+                self.hvac_state[room] = 'off'
+                self.hvac_mode[room] = None
+                self.send_hvac_command(room, 'turn_off')
+
+
 
     def send_hvac_command(self, room, command, mode=None):
         """Send HVAC command to the appropriate MQTT topic."""

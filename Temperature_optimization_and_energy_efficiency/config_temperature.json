@@ -5,7 +5,7 @@
     "service_catalog": "http://service_catalog:8080",
     "endpoint": null,
     "subscribed_topics": {
-        "enviroment": "gym/environment/#",
+        "environment": "gym/environment/#",
         "desired_temperature": "gym/desired_temperature/#",
         "current_occupancy":"gym/occupancy/current",
         "control_commands":"gym/hvac/on_off/#"

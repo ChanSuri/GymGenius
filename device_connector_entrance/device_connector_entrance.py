@@ -202,34 +202,70 @@ class DeviceConnector:
             return json.dumps({"status": "error", "message": str(e)})
               
 
+    # def update_simulated_temperature(self, room):
+    #     """Update the simulated temperature for a specific room based on HVAC state and residual effects."""
+    #     if room not in self.simulated_temperature:
+    #         # Initialize simulated temperature for the room
+    #         self.simulated_temperature[room] = self.real_temperature.get(room, 20.0)
+
+    #     if self.hvac_state == 'on' and self.hvac_last_turned_on:
+    #         elapsed_time = datetime.now() - self.hvac_last_turned_on
+    #         minutes_running = elapsed_time.total_seconds() / 60
+
+    #         # Apply HVAC effects: e.g., 0.5 degrees per 15 minutes
+    #         temp_change = (minutes_running // 5) * 0.5
+
+    #         if self.hvac_mode == 'cool':
+    #             self.simulated_temperature[room] -= temp_change
+    #         elif self.hvac_mode == 'heat':
+    #             self.simulated_temperature[room] += temp_change
+    #     else:
+    #         # Gradual return to real temperature
+    #         if self.simulated_temperature[room] < self.real_temperature.get(room, 20.0):
+    #             self.simulated_temperature[room] += 0.1
+    #         elif self.simulated_temperature[room] > self.real_temperature.get(room, 20.0):
+    #             self.simulated_temperature[room] -= 0.1
+
+    #     # Clamp temperature to realistic bounds
+    #     self.simulated_temperature[room] = max(min(self.simulated_temperature[room], 35), 15)
+    #     return round(self.simulated_temperature[room], 2)
+
     def update_simulated_temperature(self, room):
-        """Update the simulated temperature for a specific room based on HVAC state and residual effects."""
+        """
+        Update the simulated temperature for a specific room
+        based on the HVAC state (on/off) and mode (cool/heat).
+        We use small increments or decrements (e.g. ±0.3 °C per step)
+        to avoid abrupt temperature jumps from one reading to the next.
+        """
+
+        # If there's no simulated temperature yet for this room, initialize it
         if room not in self.simulated_temperature:
-            # Initialize simulated temperature for the room
             self.simulated_temperature[room] = self.real_temperature.get(room, 20.0)
 
+        # If HVAC is on, gradually move the temperature up or down by a small step
         if self.hvac_state == 'on' and self.hvac_last_turned_on:
-            elapsed_time = datetime.now() - self.hvac_last_turned_on
-            minutes_running = elapsed_time.total_seconds() / 60
-
-            # Apply HVAC effects: e.g., 0.5 degrees per 15 minutes
-            temp_change = (minutes_running // 15) * 0.5
-
+            step = 0.3  # e.g. 0.3 °C at each iteration
             if self.hvac_mode == 'cool':
-                self.simulated_temperature[room] -= temp_change
+                self.simulated_temperature[room] -= step
             elif self.hvac_mode == 'heat':
-                self.simulated_temperature[room] += temp_change
+                self.simulated_temperature[room] += step
+
         else:
-            # Gradual return to real temperature
-            if self.simulated_temperature[room] < self.real_temperature.get(room, 20.0):
-                self.simulated_temperature[room] += 0.1
-            elif self.simulated_temperature[room] > self.real_temperature.get(room, 20.0):
-                self.simulated_temperature[room] -= 0.1
+            # If the HVAC is off, or hasn't been turned on yet,
+            # move the simulated temperature gently back toward the "real" sensor reading
+            step_back = 0.1
+            current_real_temp = self.real_temperature.get(room, 20.0)
 
-        # Clamp temperature to realistic bounds
+            if self.simulated_temperature[room] < (current_real_temp - 0.1):
+                self.simulated_temperature[room] += step_back
+            elif self.simulated_temperature[room] > (current_real_temp + 0.1):
+                self.simulated_temperature[room] -= step_back
+
+        # Clamp the temperature to realistic bounds
         self.simulated_temperature[room] = max(min(self.simulated_temperature[room], 35), 15)
-        return round(self.simulated_temperature[room], 2)
 
+        # Return a rounded value (optional)
+        return round(self.simulated_temperature[room], 2)
 
     def check_and_delete_inactive_devices(self):
         """Checks for inactive devices and deletes them if they haven't been updated in the last 3 days."""
@@ -274,8 +310,9 @@ class DeviceConnector:
             topic = message.topic
 
             if f"gym/hvac/control/{self.location}" in topic:
-                control_command = payload.get('control_command')
-                mode = payload.get('mode', self.hvac_mode)
+                data = payload.get("message", {}).get("data", {})
+                control_command = data.get("control_command")
+                mode = data.get("mode", self.hvac_mode)
 
                 if control_command == 'turn_on':
                     if self.hvac_state == 'off':
@@ -283,14 +320,19 @@ class DeviceConnector:
                         self.hvac_last_turned_on = datetime.now()
                         self.hvac_mode = mode
                         print(f"HVAC turned ON in {self.hvac_mode} mode.")
+                        self.publish_hvac_status("HVAC turned on")
+
                 elif control_command == 'turn_off':
                     if self.hvac_state == 'on':
                         self.hvac_state = 'off'
                         self.hvac_last_turned_on = None
                         self.hvac_mode = None
                         print("HVAC turned OFF.")
+                        self.publish_hvac_status("HVAC turned off")
+
                 else:
                     print(f"Unknown HVAC command: {control_command}")
+
         except Exception as e:
             print(f"Error processing message: {e}")
 
