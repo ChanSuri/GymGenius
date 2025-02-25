@@ -30,8 +30,8 @@ class TempOptimizationService:
 
         self.hvac_state = {room: 'off' for room in self.thresholds.keys()}
         self.current_occupancy = 0
-        self.hvac_mode = {room: None for room in self.thresholds.keys()} # da vedere
-        self.current_command = {room: "AUTO" for room in self.thresholds.keys()}  # Default command state is ON for each room
+        self.hvac_mode = {room: None for room in self.thresholds.keys()} 
+        self.current_command = {room: "AUTO" for room in self.thresholds.keys()}  # Default command state is AUTO for each room
 
     def get_mqtt_info_from_service_catalog(self):
         """Retrieve MQTT broker and port information from the service catalog."""
