@@ -283,65 +283,66 @@ class TempOptimizationService:
         if self.current_command[room] in ["OFF", "ON"]:
             print(f"[{room}] Automatic HVAC control disabled by administrator.")
             return
+        
+        elif self.current_command[room] == "AUTO":
+            current_time = datetime.now()
+            is_open = self.gym_schedule['open'] <= current_time.time() <= self.gym_schedule['close']
 
-        current_time = datetime.now()
-        is_open = self.gym_schedule['open'] <= current_time.time() <= self.gym_schedule['close']
+            # ---- 2) 30-minute early opening logic ----
+            advance_time = timedelta(minutes=30)
+            open_time_with_advance = (datetime.combine(datetime.today(), self.gym_schedule['open']) - advance_time).time()
+            if open_time_with_advance <= current_time.time() <= self.gym_schedule['close']:
+                is_open = True
 
-        # ---- 2) 30-minute early opening logic ----
-        advance_time = timedelta(minutes=30)
-        open_time_with_advance = (datetime.combine(datetime.today(), self.gym_schedule['open']) - advance_time).time()
-        if open_time_with_advance <= current_time.time() <= self.gym_schedule['close']:
-            is_open = True
+            # ---- 3) Turn off if it's 30 minutes to close & no occupancy ----
+            close_time_with_advance = (datetime.combine(datetime.today(), self.gym_schedule['close']) - advance_time).time()
+            if current_time.time() >= close_time_with_advance and self.current_occupancy == 0:
+                if self.hvac_state[room] == 'on':
+                    print(f"[{room}] No clients present 30 minutes before closing. Turning off HVAC.")
+                    self.hvac_state[room] = 'off'
+                    self.hvac_mode[room] = None
+                    self.send_hvac_command(room, 'turn_off')
+                return
 
-        # ---- 3) Turn off if it's 30 minutes to close & no occupancy ----
-        close_time_with_advance = (datetime.combine(datetime.today(), self.gym_schedule['close']) - advance_time).time()
-        if current_time.time() >= close_time_with_advance and self.current_occupancy == 0:
-            if self.hvac_state[room] == 'on':
-                print(f"[{room}] No clients present 30 minutes before closing. Turning off HVAC.")
+            # ---- 4) If gym is closed, turn off if still on ----
+            if not is_open and self.hvac_state[room] == 'on':
                 self.hvac_state[room] = 'off'
                 self.hvac_mode[room] = None
                 self.send_hvac_command(room, 'turn_off')
-            return
+                return
 
-        # ---- 4) If gym is closed, turn off if still on ----
-        if not is_open and self.hvac_state[room] == 'on':
-            self.hvac_state[room] = 'off'
-            self.hvac_mode[room] = None
-            self.send_hvac_command(room, 'turn_off')
-            return
+            # ---- 5) Temperature thresholds & hysteresis ----
+            upper = self.thresholds[room]['upper']  # e.g. 22
+            lower = self.thresholds[room]['lower']  # e.g. 18
+            midpoint = (upper + lower) / 2.0        # e.g. 20
+            hysteresis = 0.5                        # e.g. 0.5 °C half-band
 
-        # ---- 5) Temperature thresholds & hysteresis ----
-        upper = self.thresholds[room]['upper']  # e.g. 22
-        lower = self.thresholds[room]['lower']  # e.g. 18
-        midpoint = (upper + lower) / 2.0        # e.g. 20
-        hysteresis = 0.5                        # e.g. 0.5 °C half-band
+            # ---- 5a) Turn ON if we are open & currently off ----
+            if is_open and self.hvac_state[room] == 'off':
+                if temperature > upper:
+                    self.hvac_state[room] = 'on'
+                    self.hvac_mode[room] = 'cool'
+                    self.send_hvac_command(room, 'turn_on', 'cool')
+                elif temperature < lower:
+                    self.hvac_state[room] = 'on'
+                    self.hvac_mode[room] = 'heat'
+                    self.send_hvac_command(room, 'turn_on', 'heat')
 
-        # ---- 5a) Turn ON if we are open & currently off ----
-        if is_open and self.hvac_state[room] == 'off':
-            if temperature > upper:
-                self.hvac_state[room] = 'on'
-                self.hvac_mode[room] = 'cool'
-                self.send_hvac_command(room, 'turn_on', 'cool')
-            elif temperature < lower:
-                self.hvac_state[room] = 'on'
-                self.hvac_mode[room] = 'heat'
-                self.send_hvac_command(room, 'turn_on', 'heat')
+            # ---- 5b) Turn OFF at midpoint +/- hysteresis ----
 
-        # ---- 5b) Turn OFF at midpoint +/- hysteresis ----
+            # If we're cooling, turn off if temperature <= midpoint - hysteresis
+            if self.hvac_state[room] == 'on' and self.hvac_mode[room] == 'cool':
+                if temperature <= (midpoint - hysteresis):
+                    self.hvac_state[room] = 'off'
+                    self.hvac_mode[room] = None
+                    self.send_hvac_command(room, 'turn_off')
 
-        # If we're cooling, turn off if temperature <= midpoint - hysteresis
-        if self.hvac_state[room] == 'on' and self.hvac_mode[room] == 'cool':
-            if temperature <= (midpoint - hysteresis):
-                self.hvac_state[room] = 'off'
-                self.hvac_mode[room] = None
-                self.send_hvac_command(room, 'turn_off')
-
-        # If we're heating, turn off if temperature >= midpoint + hysteresis
-        if self.hvac_state[room] == 'on' and self.hvac_mode[room] == 'heat':
-            if temperature >= (midpoint + hysteresis):
-                self.hvac_state[room] = 'off'
-                self.hvac_mode[room] = None
-                self.send_hvac_command(room, 'turn_off')
+            # If we're heating, turn off if temperature >= midpoint + hysteresis
+            if self.hvac_state[room] == 'on' and self.hvac_mode[room] == 'heat':
+                if temperature >= (midpoint + hysteresis):
+                    self.hvac_state[room] = 'off'
+                    self.hvac_mode[room] = None
+                    self.send_hvac_command(room, 'turn_off')
 
 
 
