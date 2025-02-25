@@ -265,7 +265,11 @@ class TempOptimizationService:
     #         self.hvac_state[room] = 'off'
     #         self.send_hvac_command(room, 'turn_off')
 
+    #define manual and automatic control function
     def control_hvac(self, room, temperature, humidity):
+
+
+        
         """
         Automatic HVAC control with the old functionalities PLUS hysteresis:
 
@@ -279,10 +283,32 @@ class TempOptimizationService:
         if it's 30 minutes before closing and no users are present.
         """
 
-        # ---- 1) Manual override check ----
+        # ---- 1) Manual override control ----
         if self.current_command[room] in ["OFF", "ON"]:
-            print(f"[{room}] Automatic HVAC control disabled by administrator.")
-            return
+            print(f"[{room}] Manual HVAC control activated by administrator.")
+
+            # Execute manual control based on the command received
+            if self.current_command[room] == "ON":
+                # Turn on the HVAC in the specified mode (cool/heat)
+                manual_mode = self.hvac_mode[room]  # Get the mode previously set by the admin
+                if manual_mode in ["cool", "heat"]:
+                    if self.hvac_state[room] == 'off':
+                        self.hvac_state[room] = 'on'
+                        self.send_hvac_command(room, 'turn_on', manual_mode)
+                        print(f"[{room}] Manual command executed: HVAC turned ON in {manual_mode} mode.")
+                else:
+                    print(f"[{room}] Manual ON command received, but mode (cool/heat) not specified.")
+
+            elif self.current_command[room] == "OFF":
+                # Turn off the HVAC regardless of temperature
+                if self.hvac_state[room] == 'on':
+                    self.hvac_state[room] = 'off'
+                    self.hvac_mode[room] = None
+                    self.send_hvac_command(room, 'turn_off')
+                    print(f"[{room}] Manual command executed: HVAC turned OFF.")
+
+            return  # Skip automatic control when manual override is active
+
         
         elif self.current_command[room] == "AUTO":
             current_time = datetime.now()
