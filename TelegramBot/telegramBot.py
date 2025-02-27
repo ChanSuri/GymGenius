@@ -161,10 +161,10 @@ class Telegrambot():
             if chat_id in self.user_states and self.user_states[chat_id] != None:
                 if self.user_states[chat_id] == 'awaiting_suggestion':
                     if message == "quit":
-                        self.bot.sendMessage(chat_id, 'What do you want to know about us? [/knowus]')
+                        self.bot.sendMessage(chat_id, 'What else do you want to know about data in gym? [/seedata]')
                     else:
-                        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                        with open("TelegramBot/suggestions.txt", "a") as file:
+                        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        with open("suggestions.txt", "a") as file:
                             file.write(f"{current_time} | {chat_id} | {message}\n")
                         self.bot.sendMessage(chat_id, "Your suggestion is saved! Thank you.")
                     self.user_states[chat_id] = None
@@ -330,7 +330,7 @@ class Telegrambot():
         self.bot.sendMessage(chat_id, text='Login success!', reply_markup=mark_up)
 
     def admin_suggestion(self,chat_id):
-        with open("TelegramBot/suggestions.txt", "r") as file:
+        with open("suggestions.txt", "r") as file:
             for line in file:
                 self.bot.sendMessage(chat_id, text=line.strip())
 
