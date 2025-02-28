@@ -713,6 +713,7 @@
                 "module": "node-red-contrib-telegrambot",
                 "file": "/data/node_modules/node-red-contrib-telegrambot/telegrambot/99-telegrambot.js"
             }
-        }
+        },
+        "pending_version": "16.1.3"
     }
 }

@@ -360,7 +360,7 @@
                 "entrance": "http://device_connector_entrance:8094",
                 "lifting_room": "http://device_connector_lifting_room:8095"
             },
-            "last_update": "2025-02-27 14:36:47"
+            "last_update": "2025-02-28 14:39:45"
         },
         {
             "service_id": "thingspeak_reader",
@@ -373,5 +373,5 @@
             "last_update": "2025-02-27 14:22:12"
         }
     ],
-    "lastUpdate": "2025-02-27 14:36:47"
+    "lastUpdate": "2025-02-28 14:39:45"
 }
