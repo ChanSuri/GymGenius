@@ -40,8 +40,8 @@ class SimulatedDHT11Sensor:
             "senml_record": {
                 "bn": f"gym/environment/{self.room}",
                 "e": [
-                    {"n": "temperature", "u": "Cel", "t": current_time, "v": temperature},
-                    {"n": "humidity", "u": "%", "t": current_time, "v": humidity}
+                    {"n": "temperature", "u": "Cel", "t": current_time, "v": float("%.2f" % temperature)},
+                    {"n": "humidity", "u": "%", "t": current_time, "v": float("%.2f" % humidity)}
                 ]
             }
         }

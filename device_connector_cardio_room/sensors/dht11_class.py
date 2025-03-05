@@ -12,7 +12,7 @@ class SimulatedDHT11Sensor:
         self.room = room
         self.rooms = {
             "entrance": {"type": "simulated", "temperature": 16.5, "humidity": 50.0},
-            "cardio_room": {"type": "simulated", "temperature": 28.0, "humidity": 50.0},
+            "cardio_room": {"type": "simulated", "temperature": 29.0, "humidity": 50.0},
             "lifting_room": {"type": "simulated", "temperature": 20.0, "humidity": 52.0},
             "changing_room": {"type": "simulated", "temperature": 24.0, "humidity": 55.0}
         }
@@ -40,8 +40,8 @@ class SimulatedDHT11Sensor:
             "senml_record": {
                 "bn": f"gym/environment/{self.room}",
                 "e": [
-                    {"n": "temperature", "u": "Cel", "t": current_time, "v": temperature},
-                    {"n": "humidity", "u": "%", "t": current_time, "v": humidity}
+                    {"n": "temperature", "u": "Cel", "t": current_time, "v": float("%.2f" % temperature)},
+                    {"n": "humidity", "u": "%", "t": current_time, "v": float("%.2f" % humidity)}
                 ]
             }
         }

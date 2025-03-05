@@ -243,7 +243,7 @@ class DeviceConnector:
 
         # If HVAC is on, gradually move the temperature up or down by a small step
         if self.hvac_state == 'on' and self.hvac_last_turned_on:
-            step = 0.3  # e.g. 0.3 °C at each iteration
+            step = 0.9  # e.g. 0.3 °C at each iteration
             if self.hvac_mode == 'cool':
                 self.simulated_temperature[room] -= step
             elif self.hvac_mode == 'heat':
@@ -311,9 +311,7 @@ class DeviceConnector:
             print(f"Received payload: {payload}")
             topic = message.topic
 
-            # Verifichiamo che il topic corrisponda effettivamente a "gym/hvac/control/<location>"
             if f"gym/hvac/control/{self.location}" in topic:
-                # I campi "control_command" e "mode" si trovano in payload["message"]["data"]
                 data = payload.get("message", {}).get("data", {})
                 control_command = data.get("control_command")
                 mode = data.get("mode", self.hvac_mode)

@@ -228,7 +228,7 @@ class OccupancyService:
         for hour_slot in range(len(self.time_slots)):
             for day in range(7):
                 # Accedere al primo elemento dell'array per evitare il warning
-                self.prediction_matrix[hour_slot, day] = model.predict([[hour_slot, day]])[0]
+                self.prediction_matrix[hour_slot, day] = int(round(model.predict([[hour_slot, day]])[0]))
         print(f"Prediction matrix updated: \n{self.prediction_matrix}")
         self.publish_prediction()
 
