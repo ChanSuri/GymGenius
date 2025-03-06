@@ -33,8 +33,8 @@ class Telegrambot():
         #publish
         self.publishedTopic = self.conf["published_topics"]
         self.switchTopic = self.publishedTopic["switchTopic"] 
-        self.tempTopic = self.publishedTopic["TempTopic"] #send temperature, NEED directly get temp&humidity from device in env data  
         self.subscribed_topics = self.conf["subscribed_topics"]
+        self.tempTopic = self.subscribed_topics["TempTopic"]
         self.crowdTopic = self.subscribed_topics["crowdTopic"] 
         self.availTopic = self.subscribed_topics["availTopic"]
         self.overtempTopic = self.subscribed_topics["overtempTopic"]
@@ -65,6 +65,7 @@ class Telegrambot():
             [15, 7, 11, 12, 12, 26, 39],    # 22:00-24:00
             [0,  0,  2,  4,  3, 15,  9]     # 00:00-08:00
         ] #example
+        self.latest_environment_data = {}
         self.machines = self.get_machines_from_service_catalog()
         self.zones = self.get_rooms_from_service_catalog() or [] 
         self.zones.append('All')
@@ -335,32 +336,57 @@ class Telegrambot():
                 self.bot.sendMessage(chat_id, text=line.strip())
 
     def admin_see_data(self,chat_id,room):
-        # check if the room in device_connector
-        if room not in self.device_connector:
-            self.bot.sendMessage(chat_id, f"Room '{room}' not configured.")
-            return
-        device_connector_url = self.device_connector[room] + "/environment"
-        # from Device Connector get data
-        response = requests.get(device_connector_url) 
-        if response.status_code == 200:
-            data = response.json()  # Assume JSON response with "temperature" and "humidity" keys
-            senml_record = data.get("senml_record", {})
-            if 'e' in senml_record and data.get("location", {}) == room:
-                temperature = next((e["v"] for e in senml_record["e"] if e["n"] == "temperature"), None)
-                humidity = next((e["v"] for e in senml_record["e"] if e["n"] == "humidity"), None)
-
-                if temperature is not None or humidity is not None:
-                    if isinstance(temperature, dict):
-                        temperature = next(iter(temperature.values()))
-                    if isinstance(humidity, dict):
-                        humidity = next(iter(humidity.values()))
-                    self.bot.sendMessage(chat_id, f"Room <{room}> current environment:\n Temperature: {temperature}°C \n Humidity: {humidity}%\n")
-                else:
-                    self.bot.sendMessage(chat_id, "Unable to fetch the environment data.")
+        if room not in self.latest_environment_data:
             mark_up = ReplyKeyboardMarkup(keyboard=[['Control'], ['Envdata'],['Suggestions']],one_time_keyboard=True)
-            self.bot.sendMessage(chat_id, text='What else would you like to do?', reply_markup=mark_up)
-        else:
-            raise Exception(f"Failed to fetch data from DeviceConnector: {response.status_code}")
+            self.bot.sendMessage(chat_id, f"No {room} data yet. Please try later!", reply_markup=mark_up)
+        
+        # JSON
+        try:
+            data = self.latest_environment_data[room]
+            temp = data["temperature"] if data["temperature"] is not None else "None"
+            hum = data["humidity"] if data["humidity"] is not None else "None"
+            timestamp = data["timestamp"] if data["timestamp"] else "None"
+            if timestamp != "None":
+                timestamp = datetime.fromisoformat(timestamp).strftime("%Y-%m-%d %H:%M:%S")
+
+            message = (
+                f"📍 Room: {room} 📍\n"
+                f"🕒 Time: {timestamp}\n"
+                f"🌡 Temperature: {temp}°C\n"
+                f"💧 Humidity: {hum}%"
+            )
+            self.bot.sendMessage(chat_id, message, parse_mode="Markdown")
+        
+        except Exception as e:
+            self.bot.sendMessage(chat_id, f"❌ Error fetch data:{str(e)}")
+        
+        # if room not in self.device_connector:
+        #     self.bot.sendMessage(chat_id, f"Room '{room}' not configured.")
+        #     return
+        # device_connector_url = self.device_connector[room] + "/environment"
+        # # from Device Connector get data
+        # response = requests.get(device_connector_url) 
+        # if response.status_code == 200:
+        #     data = response.json()  # Assume JSON response with "temperature" and "humidity" keys
+        #     # self.bot.sendMessage(chat_id, f"Data '{data}' is:")
+        #     senml_record = data.get("senml_record", {})
+        #     if 'e' in senml_record and data.get("location", {}) == room:
+        #         temperature = next((e["v"] for e in senml_record["e"] if e["n"] == "temperature"), None)
+        #         humidity = next((e["v"] for e in senml_record["e"] if e["n"] == "humidity"), None)
+        #         # self.bot.sendMessage(chat_id, f"Data '{temperature}' and '{humidity}' are:")
+
+        #         if temperature is not None or humidity is not None:
+        #             if isinstance(temperature, dict):
+        #                 temperature = next(iter(temperature.values()))
+        #             if isinstance(humidity, dict):
+        #                 humidity = next(iter(humidity.values()))
+        #             self.bot.sendMessage(chat_id, f"Room <{room}> current environment:\n Temperature: {temperature}°C \n Humidity: {humidity}%\n")
+        #         else:
+        #             self.bot.sendMessage(chat_id, "Unable to fetch the environment data.")
+        #     mark_up = ReplyKeyboardMarkup(keyboard=[['Control'], ['Envdata'],['Suggestions']],one_time_keyboard=True)
+        #     self.bot.sendMessage(chat_id, text='What else would you like to do?', reply_markup=mark_up)
+        # else:
+        #     raise Exception(f"Failed to fetch data from DeviceConnector: {response.status_code}")
     
     def admin_operate(self, chat_id):
         mark_up = ReplyKeyboardMarkup(keyboard=[['Switchon'], ['Switchoff'], ['AUTO']],one_time_keyboard=True)
@@ -388,8 +414,8 @@ class Telegrambot():
     def send_hvac_command(self, room, command, mode=None):
         if room == "All":
             room = "#"
-        payload = json.dumps({
-            "topic": self.switchTopic + room, #gym/hvac/on_off/#
+        payload = {
+            "topic": self.switchTopic + room,
             "message": {
                 "device_id": "Temperature control",
                 "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -398,9 +424,10 @@ class Telegrambot():
                     "mode": mode
                 }
             }
-        })
+        }
         self.client.myPublish(self.switchTopic + room, payload)
         print(f"[{room}] Sent HVAC command: {command} with mode {mode}")
+
         
     #self.notifier.notify (msg.topic, msg.payload)
     def notify(self, topic, msg):
@@ -408,7 +435,7 @@ class Telegrambot():
         try:
             message = json.loads(msg.decode('utf-8'))  # Decode and parse the JSON message
             print(f"Received message on topic: {topic}")
-            if topic.startswith(self.overtempTopic):
+            if topic.startswith("gym/environment/alert/"):
                 room = topic.split('/')[-1]
                 alert_message = message["message"]["data"]["alert"]
                 tosend = f'{alert_message}. Please check it and do some operations in {room}!'
@@ -440,6 +467,22 @@ class Telegrambot():
                 self.availmachines[machine]["available"] = data.get("available", 0)
                 self.availmachines[machine]["busy"] = data.get("busy", 0)
                 self.availmachines[machine]["total"] = data.get("total", 0)
+                
+            elif topic.startswith("gym/environment/"):
+                room = topic.split("/")[-1]  # 提取 room 名称
+                print(message)
+                temperature = next((x["v"] for x in message["e"] if x["n"] == "temperature"), None)
+                humidity = next((x["v"] for x in message["e"] if x["n"] == "humidity"), None)
+                timestamp = next((x["t"] for x in message["e"] if x["n"] == "temperature"), None)
+
+                # 存储最新数据
+                self.latest_environment_data[room] = {
+                    "temperature": temperature,
+                    "humidity": humidity,
+                    "timestamp": timestamp
+                }
+                print(f"✅ Updated {room} environment data: {self.latest_environment_data[room]}")
+
 
 
         except Exception as e:
