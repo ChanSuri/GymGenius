@@ -284,7 +284,8 @@ class TempOptimizationService:
         """
 
         # ---- 1) Manual override control ----
-        if self.current_command[room] in ["OFF", "ON"]:
+        #if self.current_command[room] in ["OFF", "ON"]:
+        if self.current_command[room] in ["turn_off", "turn_on"]:
             print(f"[{room}] Manual HVAC control activated by administrator.")
 
             # Execute manual control based on the command received
@@ -307,7 +308,7 @@ class TempOptimizationService:
                     self.send_hvac_command(room, 'turn_off')
                     print(f"[{room}] Manual command executed: HVAC turned OFF.")
 
-            return  # Skip automatic control when manual override is active
+            #return  # Skip automatic control when manual override is active
 
         
         elif self.current_command[room] == "AUTO":

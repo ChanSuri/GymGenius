@@ -208,7 +208,7 @@ class Telegrambot():
                     self.bot.sendMessage(chat_id, "Please send '/administrator' to login first!")
             elif message == "cool" or message == "heat":
                 if self.check_auth(chat_id)==True:
-                    self.switchMode ="turn_on"
+                    self.switchMode ="ON"
                     self.ACMode = message
                     self.admin_switch_zone(chat_id)
                 else:
@@ -221,7 +221,7 @@ class Telegrambot():
                     self.bot.sendMessage(chat_id, "Please send '/administrator' to login first!")
             elif message == "Switchoff":
                 if self.check_auth(chat_id)==True:
-                    self.switchMode="turn_off"
+                    self.switchMode="OFF"
                     self.admin_switch_zone(chat_id)
                 else:
                     self.bot.sendMessage(chat_id, "Please send '/administrator' to login first!")
@@ -268,7 +268,7 @@ class Telegrambot():
                 keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=f"{slot['start']} - {slot['end']}", callback_data=key)] for key, slot in self.timeslot.items()])
                 self.bot.sendMessage(chat_id, parse_mode='Markdown',text='*Please select the time slot that you want to predict:*', reply_markup=keyboard)
             else:
-                if self.switchMode in ["turn_on", "turn_off", "AUTO"]:
+                if self.switchMode in ["ON", "OFF", "AUTO"]:
                     if self.check_auth(chat_id) ==True:
                         if message in self.zones:
                             self.bot.sendMessage(chat_id, text= f"AC in {message} switched to {self.switchMode} in mode {self.ACMode}")
