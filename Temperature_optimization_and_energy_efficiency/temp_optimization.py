@@ -215,6 +215,7 @@ class TempOptimizationService:
             command_data = json.loads(message.payload.decode())
             self.current_command[room] = command_data['message']['data'].get('state', "OFF").upper()
             print(f"[{room}] Received administrator command: {self.current_command[room]}.")
+            self.control_hvac(room, temperature=None, humidity=None)
         except (json.JSONDecodeError, TypeError) as e:
             print(f"Failed to decode command data for {room}: {e}")
 
@@ -285,7 +286,7 @@ class TempOptimizationService:
 
         # ---- 1) Manual override control ----
         #if self.current_command[room] in ["OFF", "ON"]:
-        if self.current_command[room] in ["turn_off", "turn_on"]:
+        if self.current_command[room] in ["OFF", "ON"]:
             print(f"[{room}] Manual HVAC control activated by administrator.")
 
             # Execute manual control based on the command received

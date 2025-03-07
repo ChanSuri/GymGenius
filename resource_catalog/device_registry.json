@@ -10,7 +10,7 @@
             "location": "entrance",
             "status": "active",
             "endpoint": "GymGenius/Occupancy/Entrance",
-            "last_update": "2025-03-07 17:24:32"
+            "last_update": "2025-03-07 17:39:21"
         },
         {
             "device_id": "ExitSensor001",
@@ -18,15 +18,15 @@
             "location": "entrance",
             "status": "active",
             "endpoint": "GymGenius/Occupancy/Exit",
-            "last_update": "2025-03-07 17:24:54"
+            "last_update": "2025-03-07 17:39:00"
         },
         {
             "device_id": "simulated_stationary_bike_3",
             "type": "stationary_bike",
             "location": "cardio_room",
-            "status": "inactive",
+            "status": "active",
             "endpoint": "GymGenius/Availability/stationary_bike/3",
-            "last_update": "2025-03-07 17:24:35"
+            "last_update": "2025-03-07 17:39:18"
         },
         {
             "device_id": "simulated_treadmill_1",
@@ -34,7 +34,7 @@
             "location": "cardio_room",
             "status": "inactive",
             "endpoint": "GymGenius/Availability/treadmill/1",
-            "last_update": "2025-03-07 17:24:19"
+            "last_update": "2025-03-07 17:39:26"
         },
         {
             "device_id": "DHT11_Sensor_entrance",
@@ -42,7 +42,7 @@
             "location": "entrance",
             "status": "active",
             "endpoint": "gym/environment/entrance",
-            "last_update": "2025-03-07T17:25:11.077010+00:00"
+            "last_update": "2025-03-07T17:39:35.534778+00:00"
         },
         {
             "device_id": "DHT11_Sensor_cardio_room",
@@ -50,7 +50,7 @@
             "location": "cardio_room",
             "status": "active",
             "endpoint": "gym/environment/cardio_room",
-            "last_update": "2025-03-07T17:24:55.666174+00:00"
+            "last_update": "2025-03-07T17:39:43.600359+00:00"
         },
         {
             "device_id": "DHT11_Sensor_lifting_room",
@@ -58,7 +58,7 @@
             "location": "lifting_room",
             "status": "active",
             "endpoint": "gym/environment/lifting_room",
-            "last_update": "2025-03-07T17:24:34.359983+00:00"
+            "last_update": "2025-03-07T17:39:29.703631+00:00"
         },
         {
             "device_id": "DHT11_Sensor_changing_room",
@@ -66,7 +66,7 @@
             "location": "changing_room",
             "status": "active",
             "endpoint": "gym/environment/changing_room",
-            "last_update": "2025-03-07T17:24:54.981546+00:00"
+            "last_update": "2025-03-07T17:39:50.326861+00:00"
         },
         {
             "device_id": "simulated_elliptical_trainer_2",
@@ -74,7 +74,7 @@
             "location": "cardio_room",
             "status": "inactive",
             "endpoint": "GymGenius/Availability/elliptical_trainer/2",
-            "last_update": "2025-03-07 17:24:17"
+            "last_update": "2025-03-07 17:39:07"
         },
         {
             "device_id": "simulated_stationary_bike_1",
@@ -82,23 +82,23 @@
             "location": "cardio_room",
             "status": "inactive",
             "endpoint": "GymGenius/Availability/stationary_bike/1",
-            "last_update": "2025-03-07 17:24:23"
+            "last_update": "2025-03-07 17:39:19"
         },
         {
             "device_id": "simulated_treadmill_2",
             "type": "treadmill",
             "location": "cardio_room",
-            "status": "active",
+            "status": "inactive",
             "endpoint": "GymGenius/Availability/treadmill/2",
-            "last_update": "2025-03-07 17:24:38"
+            "last_update": "2025-03-07 17:39:10"
         },
         {
             "device_id": "simulated_stationary_bike_2",
             "type": "stationary_bike",
             "location": "cardio_room",
-            "status": "active",
+            "status": "inactive",
             "endpoint": "GymGenius/Availability/stationary_bike/2",
-            "last_update": "2025-03-07 17:24:14"
+            "last_update": "2025-03-07 17:39:23"
         },
         {
             "device_id": "simulated_elliptical_trainer_1",
@@ -106,31 +106,31 @@
             "location": "cardio_room",
             "status": "inactive",
             "endpoint": "GymGenius/Availability/elliptical_trainer/1",
-            "last_update": "2025-03-07 17:24:28"
+            "last_update": "2025-03-07 17:39:28"
         },
         {
             "device_id": "simulated_rowing_machine_1",
             "type": "rowing_machine",
             "location": "cardio_room",
-            "status": "active",
+            "status": "inactive",
             "endpoint": "GymGenius/Availability/rowing_machine/1",
-            "last_update": "2025-03-07 17:24:34"
+            "last_update": "2025-03-07 17:39:09"
         },
         {
             "device_id": "simulated_cable_machine_1",
             "type": "cable_machine",
             "location": "lifting_room",
-            "status": "active",
+            "status": "inactive",
             "endpoint": "GymGenius/Availability/cable_machine/1",
-            "last_update": "2025-03-07 17:24:53"
+            "last_update": "2025-03-07 17:38:57"
         },
         {
             "device_id": "simulated_smith_machine_2",
             "type": "smith_machine",
             "location": "lifting_room",
-            "status": "inactive",
+            "status": "active",
             "endpoint": "GymGenius/Availability/smith_machine/2",
-            "last_update": "2025-03-07 17:24:43"
+            "last_update": "2025-03-07 17:38:58"
         },
         {
             "device_id": "simulated_rowing_machine_2",
@@ -138,15 +138,15 @@
             "location": "cardio_room",
             "status": "inactive",
             "endpoint": "GymGenius/Availability/rowing_machine/2",
-            "last_update": "2025-03-07 17:24:31"
+            "last_update": "2025-03-07 17:39:24"
         },
         {
             "device_id": "simulated_leg_press_machine_1",
             "type": "leg_press_machine",
             "location": "lifting_room",
-            "status": "inactive",
+            "status": "active",
             "endpoint": "GymGenius/Availability/leg_press_machine/1",
-            "last_update": "2025-03-07 17:24:52"
+            "last_update": "2025-03-07 17:38:49"
         },
         {
             "device_id": "simulated_cable_machine_2",
@@ -154,15 +154,15 @@
             "location": "lifting_room",
             "status": "inactive",
             "endpoint": "GymGenius/Availability/cable_machine/2",
-            "last_update": "2025-03-07 17:24:46"
+            "last_update": "2025-03-07 17:38:50"
         },
         {
             "device_id": "simulated_cable_machine_3",
             "type": "cable_machine",
             "location": "lifting_room",
-            "status": "active",
+            "status": "inactive",
             "endpoint": "GymGenius/Availability/cable_machine/3",
-            "last_update": "2025-03-07 17:25:01"
+            "last_update": "2025-03-07 17:39:00"
         },
         {
             "device_id": "simulated_smith_machine_3",
@@ -170,7 +170,7 @@
             "location": "lifting_room",
             "status": "inactive",
             "endpoint": "GymGenius/Availability/smith_machine/3",
-            "last_update": "2025-03-07 17:25:05"
+            "last_update": "2025-03-07 17:39:05"
         },
         {
             "device_id": "simulated_lat_pulldown_machine_2",
@@ -178,7 +178,7 @@
             "location": "lifting_room",
             "status": "active",
             "endpoint": "GymGenius/Availability/lat_pulldown_machine/2",
-            "last_update": "2025-03-07 17:24:56"
+            "last_update": "2025-03-07 17:39:12"
         },
         {
             "device_id": "simulated_lat_pulldown_machine_3",
@@ -186,15 +186,15 @@
             "location": "lifting_room",
             "status": "active",
             "endpoint": "GymGenius/Availability/lat_pulldown_machine/3",
-            "last_update": "2025-03-07 17:25:03"
+            "last_update": "2025-03-07 17:39:06"
         },
         {
             "device_id": "simulated_leg_press_machine_2",
             "type": "leg_press_machine",
             "location": "lifting_room",
-            "status": "inactive",
+            "status": "active",
             "endpoint": "GymGenius/Availability/leg_press_machine/2",
-            "last_update": "2025-03-07 17:24:42"
+            "last_update": "2025-03-07 17:39:01"
         },
         {
             "device_id": "simulated_rowing_machine_3",
@@ -202,15 +202,15 @@
             "location": "cardio_room",
             "status": "active",
             "endpoint": "GymGenius/Availability/rowing_machine/3",
-            "last_update": "2025-03-07 17:24:37"
+            "last_update": "2025-03-07 17:39:13"
         },
         {
             "device_id": "simulated_leg_press_machine_3",
             "type": "leg_press_machine",
             "location": "lifting_room",
-            "status": "inactive",
+            "status": "active",
             "endpoint": "GymGenius/Availability/leg_press_machine/3",
-            "last_update": "2025-03-07 17:24:57"
+            "last_update": "2025-03-07 17:38:52"
         },
         {
             "device_id": "simulated_lat_pulldown_machine_1",
@@ -218,15 +218,15 @@
             "location": "lifting_room",
             "status": "inactive",
             "endpoint": "GymGenius/Availability/lat_pulldown_machine/1",
-            "last_update": "2025-03-07 17:24:58"
+            "last_update": "2025-03-07 17:39:15"
         },
         {
             "device_id": "simulated_smith_machine_1",
             "type": "smith_machine",
             "location": "lifting_room",
-            "status": "inactive",
+            "status": "active",
             "endpoint": "GymGenius/Availability/smith_machine/1",
-            "last_update": "2025-03-07 17:25:06"
+            "last_update": "2025-03-07 17:39:04"
         },
         {
             "device_id": "simulated_treadmill_3",
@@ -234,15 +234,15 @@
             "location": "cardio_room",
             "status": "active",
             "endpoint": "GymGenius/Availability/treadmill/3",
-            "last_update": "2025-03-07 17:24:41"
+            "last_update": "2025-03-07 17:39:21"
         },
         {
             "device_id": "simulated_stationary_bike_4",
             "type": "stationary_bike",
             "location": "cardio_room",
-            "status": "active",
+            "status": "inactive",
             "endpoint": "GymGenius/Availability/stationary_bike/4",
-            "last_update": "2025-03-07 17:24:22"
+            "last_update": "2025-03-07 17:39:29"
         },
         {
             "device_id": "simulated_elliptical_trainer_4",
@@ -250,7 +250,7 @@
             "location": "cardio_room",
             "status": "active",
             "endpoint": "GymGenius/Availability/elliptical_trainer/4",
-            "last_update": "2025-03-07 17:24:44"
+            "last_update": "2025-03-07 17:39:16"
         },
         {
             "device_id": "simulated_rowing_machine_4",
@@ -258,7 +258,7 @@
             "location": "cardio_room",
             "status": "active",
             "endpoint": "GymGenius/Availability/rowing_machine/4",
-            "last_update": "2025-03-07 17:24:40"
+            "last_update": "2025-03-07 17:39:12"
         },
         {
             "device_id": "simulated_treadmill_4",
@@ -266,15 +266,15 @@
             "location": "cardio_room",
             "status": "inactive",
             "endpoint": "GymGenius/Availability/treadmill/4",
-            "last_update": "2025-03-07 17:24:11"
+            "last_update": "2025-03-07 17:39:27"
         },
         {
             "device_id": "simulated_elliptical_trainer_3",
             "type": "elliptical_trainer",
             "location": "cardio_room",
-            "status": "active",
+            "status": "inactive",
             "endpoint": "GymGenius/Availability/elliptical_trainer/3",
-            "last_update": "2025-03-07 17:24:25"
+            "last_update": "2025-03-07 17:39:31"
         },
         {
             "device_id": "simulated_leg_press_machine_4",
@@ -282,15 +282,15 @@
             "location": "lifting_room",
             "status": "inactive",
             "endpoint": "GymGenius/Availability/leg_press_machine/4",
-            "last_update": "2025-03-07 17:24:48"
+            "last_update": "2025-03-07 17:39:03"
         },
         {
             "device_id": "simulated_lat_pulldown_machine_4",
             "type": "lat_pulldown_machine",
             "location": "lifting_room",
-            "status": "active",
+            "status": "inactive",
             "endpoint": "GymGenius/Availability/lat_pulldown_machine/4",
-            "last_update": "2025-03-07 17:25:08"
+            "last_update": "2025-03-07 17:39:16"
         },
         {
             "device_id": "simulated_cable_machine_4",
@@ -298,7 +298,7 @@
             "location": "lifting_room",
             "status": "active",
             "endpoint": "GymGenius/Availability/cable_machine/4",
-            "last_update": "2025-03-07 17:24:39"
+            "last_update": "2025-03-07 17:38:54"
         },
         {
             "device_id": "simulated_smith_machine_4",
@@ -306,8 +306,8 @@
             "location": "lifting_room",
             "status": "active",
             "endpoint": "GymGenius/Availability/smith_machine/4",
-            "last_update": "2025-03-07 17:24:49"
+            "last_update": "2025-03-07 17:39:09"
         }
     ],
-    "lastUpdate": "2025-03-07 17:25:16"
+    "lastUpdate": "2025-03-07 17:39:52"
 }
