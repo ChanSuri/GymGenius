@@ -209,15 +209,39 @@ class TempOptimizationService:
         except (json.JSONDecodeError, TypeError) as e:
             print(f"Failed to decode threshold data for {room}: {e}")
 
+    # def handle_hvac_on_off(self, room, message):
+    #     """Handle HVAC on/off commands for a specific room."""
+    #     try:
+    #         command_data = json.loads(message.payload.decode())
+    #         self.current_command[room] = command_data['message']['data'].get('state', "OFF").upper()
+    #         print(f"[{room}] Received administrator command: {self.current_command[room]}.")
+    #         self.control_hvac(room, temperature=None, humidity=None)
+    #     except (json.JSONDecodeError, TypeError) as e:
+    #         print(f"Failed to decode command data for {room}: {e}")
+
     def handle_hvac_on_off(self, room, message):
-        """Handle HVAC on/off commands for a specific room."""
         try:
             command_data = json.loads(message.payload.decode())
-            self.current_command[room] = command_data['message']['data'].get('state', "OFF").upper()
-            print(f"[{room}] Received administrator command: {self.current_command[room]}.")
+            
+            # Ricaviamo lo stato e la modalità dal payload
+            state = command_data['message']['data'].get('control_command', "OFF").upper()
+            mode  = command_data['message']['data'].get('mode', None)
+
+            # Salviamo lo stato
+            self.current_command[room] = state
+
+            # Se c'è una modalità valida (cool o heat), salviamola in self.hvac_mode
+            if mode in ["cool", "heat"]:
+                self.hvac_mode[room] = mode
+
+            print(f"[{room}] Received administrator command: {state} - mode: {mode}")
+            
+            # Usiamo la logica di controllo
             self.control_hvac(room, temperature=None, humidity=None)
+
         except (json.JSONDecodeError, TypeError) as e:
             print(f"Failed to decode command data for {room}: {e}")
+
 
     def handle_occupancy(self, message):
         """Handle occupancy data."""
