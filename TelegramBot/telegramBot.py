@@ -11,7 +11,7 @@ import cherrypy
 import threading
 import calendar
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 logging.basicConfig(level=logging.INFO)
 
@@ -68,9 +68,10 @@ class Telegrambot():
         self.latest_environment_data = {}
         self.machines = self.get_machines_from_service_catalog()
         self.zones = self.get_rooms_from_service_catalog() or [] 
-        self.zones.append('All')
+        # self.zones.append('All')
         self.availmachines = {machine: {"available": 0, "busy": 0, "total": 0} for machine in self.machines}
         self.last_alert_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        self.last_room = "None"
 
     
     #get info from service catalog   
@@ -195,42 +196,42 @@ class Telegrambot():
                 if self.check_auth(chat_id)==True:
                     self.admin_suggestion(chat_id)
                 else:
-                    self.bot.sendMessage(chat_id, "Please send '/administrator' to login first!")
+                    self.bot.sendMessage(chat_id, "Please send 'Administrator' to login first!")
             elif message == "Envdata":
                 if self.check_auth(chat_id)==True:
                     self.admin_env_zone(chat_id)
                 else:
-                    self.bot.sendMessage(chat_id, "Please send '/administrator' to login first!")
+                    self.bot.sendMessage(chat_id, "Please send 'Administrator' to login first!")
             elif message == "Control":
                 if self.check_auth(chat_id)==True:
                     self.admin_operate(chat_id)
                 else:
-                    self.bot.sendMessage(chat_id, "Please send '/administrator' to login first!")
+                    self.bot.sendMessage(chat_id, "Please send 'Administrator' to login first!")
             elif message == "cool" or message == "heat":
                 if self.check_auth(chat_id)==True:
                     self.switchMode ="ON"
                     self.ACMode = message
                     self.admin_switch_zone(chat_id)
                 else:
-                    self.bot.sendMessage(chat_id, "Please send '/administrator' to login first!")
-            elif message == "Switchon":
+                    self.bot.sendMessage(chat_id, "Please send 'Administrator' to login first!")
+            elif message == "ON":
                 if self.check_auth(chat_id)==True:
                     mark_up = ReplyKeyboardMarkup(keyboard=[['cool'], ['heat']],one_time_keyboard=True)
                     self.bot.sendMessage(chat_id, 'Which AC mode to set?', reply_markup=mark_up)
                 else:
-                    self.bot.sendMessage(chat_id, "Please send '/administrator' to login first!")
-            elif message == "Switchoff":
+                    self.bot.sendMessage(chat_id, "Please send 'Administrator' to login first!")
+            elif message == "OFF":
                 if self.check_auth(chat_id)==True:
                     self.switchMode="OFF"
                     self.admin_switch_zone(chat_id)
                 else:
-                    self.bot.sendMessage(chat_id, "Please send '/administrator' to login first!")
+                    self.bot.sendMessage(chat_id, "Please send 'Administrator' to login first!")
             elif message == "AUTO":
                 if self.check_auth(chat_id)==True:
                     self.switchMode="AUTO"
                     self.admin_switch_zone(chat_id)
                 else:
-                    self.bot.sendMessage(chat_id, "Please send '/administrator' to login first!")
+                    self.bot.sendMessage(chat_id, "Please send 'Administrator' to login first!")
             elif message == "Logout":
                 if self.check_auth(chat_id)==True:
                     del self.chat_auth[str(chat_id)]
@@ -355,7 +356,9 @@ class Telegrambot():
                 f"🌡 Temperature: {temp}°C\n"
                 f"💧 Humidity: {hum}%"
             )
-            self.bot.sendMessage(chat_id, message, parse_mode="Markdown")
+            self.bot.sendMessage(chat_id, message)
+            mark_up = ReplyKeyboardMarkup(keyboard=[['Control'], ['Envdata'],['Suggestions'],['Return']],one_time_keyboard=True)
+            self.bot.sendMessage(chat_id, f"What else you want to do?", reply_markup=mark_up)
         
         except Exception as e:
             self.bot.sendMessage(chat_id, f"❌ Error fetch data:{str(e)}")
@@ -389,7 +392,7 @@ class Telegrambot():
         #     raise Exception(f"Failed to fetch data from DeviceConnector: {response.status_code}")
     
     def admin_operate(self, chat_id):
-        mark_up = ReplyKeyboardMarkup(keyboard=[['Switchon'], ['Switchoff'], ['AUTO']],one_time_keyboard=True)
+        mark_up = ReplyKeyboardMarkup(keyboard=[['ON'], ['OFF'], ['AUTO']],one_time_keyboard=True)
         self.bot.sendMessage(chat_id, text='Please select your operation for HVAC...', reply_markup=mark_up)
         
     def admin_switch_zone(self,chat_id):
@@ -398,6 +401,7 @@ class Telegrambot():
             one_time_keyboard=True
         )
         self.bot.sendMessage(chat_id, text='Please select the zone you want to switch...', reply_markup=mark_up)
+        
     def admin_env_zone(self,chat_id):
         mark_up = ReplyKeyboardMarkup(
             keyboard=[[room] for room in self.zones],
@@ -431,22 +435,26 @@ class Telegrambot():
         
     #self.notifier.notify (msg.topic, msg.payload)
     def notify(self, topic, msg):
-        #print(msg)
+        # print(msg)
         try:
             message = json.loads(msg.decode('utf-8'))  # Decode and parse the JSON message
             print(f"Received message on topic: {topic}")
             if topic.startswith("gym/environment/alert/"):
                 room = topic.split('/')[-1]
                 alert_message = message["message"]["data"]["alert"]
-                tosend = f'{alert_message}. Please check it and do some operations in {room}!'
-                for chat_ID in self.chat_auth:
-                    keyboard = ReplyKeyboardMarkup(keyboard=[['Control'], ['Envdata'], ['Suggestions']], one_time_keyboard=True)
-                    self.bot.sendMessage(chat_ID, text=tosend, reply_markup=keyboard)
+                current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # alert
+                if room != self.last_room or (current_time - self.last_alert_time) >= timedelta(hours=1):
+                    tosend = f'{alert_message}. Please check it and do some operations in {room}!'
+                    for chat_ID in self.chat_auth:
+                        keyboard = ReplyKeyboardMarkup(keyboard=[['Control'], ['Envdata'], ['Suggestions']], one_time_keyboard=True)
+                        self.bot.sendMessage(chat_ID, text=tosend, reply_markup=keyboard)
+                    self.last_room = room
+                    self.last_alert_time = current_time
 
             elif topic == self.crowdTopic:
                 self.current_occupancy = message["message"]["data"]["current_occupancy"]
                 current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # alert
-                if self.current_occupancy > self.crowdthreshold and current_time - self.last_alert_time >= 3600:
+                if self.current_occupancy > self.crowdthreshold and (current_time - self.last_alert_time) >= timedelta(hours=1):
                     tosend = f"Alert! Current occupancy is reaching {self.current_occupancy} now. Please manage your plan or consider coming another time."
                     for chat_ID in self.chatIDs:
                         self.bot.sendMessage(chat_ID, text=tosend)
