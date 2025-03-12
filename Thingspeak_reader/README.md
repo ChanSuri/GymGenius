@@ -70,13 +70,10 @@ This will return the CSV file containing historical records.
 
 Available channels (defined in `config_thingspeak.json`):
 
--**Entrance**
-
--**Changing Room**
-
--**Cardio Room**
-
--**Lifting Room**
+- **Entrance**
+- **Changing Room**
+- **Cardio Room**
+- **Lifting Room**
 
 ---
 
