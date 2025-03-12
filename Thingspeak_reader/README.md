@@ -20,7 +20,7 @@ This service periodically fetches data from ThingSpeak and stores it locally, en
 ---
 
 ## Features
-- **Automatic Data Retrieval**: Fetches data from predefined ThingSpeak channels at regular intervals.
+- **Automatic Data Retrieval**: Fetches data from predefined ThingSpeak channels at regular intervals (default: 30 seconds).
 - **Historical Data Storage**: Saves retrieved data into CSV files for future analysis.
 - **HTTP Endpoint for Data Access**: Provides an HTTP GET interface to download historical data.
 - **Service Registration and Deregistration**: Registers itself in a service catalog and unregisters on shutdown.
