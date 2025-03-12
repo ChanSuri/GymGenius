@@ -30,7 +30,6 @@ The **Thingspeak Adaptor** is a microservice designed to collect real-time envir
 - Python 3.x
 - `paho-mqtt` library
 - `requests` library (for HTTP communication with ThingSpeak)
-- `cherrypy` library (for handling GET requests for historical data)
 
 ---
 
