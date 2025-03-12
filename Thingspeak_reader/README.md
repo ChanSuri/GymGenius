@@ -95,6 +95,12 @@ On startup, the service registers itself with the service catalog to ensure disc
 
 3. On shutdown, it deregisters itself.
 
+At startup, the Thingspeak Reader registers itself with the service catalog using the `register_service` function. This allows external systems to query the service's status and details.
+
+- **Service ID**: `thingspeak_reader`
+- **Description**: "Generates historical records on occupancy, usage, and conditions for each room"
+- **Endpoint**: The service registers an endpoint that can be used for monitoring or management, such as `http://thingspeak_reader:8089/thingspeak_reader`.
+
 ---
 
 ## Shutdown and Cleanup
