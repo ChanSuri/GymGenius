@@ -1,4 +1,4 @@
-# Thingspeak Adaptor 
+# Thingspeak Adaptor & ThingSpeak Integration
 
 ## Table of Contents
 - [Overview](#overview)
@@ -162,8 +162,6 @@ At startup, the Thingspeak Adaptor registers itself with the service catalog usi
 
 - **Service ID**: `thingspeak_adaptor`
 - **Description**: "Manages data uploads to ThingSpeak"
-- **Endpoint**: The service registers an endpoint that can be used for monitoring or management, such as `http://localhost:8080/thingspeak_adaptor`.
-
 ---
 
 ## Shutdown and Cleanup
