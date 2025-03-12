@@ -85,16 +85,6 @@ The Thingspeak Reader saves data as CSV files, where each room has a separate CS
 
 ## Service Registration
 
-On startup, the service registers itself with the service catalog to ensure discoverability.
-
-**Registration Process**
-
-1. The service sends a registration request to the catalog.
-
-2. If already registered, it updates the registration timestamp.
-
-3. On shutdown, it deregisters itself.
-
 At startup, the Thingspeak Reader registers itself with the service catalog using the `register_service` function. This allows external systems to query the service's status and details.
 
 - **Service ID**: `thingspeak_reader`
