@@ -70,7 +70,7 @@ class Telegrambot():
         self.zones = self.get_rooms_from_service_catalog() or [] 
         # self.zones.append('All')
         self.availmachines = {machine: {"available": 0, "busy": 0, "total": 0} for machine in self.machines}
-        self.last_alert_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        self.last_alert_time = datetime.now()
         self.last_room = "None"
 
     
@@ -137,48 +137,71 @@ class Telegrambot():
             return []
         
     #MQTT        
+    def start(self):
+        self.client.start()
+        try:
+            for topic_key, topic_value in self.conf["subscribed_topics"].items():
+                self.client.mySubscribe(topic_value)
+                print(f"Subscribed to topic: {topic_key}")
+            MessageLoop(self.bot,{'chat': self.on_chat_message,'callback_query': self.on_callback_query}).run_as_thread()
+        except KeyError as e:
+            print(f"Error in subscribed_topics format: {e}")
+    
+    # def handle_update(self, update):
+    #     print(f"🔔 New update received:\n{update}")
+
+    #     if 'message' in update:
+    #         # 普通聊天消息
+    #         self.on_chat_message(update['message'])
+
+    #     elif 'callback_query' in update:
+    #         # 按钮点击
+    #         self.on_callback_query(update['callback_query'])
+
+    #     elif 'my_chat_member' in update:
+    #         # Bot 被踢出 or 被加进群
+    #         print(f"⚠️ Bot chat member status changed: {update['my_chat_member']}")
+    #         # 你可以在这里做逻辑处理，比如提示管理员等等
+
+    #     else:
+    #         print(f"❗ Unhandled update type: {update}")
+
     # def start(self):
     #     self.client.start()
     #     try:
     #         for topic_key, topic_value in self.conf["subscribed_topics"].items():
     #             self.client.mySubscribe(topic_value)
-    #             print(f"Subscribed to topic: {topic_key}")
-    #         MessageLoop(self.bot,{'chat': self.on_chat_message,'callback_query': self.on_callback_query}).run_as_thread()
+    #             print(f"✅ Subscribed to topic: {topic_key}")
+
+    #         print("✅ Custom polling loop started...")
+
+    #         offset = None
+    #         while True:
+    #             updates = self.bot.getUpdates(offset=offset, timeout=10)
+    #             for update in updates:
+    #                 offset = update['update_id'] + 1  # 确保不重复
+    #                 self.handle_update(update)  # 自己处理每个 update
+
+    #             time.sleep(1)
+
+    #     except Exception as e:
+    #         print(f"❌ Error in polling loop: {e}")
+
+
+    # def start(self):
+    #     self.client.start()
+
+    #     try:
+    #         for topic_key, topic_value in self.conf["subscribed_topics"].items():
+    #             self.client.mySubscribe(topic_value)
+    #             print(f"✅ Subscribed to topic: {topic_key}")
+
+    #         # 👇 改成 handle_update，自己处理所有 update 类型
+    #         MessageLoop(self.bot, self.handle_update).run_as_thread()
+    #         print("✅ Message loop started")
+
     #     except KeyError as e:
-    #         print(f"Error in subscribed_topics format: {e}")
-    def handle_update(self, update):
-        print(f"🔔 New update received:\n{update}")
-
-        if 'message' in update:
-            # 普通聊天消息
-            self.on_chat_message(update['message'])
-
-        elif 'callback_query' in update:
-            # 按钮点击
-            self.on_callback_query(update['callback_query'])
-
-        elif 'my_chat_member' in update:
-            # Bot 被踢出 or 被加进群
-            print(f"⚠️ Bot chat member status changed: {update['my_chat_member']}")
-            # 你可以在这里做逻辑处理，比如提示管理员等等
-
-        else:
-            print(f"❗ Unhandled update type: {update}")
-
-    def start(self):
-        self.client.start()
-
-        try:
-            for topic_key, topic_value in self.conf["subscribed_topics"].items():
-                self.client.mySubscribe(topic_value)
-                print(f"✅ Subscribed to topic: {topic_key}")
-
-            # 👇 改成 handle_update，自己处理所有 update 类型
-            MessageLoop(self.bot, self.handle_update).run_as_thread()
-            print("✅ Message loop started")
-
-        except KeyError as e:
-            print(f"❌ Error in subscribed_topics format: {e}")
+    #         print(f"❌ Error in subscribed_topics format: {e}")
 
         
     def stop(self):
@@ -569,7 +592,7 @@ class Telegrambot():
                 self.bot.sendMessage(chat_id, tosend)
             except Exception as e:
                 self.bot.sendMessage(chat_id, f"Failed")
-                
+
 def start_cherrypy(telegrambot):
     cherrypy.config.update({'server.socket_port': 8086, 'server.socket_host': '0.0.0.0'})
     conf = {
@@ -581,29 +604,76 @@ def start_cherrypy(telegrambot):
     # Ensure 'service' is defined properly before this
     cherrypy.tree.mount(telegrambot, '/', conf)
     cherrypy.engine.start()
-    cherrypy.engine.block()
-        
-if __name__ == "__main__":
-    # configFile = input("Enter the location of configuration file: ")
-    # if len(configFile) == 0:
-    #     configFile = "TelegramBot/configuration.json"
+
+def main():
     configFile = "teleconfig.json"
     with open(configFile) as config_file:
         config_dict = json.load(config_file)
+    
     # Register the service at startup
     register_service(config_dict, config_dict["service_catalog"])    
     print("Telegram Service Initialized and Registered")
+    
     telegrambot = Telegrambot(config_dict)
+
     # Start CherryPy in a separate thread
-    cherrypy_thread = threading.Thread(target=start_cherrypy,args=(telegrambot,))
+    cherrypy_thread = threading.Thread(target=start_cherrypy, args=(telegrambot,))
     cherrypy_thread.start()
+
+    # Start the Telegram bot
     telegrambot.start()
 
     print('waiting ...')
 
-# Keep the program running.
-    while (True):
-        if input() == 'q':
+    # Keep the program running until user enters 'q'
+    while True:
+        user_input = input()
+        if user_input == 'q':
             break
-    cherrypy.engine.exit()
-    telegrambot.stop()
+
+    # Graceful shutdown
+    cherrypy.engine.exit()  # Stop the CherryPy engine
+    telegrambot.stop()  # Stop the Telegram bot
+
+    # Wait for CherryPy thread to finish before exiting
+    cherrypy_thread.join()
+
+if __name__ == "__main__":
+    main()
+
+
+# def start_cherrypy(telegrambot):
+#     cherrypy.config.update({'server.socket_port': 8086, 'server.socket_host': '0.0.0.0'})
+#     conf = {
+#         '/': {
+#             'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+#             'tools.sessions.on': True
+#         }
+#     }
+#     # Ensure 'service' is defined properly before this
+#     cherrypy.tree.mount(telegrambot, '/', conf)
+#     cherrypy.engine.start()
+#     cherrypy.engine.block()
+
+       
+# if __name__ == "__main__":
+#     configFile = "teleconfig.json"
+#     with open(configFile) as config_file:
+#         config_dict = json.load(config_file)
+#     # Register the service at startup
+#     register_service(config_dict, config_dict["service_catalog"])    
+#     print("Telegram Service Initialized and Registered")
+#     telegrambot = Telegrambot(config_dict)
+#     # Start CherryPy in a separate thread
+#     cherrypy_thread = threading.Thread(target=start_cherrypy,args=(telegrambot,))
+#     cherrypy_thread.start()
+#     telegrambot.start()
+
+#     print('waiting ...')
+
+# # Keep the program running.
+#     while (True):
+#         if input() == 'q':
+#             break
+#     cherrypy.engine.exit()
+#     telegrambot.stop()
