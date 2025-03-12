@@ -90,7 +90,7 @@ The Thingspeak Reader saves data as CSV files, where each room has a separate CS
 
 On startup, the service registers itself with the service catalog to ensure discoverability.
 
-Registration Process
+**Registration Process**
 
 1. The service sends a registration request to the catalog.
 
