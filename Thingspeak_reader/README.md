@@ -46,7 +46,7 @@ This service periodically fetches data from ThingSpeak and stores it locally, en
 
 The service requires two configuration files:
 
--`config_thingspeak.json`: Defines the ThingSpeak API endpoints and channels to retrieve data from.
+-```config_thingspeak.json```: Defines the ThingSpeak API endpoints and channels to retrieve data from.
 -
 
 ---
