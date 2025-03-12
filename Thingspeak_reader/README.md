@@ -49,6 +49,7 @@ At startup, the service registers itself with the service catalog using the `reg
 - Retrieved data is stored in CSV files, **overwriting** previous data with the latest snapshot from ThingSpeak.  
 - Files are named as follows:  
 ```thingspeak_data_<channel_name>.csv```
+
 For example, data for the **Entrance Room** would be stored as:
 ```thingspeak_data_entrance.csv```
 
