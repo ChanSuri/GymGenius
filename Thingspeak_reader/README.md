@@ -46,70 +46,59 @@ This service periodically fetches data from ThingSpeak and stores it locally, en
 
 The service requires two configuration files:
 
--```config_thingspeak.json```: Defines the ThingSpeak API endpoints and channels to retrieve data from.
--
+- `config_thingspeak.json`: Defines the ThingSpeak API endpoints and channels to retrieve data from.
+- `config_thingspeak_reader.json`: Defines the service registration details and endpoint information.
+
 
 ---
 ## Usage
 
-### Service Registration
-At startup, the service registers itself with the service catalog using the `register_service` function from `registration_functions.py`.
+### Data Collection
 
+The **Thingspeak Reader** fetches data periodically from ThingSpeak and saves it in CSV format. It reads:
+-**Temperature and Humidity**
+-**Current Occupancy**
+-**Machine Availability** (for cardio and lifting room)
 
-### Periodic Updates
-- TA_reader fetches new data from each configured **ThingSpeak channel** at a predefined **update interval** (e.g., 30 seconds).  
-- Retrieved data is stored in CSV files, **overwriting** previous data with the latest snapshot from ThingSpeak.  
-- Files are named as follows:  ```thingspeak_data_<channel_name>.csv```
+## HTTP GET Requests for Historical Data
 
-For example, data for the **Entrance Room** would be stored as:
-```thingspeak_data_entrance.csv```
+To retrieve historical data for a specific channel, send a GET request:
 
-### Retrieve Historical Data
-- To access a specific room’s historical data, make an HTTP **GET request** to the TA_reader endpoint, specifying the `channel` query parameter.  
-- Example request using:
-```http://localhost:8089/?channel=entrance"```
-**Response**: The service returns the CSV file content for the requested channel (e.g., entrance).
-If the channel does not exist or the CSV file is unavailable, the service returns a 404 Not Found error.
+`"http://thingspeak_reader:8089/thingspeak_adaptor?channel=entrance"`
 
----
+This will return the CSV file containing historical records.
 
-## Dynamic Configuration from the Service Catalog
+Available channels (defined in `config_thingspeak.json`):
 
-At startup, **TA_reader** can optionally fetch configuration details by issuing a **GET request** to a **service catalog**. These details may include:
+-**Entrance**
 
-- **ThingSpeak Channels**: A list of channels (`IDs`, `read API keys`) to poll for each room or sensor group.
-- **Update Interval**: How often (**in seconds**) TA_reader should request new data from **ThingSpeak**.
-- **CSV Storage Paths** (if needed): Where to store the CSV files (by default, in the same directory).
-- **Service Endpoint**: The HTTP endpoint for external clients to access the CSV files, e.g.:
-`http://thingspeak_reader:8089`
-- **Registration Settings**: Information for registering or updating the service’s entry in the catalog (e.g., `service ID`, `status`, and `description`).
+-**Changing Room**
 
-After fetching this information, **TA_reader**:
-1. **Starts polling** the specified channels at the indicated interval.
-2. **Generates or updates** local CSV files.
-3. **Serves** them via **HTTP GET requests** on the configured endpoint.
+-**Cardio Room**
+
+-**Lifting Room**
 
 ---
 
-## ThingSpeak Configuration
+## Historical Data Handling
 
-TA_reader also relies on ThingSpeak-specific details, typically found in a local JSON file (e.g., config_thingspeak.json). For each channel:
-
--**channel_id**: The numerical ID representing a ThingSpeak channel.
--**read_api_key**: The API key enabling read-access to that channel.
--**fields**: A mapping of your preferred field names (e.g., temperature, humidity) to the actual ThingSpeak field numbers (field1, field2, etc.).
-
----
+The Thingspeak Reader saves data as CSV files, where each room has a separate CSV file (`thingspeak_data_<channel_name>.csv`).
 
 ---
 
 ## Service Registration
 
-At startup, the Thingspeak Reader registers itself with the service catalog using the `register_service` function. This allows external systems to query the service's status and details.
+On startup, the service registers itself with the service catalog to ensure discoverability.
 
-- **Service ID**: `thingspeak_reader`
-- **Description**: "Generates historical records on occupancy, usage, and conditions for each room"
-- **Endpoint**: The service registers an endpoint that can be used for monitoring or management, such as `http://thingspeak_reader:8080/thingspeak_reader`.
+### Registration Process
+
+1. The service sends a registration request to the catalog.
+
+2. If already registered, it updates the registration timestamp.
+
+3. On shutdown, it deregisters itself.
+
+---
 
 ## Shutdown and Cleanup
 
@@ -118,6 +107,3 @@ To stop the service gracefully, press `Ctrl+C`. This triggers the signal handler
 - Stop the MQTT client and cleanly shut down all processes.
 
 The service ensures that the MQTT client disconnects properly and that the ThingSpeak data stream is closed without any interruptions.
-
-
-
