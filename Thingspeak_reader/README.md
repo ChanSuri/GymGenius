@@ -31,15 +31,10 @@ This service periodically fetches data from ThingSpeak and stores it locally, en
 ## Installation
 
 ### Prerequisites
-- **Python 3.x**
-- **requests**
-- **pandas**
-- **cherrypy**
-- **json**
-- **threading**
-- **signal**
-- **os**
-- **time**
+- Python 3.x
+- `paho-mqtt` library
+- `requests` library (for HTTP communication with ThingSpeak)
+- `cherrypy` library (for handling GET requests for historical data)
 
 ---
 ## Configuration
