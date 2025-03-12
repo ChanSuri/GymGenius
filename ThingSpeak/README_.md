@@ -1,4 +1,4 @@
-# Thingspeak Adaptor 
+# Thingspeak Adaptor & ThingSpeak Integration
 
 ## Table of Contents
 - [Overview](#overview)
@@ -8,6 +8,7 @@
 - [MQTT Topics](#mqtt-topics)
 - [ThingSpeak Configuration](#thingspeak-configuration)
 - [Service Registration](#service-registration)
+- [Historical Data Handling](#historical-data-handling)
 - [Shutdown and Cleanup](#shutdown-and-cleanup)
 
 ---
@@ -15,12 +16,16 @@
 ## Overview
 The **Thingspeak Adaptor** is a microservice designed to collect real-time environmental data, occupancy status, and machine availability in a gym environment. It listens to MQTT topics for aggregated machine availability, occupancy data, and room conditions (temperature and humidity). The service uploads the data to the **ThingSpeak** IoT analytics platform for storage and visualization using REST API calls.
 
+Additionally, **TA_reader** generates historical data files based on the data from each specific room. It processes real-time data and saves historical information for future analysis, helping to track the availability of machines, occupancy, and environmental conditions like temperature and humidity in individual rooms.
+
 ---
 
 ## Features
 - **MQTT Integration**: Subscribes to MQTT topics for machine availability, temperature, humidity, and occupancy.
 - **ThingSpeak Data Upload (via REST)**: Automatically uploads real-time data to configured ThingSpeak channels using RESTful HTTP requests.
 - **Service Registration and Deregistration**: Registers the service with a service catalog on startup and deregisters it on shutdown.
+- **Historical Data Generation (Room-Specific)**: The system saves historical information for each room (Entrance Room, Cardio Room, Lifting Room, and Changing Room) using **TA_reader**, generating separate files for tracking data from individual rooms.
+- **GET Requests for Historical Data**: Retrieve historical data files for each room via an HTTP GET request, allowing easy access to historical records.
 
 ---
 
@@ -30,6 +35,7 @@ The **Thingspeak Adaptor** is a microservice designed to collect real-time envir
 - Python 3.x
 - `paho-mqtt` library
 - `requests` library (for HTTP communication with ThingSpeak)
+- `cherrypy` library (for handling GET requests for historical data)
 
 ---
 
@@ -42,6 +48,17 @@ The service collects data from MQTT topics and processes them in real time. Supp
 - **Aggregated Machine Availability** for various gym machines (e.g., treadmills, elliptical trainers).
 
 Once data is collected, it is uploaded to ThingSpeak via REST API calls, where it can be visualized and analyzed.
+
+In addition, **TA_reader** processes this real-time data and generates files that store historical information for each room separately. These historical records provide insights into the occupancy, availability, usage, and environmental conditions in the *Cardio Room*, *Lifting Room*, *Changing Room*, and *Entrance Room*.
+
+### GET Requests for Historical Data
+You can retrieve historical data files for each room by making a GET request to the `TA_reader` endpoint. For example, to retrieve the data for the **Entrance Room**, use the following URL format: [http://thingspeak_adaptor:8089/thingspeak_adaptor?channel=Entrance](http://thingspeak_adaptor:8089/thingspeak_adaptor?channel=Entrance)
+
+Replace `Entrance` with the name of the room you want to retrieve the data for. The available channels are:
+- Entrance
+- Changing Room
+- Cardio Room
+- Lifting Room
 
 ---
 
@@ -166,6 +183,16 @@ At startup, the Thingspeak Adaptor registers itself with the service catalog usi
 
 ---
 
+## Historical Data Handling
+
+**TA_reader** processes the real-time data collected by the Thingspeak Adaptor and generates historical data files for each individual room. This allows the gym to maintain detailed historical records, which can be used for analysis, reporting, or predictive maintenance.
+
+- **Room-Specific Data Files**: Historical data is saved separately for each room, ensuring that machine availability, occupancy, and environmental conditions (temperature, humidity) are tracked at a granular level.
+- **File Structure**: Separate files are generated for rooms such as the *Entrance Room*, *Cardio Room*, *Lifting Room*, and *Changing Room*, allowing detailed analysis of machine usage, environmental conditions, and occupancy trends over time.
+- **GET Requests**: Access historical data files via HTTP requests to easily retrieve room-specific data for further analysis.
+
+---
+
 ## Shutdown and Cleanup
 
 To stop the service gracefully, press `Ctrl+C`. This triggers the signal handler to:
@@ -173,5 +200,6 @@ To stop the service gracefully, press `Ctrl+C`. This triggers the signal handler
 - Stop the MQTT client and cleanly shut down all processes.
 
 The service ensures that the MQTT client disconnects properly and that the ThingSpeak data stream is closed without any interruptions.
+
 
 

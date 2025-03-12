@@ -1,9 +1,9 @@
 {
     "service_id": "thingspeak_adaptor",
-    "description": "Handles ThingSpeak data uploads and CSV generation",
+    "description": "Manages data uploads to ThingSpeak",
     "status": "active",
     "service_catalog": "http://service_catalog:8080",
-    "endpoint": "http://thingspeak_adaptor:8089/thingspeak_adaptor/?channel=entrance",
+    "endpoint": null,
     "subscribed_topics": {
         "current_occupancy": "gym/occupancy/current",
         "enviroments": "gym/environment/<roomID>",
