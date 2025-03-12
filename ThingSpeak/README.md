@@ -1,4 +1,4 @@
-# Thingspeak Adaptor & ThingSpeak Integration
+# Thingspeak Adaptor 
 
 ## Table of Contents
 - [Overview](#overview)
