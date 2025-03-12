@@ -137,15 +137,49 @@ class Telegrambot():
             return []
         
     #MQTT        
+    # def start(self):
+    #     self.client.start()
+    #     try:
+    #         for topic_key, topic_value in self.conf["subscribed_topics"].items():
+    #             self.client.mySubscribe(topic_value)
+    #             print(f"Subscribed to topic: {topic_key}")
+    #         MessageLoop(self.bot,{'chat': self.on_chat_message,'callback_query': self.on_callback_query}).run_as_thread()
+    #     except KeyError as e:
+    #         print(f"Error in subscribed_topics format: {e}")
+    def handle_update(self, update):
+        print(f"🔔 New update received:\n{update}")
+
+        if 'message' in update:
+            # 普通聊天消息
+            self.on_chat_message(update['message'])
+
+        elif 'callback_query' in update:
+            # 按钮点击
+            self.on_callback_query(update['callback_query'])
+
+        elif 'my_chat_member' in update:
+            # Bot 被踢出 or 被加进群
+            print(f"⚠️ Bot chat member status changed: {update['my_chat_member']}")
+            # 你可以在这里做逻辑处理，比如提示管理员等等
+
+        else:
+            print(f"❗ Unhandled update type: {update}")
+
     def start(self):
         self.client.start()
+
         try:
             for topic_key, topic_value in self.conf["subscribed_topics"].items():
                 self.client.mySubscribe(topic_value)
-                print(f"Subscribed to topic: {topic_key}")
-            MessageLoop(self.bot,{'chat': self.on_chat_message,'callback_query': self.on_callback_query}).run_as_thread()
+                print(f"✅ Subscribed to topic: {topic_key}")
+
+            # 👇 改成 handle_update，自己处理所有 update 类型
+            MessageLoop(self.bot, self.handle_update).run_as_thread()
+            print("✅ Message loop started")
+
         except KeyError as e:
-            print(f"Error in subscribed_topics format: {e}")
+            print(f"❌ Error in subscribed_topics format: {e}")
+
         
     def stop(self):
         self.workingStatus = False
