@@ -55,7 +55,7 @@ For example, data for the **Entrance Room** would be stored as: thingspeak_data_
 
 ### Retrieve Historical Data
 - To access a specific room’s historical data, make an HTTP **GET request** to the TA_reader endpoint, specifying the `channel` query parameter.  
-- Example request using `curl`:
+- Example request using:
 ```http://localhost:8089/?channel=entrance"```
 **Response**: The service returns the CSV file content for the requested channel (e.g., entrance).
 If the channel does not exist or the CSV file is unavailable, the service returns a 404 Not Found error.
