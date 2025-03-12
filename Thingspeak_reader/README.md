@@ -56,9 +56,9 @@ The service requires two configuration files:
 ### Data Collection
 
 The **Thingspeak Reader** fetches data periodically from ThingSpeak and saves it in CSV format. It reads:
--**Temperature and Humidity**
--**Current Occupancy**
--**Machine Availability** (for cardio and lifting room)
+- **Temperature and Humidity**
+- **Current Occupancy**
+- **Machine Availability** (for cardio and lifting room)
 
 ## HTTP GET Requests for Historical Data
 
