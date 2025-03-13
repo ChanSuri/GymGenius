@@ -84,7 +84,7 @@ At startup, the Thingspeak Reader registers itself with the service catalog usin
 
 - **Service ID**: `thingspeak_reader`
 - **Description**: "Generates historical records on occupancy, usage, and conditions for each room"
-- **Endpoint**: The service registers an endpoint that can be used for monitoring or management, such as `http://thingspeak_reader:8089/thingspeak_reader`.
+- **Endpoint**: The service registers an endpoint that can be used for monitoring or management, such as `"http://thingspeak_reader:8089/thingspeak_adaptor/?channel=<channel_name>"`.
 
 ---
 
