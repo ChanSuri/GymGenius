@@ -292,6 +292,8 @@ class Telegrambot():
             elif message == "Logout":
                 if self.check_auth(chat_id)==True:
                     del self.chat_auth[str(chat_id)]
+                    mark_up = ReplyKeyboardMarkup(keyboard=[['Client'], ['Administrator']],one_time_keyboard=True)
+                    self.bot.sendMessage(chat_id, text='Select your role for other options:', reply_markup=mark_up)
                 else:
                     self.bot.sendMessage(chat_id, "You haven't logged in!")
             elif message == "Return":
@@ -414,7 +416,7 @@ class Telegrambot():
                 f"💧 Humidity: {hum}%"
             )
             self.bot.sendMessage(chat_id, message)
-            mark_up = ReplyKeyboardMarkup(keyboard=[['Control'], ['Envdata'],['Suggestions'],['Return']],one_time_keyboard=True)
+            mark_up = ReplyKeyboardMarkup(keyboard=[['Control'], ['Envdata'],['Suggestions'],['Logout']],one_time_keyboard=True)
             self.bot.sendMessage(chat_id, f"What else you want to do?", reply_markup=mark_up)
         
         except Exception as e:
