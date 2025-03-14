@@ -220,7 +220,7 @@ class Telegrambot():
             if chat_id in self.user_states and self.user_states[chat_id] != None:
                 if self.user_states[chat_id] == 'awaiting_suggestion':
                     if message == "quit":
-                        self.bot.sendMessage(chat_id, 'What else do you want to know about data in gym? [/seedata]')
+                        self.bot.sendMessage(chat_id, 'What else do you want to know about data in gym?')
                     else:
                         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         with open("suggestions.txt", "a") as file:
