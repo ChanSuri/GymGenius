@@ -11,15 +11,16 @@
 
 
 ## Overview
-The **Temperature Optimization Service** is a microservice designed to manage and control the HVAC system of a gym. The service uses MQTT to receive real-time environmental data (temperature and humidity), occupancy status, and administrator commands, and then makes decisions on whether to turn the HVAC system on or off based on predefined temperature thresholds, gym schedule, and occupancy.
+The **Temperature Optimization Service** is a microservice designed to manage and control the HVAC system of a gym. The service uses MQTT to receive real-time environmental data (temperature and humidity), occupancy status, and administrator commands, and then makes decisions on whether to turn the HVAC system on or off based on predefined temperature thresholds, gym schedule, and occupancy. It also features manual and automatic HVAC control modes with hysteresis to prevent frequent toggling.
 
 All information related to MQTT broker, temperature thresholds, and alert limits are dynamically retrieved from the service catalog via a GET request. The configuration file only contains the service catalog URL and MQTT topics to subscribe to.
 
 ## Features
 - **Dynamic Configuration**: The MQTT broker details, temperature thresholds, and alert limits, and gym schedule are fetched dynamically from the service catalog.
 - **MQTT Integration**: Subscribes to environmental data, occupancy updates, and administrator commands, and publishes HVAC control decisions.
-- **Threshold Management**: Dynamically updates temperature thresholds through MQTT messages and alerts when conditions exceed predefined limits.
+- **Threshold Management with Hysteresis**: Dynamically updates temperature thresholds through MQTT messages, prevents frequent toggling using a hysteresis approach, and alerts when conditions exceed predefined limits.
 - **Gym Schedule Awareness**: Controls HVAC based on the gym's opening hours, including pre-conditioning the environment before opening and shutting down when unoccupied before closing.
+- **Manual & Automatic Control Modes**: Allows the administrator to override automatic HVAC control and set specific modes (cool/heat) or revert back to automatic.
 
 ## Installation
 
