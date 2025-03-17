@@ -235,7 +235,8 @@ services:
     ports:
       - "1880:1880"        
     volumes:
-      - ./node_red_data:/data   
+      - ./node_red_data:/data 
+      - node_modules:/usr/src/node-red/node_modules  
     networks:
       - gym-genius-network
     depends_on:
