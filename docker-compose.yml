@@ -230,21 +230,21 @@ services:
 
   node_red:
     build:
-      context: ./node_red_data       # Dockerfile 所在目录
-      dockerfile: Dockerfile         # 默认就叫 Dockerfile 可省略
+      context: ./node_red_data 
+      dockerfile: Dockerfile   
     ports:
-      - "1880:1880"                  # Node-RED Web UI 端口
+      - "1880:1880"        
     volumes:
-      - ./node_red_data:/data        # 持久化 flows、projects、lib（开发阶段用）
+      - ./node_red_data:/app   
     networks:
       - gym-genius-network
     depends_on:
       - service_catalog
       - resource_catalog
     environment:
-      - NODE_RED_ENABLE_PROJECTS=true  # 启用项目功能
-      - TZ=Europe/Rome                 # 可选，时区
-    restart: unless-stopped            # 推荐加上，异常停止自动重启
+      - NODE_RED_ENABLE_PROJECTS=true 
+      - TZ=Europe/Rome             
+    restart: unless-stopped      
 
 
 networks:
