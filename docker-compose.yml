@@ -229,18 +229,22 @@ services:
       - SERVICE_CATALOG_URL=http://service_catalog:8080
 
   node_red:
-    image: nodered/node-red
+    build:
+      context: ./node_red_data       # Dockerfile 所在目录
+      dockerfile: Dockerfile         # 默认就叫 Dockerfile 可省略
     ports:
-      - "1880:1880"
+      - "1880:1880"                  # Node-RED Web UI 端口
     volumes:
-      - ./node_red_data:/data  #  Node-RED data
+      - ./node_red_data:/data        # 持久化 flows、projects、lib（开发阶段用）
     networks:
       - gym-genius-network
     depends_on:
       - service_catalog
       - resource_catalog
     environment:
-      - NODE_RED_ENABLE_PROJECTS=true  # 可选，启用项目功能
+      - NODE_RED_ENABLE_PROJECTS=true  # 启用项目功能
+      - TZ=Europe/Rome                 # 可选，时区
+    restart: unless-stopped            # 推荐加上，异常停止自动重启
 
 
 networks:
