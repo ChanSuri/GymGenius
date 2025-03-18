@@ -666,33 +666,9 @@
             }
         }
     },
-    "node-red-contrib-mqtt-auto": {
-        "name": "node-red-contrib-mqtt-auto",
-        "version": "1.0.3",
-        "local": true,
-        "user": true,
-        "nodes": {
-            "mqtt-auto": {
-                "name": "mqtt-auto",
-                "types": [
-                    "mqtt-auto-unsubscribe",
-                    "mqtt-auto-subscribe",
-                    "mqtt-auto-connect",
-                    "mqtt-auto-disconnect",
-                    "mqtt-auto-publish",
-                    "mqtt-auto-status"
-                ],
-                "enabled": true,
-                "local": true,
-                "user": false,
-                "module": "node-red-contrib-mqtt-auto",
-                "file": "/data/node_modules/node-red-contrib-mqtt-auto/mqtt-auto.js"
-            }
-        }
-    },
     "node-red-contrib-telegrambot": {
         "name": "node-red-contrib-telegrambot",
-        "version": "16.1.3",
+        "version": "16.3.0",
         "local": true,
         "user": true,
         "nodes": {
