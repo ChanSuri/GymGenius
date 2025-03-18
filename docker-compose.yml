@@ -229,22 +229,19 @@ services:
       - SERVICE_CATALOG_URL=http://service_catalog:8080
 
   node_red:
-    build:
-      context: ./node_red_data 
-      dockerfile: Dockerfile   
+    image: nodered/node-red:latest
     ports:
-      - "1880:1880"        
+      - "1880:1880"
     volumes:
-      - ./node_red_data:/data 
+      - ./node_red_data:/data  #  Node-RED data
     networks:
       - gym-genius-network
     depends_on:
       - service_catalog
       - resource_catalog
     environment:
-      - NODE_RED_ENABLE_PROJECTS=true 
-      - TZ=Europe/Rome             
-    restart: unless-stopped      
+      # - NODE_RED_ENABLE_PROJECTS=true  # 可选，启用项目功能   
+      - TZ=Europe/Amsterdam 
 
 
 networks:
