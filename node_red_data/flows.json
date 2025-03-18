@@ -2,7 +2,7 @@
     {
         "id": "83999a84a6e2ec86",
         "type": "tab",
-        "label": "流程 1",
+        "label": "Flow 1",
         "disabled": false,
         "info": "",
         "env": []
@@ -10,7 +10,7 @@
     {
         "id": "8e771e50a977c0f3",
         "type": "tab",
-        "label": "流程 3",
+        "label": "Flow 2",
         "disabled": false,
         "info": "",
         "env": []
