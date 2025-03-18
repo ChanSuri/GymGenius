@@ -72,7 +72,7 @@ class SimulatedDHT11Sensor:
                 return events
 
             # Wait before generating the next reading
-            time.sleep(0.5)
+            time.sleep(1)
 
         return events
 

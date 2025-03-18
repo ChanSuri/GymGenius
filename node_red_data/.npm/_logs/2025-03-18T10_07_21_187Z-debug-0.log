@@ -1,0 +1,26 @@
+0 verbose cli /usr/local/bin/node /usr/local/bin/npm
+1 info using npm@10.8.2
+2 info using node@v20.18.3
+3 silly config load:file:/usr/local/lib/node_modules/npm/npmrc
+4 silly config load:file:/data/.npmrc
+5 silly config load:file:/usr/src/node-red/.npmrc
+6 silly config load:file:/usr/local/etc/npmrc
+7 verbose title npm install node-red-contrib-telegrambot@16.3.0
+8 verbose argv "install" "--no-audit" "--no-update-notifier" "--no-fund" "--save" "--save-prefix" "~" "--omit" "dev" "--engine-strict" "node-red-contrib-telegrambot@16.3.0"
+9 verbose logfile logs-max:10 dir:/data/.npm/_logs/2025-03-18T10_07_21_187Z-
+10 verbose logfile /data/.npm/_logs/2025-03-18T10_07_21_187Z-debug-0.log
+11 silly packumentCache heap:2197815296 maxSize:549453824 maxEntrySize:274726912
+12 silly logfile done cleaning log files
+13 silly idealTree buildDeps
+14 silly fetch manifest node-red-contrib-telegrambot@16.3.0
+15 silly packumentCache full:https://registry.npmjs.org/node-red-contrib-telegrambot cache-miss
+16 http fetch GET 200 https://registry.npmjs.org/node-red-contrib-telegrambot 1396ms (cache updated)
+17 silly packumentCache full:https://registry.npmjs.org/node-red-contrib-telegrambot set size:undefined disposed:false
+18 silly placeDep ROOT node-red-contrib-telegrambot@16.3.0 REPLACE for: node-red-project@0.0.1 want: 16.3.0
+19 silly reify moves {}
+20 verbose cwd /data
+21 verbose os Linux 5.15.167.4-microsoft-standard-WSL2
+22 verbose node v20.18.3
+23 verbose npm  v10.8.2
+24 verbose exit 0
+25 info ok
