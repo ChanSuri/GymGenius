@@ -14,21 +14,23 @@ class DeviceConnector:
     exposed = True
 
     def __init__(self, config):
-        # Load configuration
+        # Load service and resource catalog URLs from the config
         self.config = config
         self.service_catalog_url = self.config['service_catalog']
         self.resource_catalog_url = self.config['resource_catalog']
         self.simulation_params = self.config.get("simulation_parameters", {})
         self.location = self.config.get("location", "unknown")
 
-        # HVAC states and sensors
+        # Initialize HVAC control variables
         self.hvac_state = 'off'  # HVAC is initially off
-        self.hvac_mode = None  # No mode when HVAC is off
+        self.hvac_mode = None  # Mode (cool/heat) only relevant when HVAC is on
         self.hvac_last_turned_on = None
 
+        # Store real vs simulated temperatures per room
         self.real_temperature = {}  # Actual temperature from sensors
         self.simulated_temperature = {}  # Adjusted temperature
 
+        # Retrieve MQTT broker information and configure the MQTT client    
         self.mqtt_broker, self.mqtt_port = self.get_mqtt_info_from_service_catalog()
         self.client = mqtt.Client()
         self.client.on_message = self.on_message
@@ -41,13 +43,14 @@ class DeviceConnector:
 
         self.subscribe_to_topics()
 
-        # Enable required sensors
+        # Initialize the available sensors (based on config)
         self.enable_sensors()
 
-        # Perform device checks at initialization
+        # At startup, check and remove any inactive devices from the resource catalog
         self.check_and_delete_inactive_devices()
 
     def get_mqtt_info_from_service_catalog(self):
+        # Query the Service Catalog for MQTT broker information
         try:
             response = requests.get(self.service_catalog_url)
             if response.status_code == 200:
@@ -61,6 +64,7 @@ class DeviceConnector:
             return None, None
 
     def subscribe_to_topics(self):
+        # Subscribe the MQTT client to necessary topics defined in the config
         try:
             for topic_key, topic_value in self.config["subscribed_topics"].items():
                 self.client.subscribe(topic_value)
@@ -69,6 +73,7 @@ class DeviceConnector:
             print(f"Error in topics: {e}")
 
     def enable_sensors(self):
+        # Dynamically enable only the sensors specified in the config
         self.sensors = {}
         if self.config.get("enable_dht11", False):
             self.sensors["dht11"] = SimulatedDHT11Sensor(self.location)
@@ -78,8 +83,10 @@ class DeviceConnector:
             self.sensors["button"] = SimulatedButtonSensor()
 
     def simulate_and_publish_sensors(self):
+        # Continuous loop simulating sensors and publishing their data
         while True:
             try:
+                # For each enabled sensor, simulate events and publish data
                 if "dht11" in self.sensors:
                     events = self.sensors["dht11"].simulate_dht11_sensor(seconds=self.simulation_params.get("dht11_seconds", 5))
                     for event in events:
@@ -98,13 +105,14 @@ class DeviceConnector:
                     for event in events:
                         self.register_and_publish(event, event["event_type"])
 
-                time.sleep(5)
+                time.sleep(5) # Control simulation frequency
             except KeyboardInterrupt:
                 print("Simulation interrupted")
                 break
 
     def register_and_publish(self, input_data, topic_type):
-        """Register device and publish data to MQTT."""
+        """Handles device registration before publishing data to MQTT.
+        Registration ensures that the device is known to the Resource Catalog."""
         registration_response = self.register_device(input_data)
         registration_data = json.loads(registration_response)
 
@@ -119,7 +127,7 @@ class DeviceConnector:
             print(f"Device registration failed: {registration_data}")
 
     def register_device(self, input_data):
-        """Register or update device in the Resource Catalog."""
+        """Register or update device entry in the Resource Catalog."""
         device_id = input_data.get("device_id")
         device_type = input_data.get("type")
         status = input_data.get("status")
@@ -136,6 +144,10 @@ class DeviceConnector:
             return json.dumps({"status": "error", "message": str(e)})
 
     def publish_data(self, input_data, topic_type):
+        """
+        Publishes general sensor data to the MQTT broker.
+        The topic is built dynamically by replacing placeholders with actual values.
+        """
         try:
             topic = self.config["published_topics"].get(topic_type, "")
             topic = topic.replace('<machineID>', input_data.get("device_id", "unknown"))
@@ -152,7 +164,9 @@ class DeviceConnector:
             print(f"Error in publishing data to topic '{topic_type}': {e}")
 
     def publish_data_occupancy(self, input_data, topic_type):
-        """Publish data to MQTT."""
+        """
+        Publishes occupancy data (entries/exits) to the appropriate MQTT topic.
+        """
         try:
             if topic_type == "entry":
                 topic = self.config["published_topics"]["entries"]
@@ -169,7 +183,10 @@ class DeviceConnector:
             print(f"Error in publishing data: {e}")  
 
     def publish_environment_data(self, input_data):
-        """Publish temperature and humidity data to MQTT, considering HVAC state and residual effects."""
+        """
+        Publishes temperature and humidity data to the environment topic.
+        Simulates HVAC effect on the temperature values before publishing.
+        """
         try:
             # Extract temperature and humidity from the sensor data
             senml_record = input_data.get("senml_record", {})
@@ -177,9 +194,10 @@ class DeviceConnector:
             room = input_data.get("location")
 
             if room and temperature is not None:
-                self.real_temperature[room] = temperature  # Update the actual temperature from the sensor
+                # Store the real temperature from the sensor
+                self.real_temperature[room] = temperature 
 
-                # Modify temperature based on HVAC status and residual effect
+                # Compute simulated temperature based on HVAC effect
                 modified_temperature = self.update_simulated_temperature(room)
 
                 # Update the SenML record with the modified temperature
@@ -199,35 +217,7 @@ class DeviceConnector:
         except Exception as e:
             print(f"Error in publishing environment data: {e}")
             return json.dumps({"status": "error", "message": str(e)})
-              
-
-    # def update_simulated_temperature(self, room):
-    #     """Update the simulated temperature for a specific room based on HVAC state and residual effects."""
-    #     if room not in self.simulated_temperature:
-    #         # Initialize simulated temperature for the room
-    #         self.simulated_temperature[room] = self.real_temperature.get(room, 20.0)
-
-    #     if self.hvac_state == 'on' and self.hvac_last_turned_on:
-    #         elapsed_time = datetime.now() - self.hvac_last_turned_on
-    #         minutes_running = elapsed_time.total_seconds() / 60
-
-    #         # Apply HVAC effects: e.g., 0.5 degrees per 15 minutes
-    #         temp_change = (minutes_running // 0.1) * 0.5
-
-    #         if self.hvac_mode == 'cool':
-    #             self.simulated_temperature[room] -= temp_change
-    #         elif self.hvac_mode == 'heat':
-    #             self.simulated_temperature[room] += temp_change
-    #     else:
-    #         # Gradual return to real temperature
-    #         if self.simulated_temperature[room] < self.real_temperature.get(room, 20.0):
-    #             self.simulated_temperature[room] += 0.1
-    #         elif self.simulated_temperature[room] > self.real_temperature.get(room, 20.0):
-    #             self.simulated_temperature[room] -= 0.1
-
-    #     # Clamp temperature to realistic bounds
-    #     self.simulated_temperature[room] = max(min(self.simulated_temperature[room], 35), 15)
-    #     return round(self.simulated_temperature[room], 2)
+        
 
     def update_simulated_temperature(self, room):
         """
@@ -243,7 +233,7 @@ class DeviceConnector:
 
         # If HVAC is on, gradually move the temperature up or down by a small step
         if self.hvac_state == 'on' and self.hvac_last_turned_on:
-            step = 0.3  # e.g. 0.3 °C at each iteration
+            step = 0.3  # HVAC changes temperature by 0.3°C per step
             if self.hvac_mode == 'cool':
                 self.simulated_temperature[room] -= step
             elif self.hvac_mode == 'heat':
@@ -251,8 +241,8 @@ class DeviceConnector:
 
         else:
             # If the HVAC is off, or hasn't been turned on yet,
-            # move the simulated temperature gently back toward the "real" sensor reading
-            step_back = 0.1
+            # move the simulated temperature back toward the "real" sensor reading
+            step_back = 0.1 # Natural recovery step towards real temp
             current_real_temp = self.real_temperature.get(room, 20.0)
 
             if self.simulated_temperature[room] < (current_real_temp - 0.1):
@@ -263,7 +253,7 @@ class DeviceConnector:
         # Clamp the temperature to realistic bounds
         self.simulated_temperature[room] = max(min(self.simulated_temperature[room], 35), 15)
 
-        # Return a rounded value (optional)
+        # Return a rounded value - We can decide to not round
         return round(self.simulated_temperature[room], 2)
 
 
@@ -306,6 +296,10 @@ class DeviceConnector:
             print("Invalid device_id for deletion.")
 
     def on_message(self, client, userdata, message):
+        """
+        Callback for processing incoming MQTT messages.
+        It listens for HVAC control commands and updates the system's state accordingly.
+        """
         try:
             payload = json.loads(message.payload.decode())
             print(f"Received payload: {payload}")
@@ -340,10 +334,16 @@ class DeviceConnector:
 
     @cherrypy.tools.json_out()
     def GET(self, *uri, **params):
+        """
+        RESTful GET endpoint to provide the current simulated environment state or HVAC status.
+        - /environment returns the simulated temperature and humidity.
+        - /hvac_status returns the current HVAC operation mode.
+        """
         if len(uri) == 0:
             return {"status": "error", "message": "No endpoint specified."}
 
         if uri[0] == "environment":
+            # Provide current temperature and humidity states
             temperature = self.simulated_temperature
             humidity = self.real_temperature
 
@@ -362,6 +362,7 @@ class DeviceConnector:
             }
 
         if uri[0] == "hvac_status":
+            # Provide current HVAC operation state
             return {
                 "status": "success",
                 "hvac_state": self.hvac_state,
@@ -372,17 +373,26 @@ class DeviceConnector:
         return {"status": "error", "message": f"Unknown endpoint: {uri[0]}"}
 
     def start_simulation_thread(self):
-        """Start the thread for sensors' simulation"""
+        """
+        Starts a dedicated thread to handle continuous sensor simulation and MQTT publishing.
+        This prevents blocking the main server loop.
+        """
         self.simulation_thread = threading.Thread(target=self.simulate_and_publish_sensors)
-        self.simulation_thread.daemon = True  # Thread closes when the main program ends.
+        self.simulation_thread.daemon = True  # Ensures the thread exits when the main program does
         self.simulation_thread.start()
 
     def stop(self):
+        """
+        Gracefully stops the MQTT loop when the service is shutting down.
+        """
         self.client.loop_stop()
         print("MQTT client stopped")
 
 def initialize_service(config_dict):
-    """Initialize and register the service."""
+    """
+    Register the DeviceConnector service in the Service Catalog.
+    Called during startup to notify the system that this device is online.
+    """
     register_service(config_dict, config_dict["service_catalog"])
     print("Device Connector Service Initialized and Registered")        
 

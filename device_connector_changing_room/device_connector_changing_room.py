@@ -135,7 +135,7 @@ class DeviceConnector:
         except Exception as e:
             return json.dumps({"status": "error", "message": str(e)})
 
-    def publish_data(self, input_data, topic_type): ## errori
+    def publish_data(self, input_data, topic_type):
         try:
             topic = self.config["published_topics"].get(topic_type, "")
             topic = topic.replace('<machineID>', input_data.get("device_id", "unknown"))
@@ -199,80 +199,6 @@ class DeviceConnector:
         except Exception as e:
             print(f"Error in publishing environment data: {e}")
             return json.dumps({"status": "error", "message": str(e)})
-        
-    ### INCLUDE HVAC messages
-        
-    # def publish_environment_data(self, input_data):
-    #     """Publish temperature and humidity data to MQTT, considering HVAC state and residual effects."""
-    #     try:
-    #         # Extract temperature and humidity from the sensor data
-    #         senml_record = input_data.get("senml_record", {})
-    #         temperature = next((e["v"] for e in senml_record["e"] if e["n"] == "temperature"), None)
-    #         room = input_data.get("location")
-
-    #         if room and temperature is not None:
-    #             self.real_temperature[room] = temperature  # Update the actual temperature from the sensor
-
-    #             # Modify temperature based on HVAC status and residual effect
-    #             modified_temperature = self.update_simulated_temperature(room)
-
-    #             # Update the SenML record with the modified temperature
-    #             for entry in senml_record["e"]:
-    #                 if entry["n"] == "temperature":
-    #                     entry["v"] = modified_temperature
-
-    #             # Add HVAC status to the message
-    #             hvac_status_message = "HVAC turned on" if self.hvac_state == 'on' else "HVAC turned off"
-
-    #             # Add the HVAC status to the payload
-    #             senml_record["hvac_status"] = {
-    #                 "status": self.hvac_state,
-    #                 "mode": self.hvac_mode if self.hvac_mode else "off",
-    #                 "message": hvac_status_message
-    #             }
-
-    #             # Convert the record to JSON and publish it to the MQTT topic
-    #             topic = self.config["published_topics"]["environment"].replace('<roomID>', room)
-    #             print(f"Publishing to topic: {topic}")
-    #             self.client.publish(topic, json.dumps(senml_record))
-    #             return json.dumps({"status": "success", "message": "Environment data and HVAC status published to MQTT"})
-
-    #         else:
-    #             raise ValueError("Missing room or temperature data.")
-
-    #     except Exception as e:
-    #         print(f"Error in publishing environment data: {e}")
-    #         return json.dumps({"status": "error", "message": str(e)})
-
-              
-
-    # def update_simulated_temperature(self, room):
-    #     """Update the simulated temperature for a specific room based on HVAC state and residual effects."""
-    #     if room not in self.simulated_temperature:
-    #         # Initialize simulated temperature for the room
-    #         self.simulated_temperature[room] = self.real_temperature.get(room, 20.0)
-
-    #     if self.hvac_state == 'on' and self.hvac_last_turned_on:
-    #         elapsed_time = datetime.now() - self.hvac_last_turned_on
-    #         minutes_running = elapsed_time.total_seconds() / 60
-
-    #         # Apply HVAC effects: e.g., 0.5 degrees per 5 minutes
-    #         temp_change = (minutes_running // 5) * 0.5
-
-    #         if self.hvac_mode == 'cool':
-    #             self.simulated_temperature[room] -= temp_change
-    #         elif self.hvac_mode == 'heat':
-    #             self.simulated_temperature[room] += temp_change
-    #     else:
-    #         # Gradual return to real temperature
-    #         if self.simulated_temperature[room] < self.real_temperature.get(room, 20.0):
-    #             self.simulated_temperature[room] += 0.1
-    #         elif self.simulated_temperature[room] > self.real_temperature.get(room, 20.0):
-    #             self.simulated_temperature[room] -= 0.1
-
-    #     # Clamp temperature to realistic bounds
-    #     self.simulated_temperature[room] = max(min(self.simulated_temperature[room], 35), 15)
-    #     return round(self.simulated_temperature[room], 2)
 
     def update_simulated_temperature(self, room):
             """
@@ -296,7 +222,7 @@ class DeviceConnector:
 
             else:
                 # If the HVAC is off, or hasn't been turned on yet,
-                # move the simulated temperature gently back toward the "real" sensor reading
+                # move the simulated temperature back toward the "real" sensor reading
                 step_back = 0.1
                 current_real_temp = self.real_temperature.get(room, 20.0)
 
@@ -308,7 +234,7 @@ class DeviceConnector:
             # Clamp the temperature to realistic bounds
             self.simulated_temperature[room] = max(min(self.simulated_temperature[room], 35), 15)
 
-            # Return a rounded value (optional)
+            # Return a rounded value
             return round(self.simulated_temperature[room], 2)
 
     def check_and_delete_inactive_devices(self):
@@ -348,35 +274,6 @@ class DeviceConnector:
                 print(f"Error during DELETE request: {e}")
         else:
             print("Invalid device_id for deletion.")
-
-    # def on_message(self, client, userdata, message):
-    #     try:
-    #         payload = json.loads(message.payload.decode())
-    #         print(f"Received payload: {payload}")
-    #         topic = message.topic
-
-    #         if f"gym/hvac/control/{self.location}" in topic:
-    #             control_command = payload.get('control_command')
-    #             mode = payload.get('mode', self.hvac_mode)
-
-    #             if control_command == 'turn_on':
-    #                 if self.hvac_state == 'off':
-    #                     self.hvac_state = 'on'
-    #                     self.hvac_last_turned_on = datetime.now()
-    #                     self.hvac_mode = mode
-    #                     print(f"HVAC turned ON in {self.hvac_mode} mode.")
-    #                     self.publish_hvac_status("HVAC turned on")
-    #             elif control_command == 'turn_off':
-    #                 if self.hvac_state == 'on':
-    #                     self.hvac_state = 'off'
-    #                     self.hvac_last_turned_on = None
-    #                     self.hvac_mode = None
-    #                     print("HVAC turned OFF.")
-    #                     self.publish_hvac_status("HVAC turned off")
-    #             else:
-    #                 print(f"Unknown HVAC command: {control_command}")
-    #     except Exception as e:
-    #         print(f"Error processing message: {e}")
 
     def on_message(self, client, userdata, message):
         try:
@@ -444,20 +341,6 @@ class DeviceConnector:
             }
 
         return {"status": "error", "message": f"Unknown endpoint: {uri[0]}"}
-    
-    # def publish_hvac_status(self, message):
-    #     """Pubblica lo stato attuale dell'HVAC sul topic della changing room."""
-    #     try:
-    #         topic = self.config["published_topics"]["environment"].replace('<roomID>', self.location)
-    #         payload = {
-    #             "device_id": "DeviceConnector_HVAC_Status",
-    #             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-    #             "status_message": message
-    #         }
-    #         self.client.publish(topic, json.dumps(payload))
-    #         print(f"Published HVAC status message to topic {topic}: {message}")
-    #     except Exception as e:
-    #         print(f"Error publishing HVAC status message: {e}")
 
 
     def start_simulation_thread(self):

@@ -1,4 +1,5 @@
-# Device Connector for Gym Management
+
+# Device Connector - Changing Room 
 
 ## Table of Contents
 - [Overview](#overview)
@@ -10,34 +11,40 @@
 - [Shutdown and Cleanup](#shutdown-and-cleanup)
 
 ## Overview
-The **Device Connector Service** is a microservice designed to manage and integrate various gym devices, such as sensors and HVAC systems. It connects to an MQTT broker to exchange messages regarding environment data, machine availability, and occupancy. It also ensures that devices are registered and monitored in the Resource Catalog, and inactive devices are removed if they have not sent updates in a while.
+The **Device Connector for the Changing Room** is a microservice designed to manage and integrate various gym devices, such as sensors and HVAC systems. It connects to an MQTT broker to exchange messages regarding environment data. It also ensures that devices are registered and monitored in the Resource Catalog, and inactive devices are removed if they have not sent updates in a while.
 
 ## Features
-- **Dynamic Room Configuration**: Retrieves room information dynamically from the Service Catalog, eliminating static configuration files.
-- **Device Registration**: Registers devices (e.g., sensors, HVAC systems) with the Resource Catalog.
-- **MQTT Integration**: Subscribes to and publishes messages on various MQTT topics related to occupancy, environment, and machine availability.
-- **HVAC Control**: Automatically controls the HVAC system based on incoming MQTT commands and environment data.
-- **Temperature Simulation**: Adjusts and simulates the temperature for each room, considering HVAC activity and gradual changes.
+- **DHT11 Sensor Simulation** for temperature and humidity
+- **Device Registration**
+- **MQTT Integration**: Subscribes to and publishes messages on various MQTT topics
+- **HVAC Control Management** with gradual temperature changes
+- **SenML-compliant MQTT Publishing**
 - **Device Inactivity Management**: Checks for inactive devices and deletes them from the Resource Catalog if they have been inactive for more than 3 days.
+- **REST API** through **CherryPy**
 
 ## Installation
-
 ### Prerequisites
 - Python 3.x
-- `paho-mqtt` library
-- `cherrypy` library
-- `requests` library
+- Required libraries: `paho-mqtt`, `cherrypy`, `requests`
+
+Install dependencies:
+```bash
+pip install paho-mqtt cherrypy requests
+```
 
 ## Usage
-
+### Start the Service
+```bash
+python device_connector_changing_room.py
+```
 ### Service Initialization
 The service initializes by:
-1. Loading configuration from a `config.json` file.
+1. Loading configuration from a `config_device_connector_changing_room.json` file.
 2. Retrieving **MQTT broker** and **port information** from the **Service Catalog**.
 3. Retrieving **room configurations** from the **Service Catalog**.
 4. Registering the service in the **Resource Catalog** using the `register_service` function.
 5. Connecting to the MQTT broker.
-6. Subscribing to various topics for machine availability, HVAC control, and entry/exit events.
+6. Subscribing to various topics for machine availability and HVAC control.
 7. Performing device checks at startup to delete inactive devices.
 
 ### Device Registration
@@ -47,13 +54,22 @@ The service registers devices with the Resource Catalog at startup using the `re
 The service periodically checks the **Resource Catalog** for devices that have not been updated in the last 3 days. If such devices are found, they are deleted from the catalog.
 
 ### MQTT Message Handling
-The service subscribes to topics related to HVAC control, machine availability, and occupancy entry/exit events. Based on incoming messages, it:
+The service subscribes to topics related to HVAC control and machine availability. Based on incoming messages, it:
 - Controls HVAC systems, adjusting the mode and on/off state for specific rooms.
 - Publishes availability data for machines like treadmills and stationary bikes.
 - Publishes environment data such as temperature and humidity, while considering HVAC effects.
   
 ### Temperature Simulation
 The service simulates temperature changes in each room by applying HVAC effects or gradually returning the temperature to real values when HVAC is off.
+
+## Available REST APIs
+- `GET /environment`: Returns temperature and humidity data
+- `GET /hvac_status`: Returns HVAC state and mode
+
+Example call:
+```bash
+curl http://localhost:8093/environment
+```
 
 ## MQTT Topics
 
@@ -150,16 +166,28 @@ The service simulates temperature changes in each room by applying HVAC effects 
     \```
   - If the "v" field is 0 if the machine is available, instead if it is 1 the machine is occupied
 
-## Service Configuration
-The service is configured via a `config.json` file. The configuration includes settings for:
+## 🛠 Service Configuration
+Configuration file: `config_device_connector_changing_room.json`
+Main parameters:
+- `service_catalog`: Service Catalog URL
+- `resource_catalog`: Resource Catalog URL
+- `subscribed_topics`, `published_topics`
+- `simulation_parameters`: DHT11 simulation interval
+- `enable_dht11`: true, `enable_pir`: false, `enable_button`: false
 
-- **Service Catalog URL**: The URL of the Service Catalog from which the service retrieves the MQTT broker, port, and room configurations. By default, it is set to `http://service_catalog:8080`.
-- **Resource Catalog URL**: The URL of the Resource Catalog where devices are registered. By default, it is set to `http://resource_catalog:8081`
-- **Subscribed Topics**: Lists MQTT topics the service listens to (e.g., HVAC control).
-- **Published Topics**: Specifies the topics to publish data (e.g., environment data, machine availability).
+Example:
+```json
+"simulation_parameters": {
+  "dht11_seconds": 5
+}
+```
 
 ## Shutdown and Cleanup
 To stop the service gracefully, press `Ctrl+C`. The signal handler will:
 - Stop the MQTT client loop cleanly.
 - Ensure all processes are properly terminated.
 - Delete the service from the **Service Catalog** by calling the `delete_service` function.
+
+**Key Notes**
+- Simulated temperature adjusts based on HVAC state and residual heating/cooling effects
+- Automatic removal of devices inactive for more than 3 days

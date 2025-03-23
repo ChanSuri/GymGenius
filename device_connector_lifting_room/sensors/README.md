@@ -1,171 +1,104 @@
-# Gym Device Management Services
 
-## Table of Contents
+# Gym Device Simulation Services
+
+## 📖 Table of Contents
 - [Overview](#overview)
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
-- [REST API](#rest-api)
-- [Service Configuration](#service-configuration)
+- [Class Descriptions](#class-descriptions)
+- [Simulation Examples](#simulation-examples)
 - [Shutdown and Cleanup](#shutdown-and-cleanup)
 
-## Overview
-The files **buutton.py**, **dht11.py**, and **PIR_sensor.py** consist of three main components designed to monitor occupancy, environmental conditions, and machine availability in a gym environment. They interact with a device connector to send and receive data from various sensors, including PIR sensors, DHT11 temperature and humidity sensors, and entrance/exit buttons. Moreover, they manage both real and simulated devices and can be deployed in a gym for real-time monitoring and data management. Hence, the measuraments are sent to the device connector through the employment of REST APIs. 
+## ✅ Overview
+This project simulates gym devices to monitor:
+- **Entry/Exit flows** through buttons
+- **Environmental conditions** (Temperature/Humidity)
+- **Machine availability** with PIR sensors
 
-### Components
-- **PIR_sensor.py**: Monitors machine availability using a real PIR sensor and simulates occupancy for other machines.
-- **dht11.py**: Collects and sends temperature and humidity data using a real DHT11 sensor, while simulating data for other rooms.
-- **button.py**: Tracks gym occupancy using a real button for entrance detection and simulates exit events.
+Each class generates data in **SenML** format ready to be sent to an IoT platform.
 
 ## Features
-- **Real and Simulated Sensor Management**: Each script handles real sensors (PIR, DHT11, entrance button) while also simulating data for other machines or rooms.
-- **Data Sending**: Publishes data, including occupancy, availability, temperature, and humidity, to the device connector.
-- **Simulated Machine Usage**: The scripts simulate machine usage for cardio and lifting rooms with realistic intervals and state changes.
+- Realistic simulation of:
+  - People flow (entry/exit button)
+  - Environmental data (DHT11)
+  - Machine occupancy (PIR)
+- Data output structured in JSON SenML format
+- Option to define simulation duration or run a single event
 
 ## Installation
-
-### Prerequisites
+### Requirements
 - Python 3.x
-- `RPi.GPIO` (for Raspberry Pi GPIO control)
-- `requests` library
-- `adafruit_dht` (for DHT11 sensor)
-- `board` library (for DHT11 sensor)
+- No external libraries required for simulation
 
-### Set up the hardware:
-- **PIR_sensor.py**: Connect the PIR sensor to the Raspberry Pi using GPIO 17 (Pin 11).
-- **dht11.py**: Connect the DHT11 sensor to the Raspberry Pi using GPIO 15 (Pin 10).
-- **button.py**: Connect the entrance button to GPIO 23 (Pin 16).
+### Running individual modules
+```bash
+python3 button_class.py
+python3 dht11_class.py
+python3 PIR_class.py
+```
 
 ## Usage
+Each file is executable and will prompt the user for simulation parameters:
+- **Duration of the simulation**
+- **Room or area to simulate**
+- **Machine type (for PIR)**
+- **Number of machines to monitor (for PIR)**
 
-### Running the Services
-You can run each service individually or in parallel.
+## Class Descriptions
 
-## Service Configuration
-Each script is configured to send data to a device connector located at `http://localhost:8082`. The configuration includes device IDs, sensor types, and room names, which can be modified based on your setup.
+### `SimulatedButtonSensor` (`button_class.py`)
+Simulates gym entrance and exit counts.
+- Main attributes: `entrance_count`, `exit_count`
+- Generates SenML events with fields:
+  - `device_id`, `event_type`, `location`, `senml_record`
+- Supports time-based or single event simulation
 
-### Example Configuration for `dht11.py`
-- Real sensor (DHT11) in the entrance:
-  \```python
-  rooms = {
-    "entrance": {"type": "real", "temperature": None, "humidity": None},
-    ...
-  }
-  \```
-- Simulated temperature and humidity for other rooms:
-  \```python
-  rooms = {
-    "cardio_room": {"type": "simulated", "temperature": 22.0, "humidity": 50.0},
-    "lifting_room": {"type": "simulated", "temperature": 23.0, "humidity": 52.0},
-    "changing_room": {"type": "simulated", "temperature": 24.0, "humidity": 55.0}
-  }
-  \```
+---
 
-### Example Configuration for `PIR_sensor.py`
-- Real PIR sensor for treadmill 1:
-  \```python
-  device_id_real = "PIR_treadmill_1"
-  \```
-- Simulated machines in cardio and lifting rooms:
-  \```python
-  cardio_machines = ["treadmill_2", ... , "elliptical_trainer_1", ... ,  "stationary_bike_1", ... , "rowing_machine_1", ...]
-  lifting_machines = ["cable_machine_1", ... , "leg_press_machine_1", ... ,"smith_machine_1", ... , "lat_pulldown_machine_1", ...]
-  \```
+### `SimulatedDHT11Sensor` (`dht11_class.py`)
+Simulates environmental readings of temperature and humidity in different rooms.
+- Simulated rooms: `entrance`, `cardio_room`, `lifting_room`, `changing_room`
+- Values fluctuate within realistic thresholds
+- SenML output with `temperature` and `humidity` event arrays
 
-### Example Configuration for `button.py`
-- Real entrance button for gym occupancy: 
-  \```python
-  entrance_simulation = { "type": "real", "entry_count": 0} 
-- Simulated exit button events: 
-  \```python
-  exit_simulation = { "type": "simulated", "exit_count": 0 } 
-  \```
+---
 
-## REST API
+### `SimulatedPIRSensor` (`PIR_class.py`)
+Simulates the availability of cardio and weight machines.
+- Simulated cardio machines: treadmill, bike, etc.
+- Simulated weight machines: cable machine, leg press, smith machine, etc.
+- SenML events with binary state (occupied/free)
 
-Each script sends data to a device connector via HTTP POST requests. Below is an overview of the REST API endpoints used by the system:
+---
 
-### POST `/`
-This endpoint is used to send sensor data to the device connector.
+## Simulation Examples
+Each class can be executed with:
 
-#### Example of request from `dht11.py`:
-- URL: `http://localhost:8082`
-- Method: `POST`
-- Payload:
-  ```json
-  {
-    "device_id": "DHT11_Sensor_entrance",
-    "event_type": "environment",
-    "type": "DHT11",
-    "location": "entrance",
-    "status": "active",
-    "endpoint": "gym/environment/entrance",
-    "time": "2024-09-23T12:34:56Z",
-    "senml_record": {
-      "bn": "gym/environment/entrance",
-      "e": [
-        {"n": "temperature", "u": "Cel", "t": "2024-09-23T12:34:56Z", "v": 22.5},
-        {"n": "humidity", "u": "%", "t": "2024-09-23T12:34:56Z", "v": 50.0}
-      ]
-    }
-  }
-
-#### Example of request from`PIR_sensor.py`:
-- URL: `http://localhost:8082`
-- Method: `POST`
-- Payload:
-  ```json
-  {
-    "device_id": "PIR_treadmill_1",
-    "event_type": "availability",
-    "type": "PIR",
-    "location": "cardio_room",
-    "status": "active",
-    "endpoint": "gym/occupancy/treadmill_1",
-    "time": "2024-09-23T12:34:56Z",
-    "senml_record": {
-      "bn": "gym/occupancy/treadmill_1",
-      "n": "treadmill_1",
-      "u": "binary",
-      "v": 1
-    }
-  }
-
-#### Example of request from `button.py`:
-- URL: `http://localhost:8082`
-- Method: `POST`
-- Example of payload for entrance:
-  ```json
-  {
-    "device_id": "EntranceSensor001",
-    "event_type": "entry",
-    "type": "push-button-enter",
-    "location": "entrance",
-    "status": "active",
-    "endpoint": "GymGenius/Occupancy/Entrance",
-    "time": "2024-09-23T12:34:56Z",
-    "senml_record": {
-      "bn": "GymGenius/Occupancy/Entrance",
-      "bt": 1695478496,
-      "n": "push-button-enter",
-      "u": "count",
-      "v": 1
-    }
-  }
-
-### Response:
-For each request, a succesful response will give back:
+Example output:
 ```json
 {
-  "message": "Data received successfully",
-  "status_code": 200
+  "device_id": "EntranceSensor001",
+  "event_type": "entry",
+  "type": "push-button-enter",
+  "location": "entrance",
+  "status": "active",
+  "endpoint": "GymGenius/Occupancy/Entrance",
+  "time": "2025-03-21 15:30:00",
+  "senml_record": {
+    "bn": "GymGenius/Occupancy/Entrance",
+    "bt": 1711037400,
+    "n": "push-button-enter",
+    "u": "count",
+    "v": 1
+  }
 }
 ```
 
-## Shutdown and Cleanup
-To stop any of the scripts gracefully, press `Ctrl+C`. The services will:
-- Stop reading data from sensors.
-- Clean up GPIO states (for the Raspberry Pi scripts).
-- Terminate any running threads and processes cleanly.
+---
 
-Make sure to run `GPIO.cleanup()` after stopping the scripts to release the GPIO pins properly.
+## Shutdown and Cleanup
+- End the simulation using **CTRL+C**
+
+---
+

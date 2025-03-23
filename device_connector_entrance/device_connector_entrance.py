@@ -202,34 +202,6 @@ class DeviceConnector:
             return json.dumps({"status": "error", "message": str(e)})
               
 
-    # def update_simulated_temperature(self, room):
-    #     """Update the simulated temperature for a specific room based on HVAC state and residual effects."""
-    #     if room not in self.simulated_temperature:
-    #         # Initialize simulated temperature for the room
-    #         self.simulated_temperature[room] = self.real_temperature.get(room, 20.0)
-
-    #     if self.hvac_state == 'on' and self.hvac_last_turned_on:
-    #         elapsed_time = datetime.now() - self.hvac_last_turned_on
-    #         minutes_running = elapsed_time.total_seconds() / 60
-
-    #         # Apply HVAC effects: e.g., 0.5 degrees per 15 minutes
-    #         temp_change = (minutes_running // 5) * 0.5
-
-    #         if self.hvac_mode == 'cool':
-    #             self.simulated_temperature[room] -= temp_change
-    #         elif self.hvac_mode == 'heat':
-    #             self.simulated_temperature[room] += temp_change
-    #     else:
-    #         # Gradual return to real temperature
-    #         if self.simulated_temperature[room] < self.real_temperature.get(room, 20.0):
-    #             self.simulated_temperature[room] += 0.1
-    #         elif self.simulated_temperature[room] > self.real_temperature.get(room, 20.0):
-    #             self.simulated_temperature[room] -= 0.1
-
-    #     # Clamp temperature to realistic bounds
-    #     self.simulated_temperature[room] = max(min(self.simulated_temperature[room], 35), 15)
-    #     return round(self.simulated_temperature[room], 2)
-
     def update_simulated_temperature(self, room):
         """
         Update the simulated temperature for a specific room
@@ -252,7 +224,7 @@ class DeviceConnector:
 
         else:
             # If the HVAC is off, or hasn't been turned on yet,
-            # move the simulated temperature gently back toward the "real" sensor reading
+            # move the simulated temperature back toward the "real" sensor reading
             step_back = 0.1
             current_real_temp = self.real_temperature.get(room, 20.0)
 
@@ -264,7 +236,7 @@ class DeviceConnector:
         # Clamp the temperature to realistic bounds
         self.simulated_temperature[room] = max(min(self.simulated_temperature[room], 35), 15)
 
-        # Return a rounded value (optional)
+        # Return a rounded value 
         return round(self.simulated_temperature[room], 2)
 
     def check_and_delete_inactive_devices(self):
