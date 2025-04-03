@@ -121,15 +121,14 @@ class Telegrambot():
         """Retrieve machine types from the service catalog."""
         try:
             response = requests.get(self.service_catalog_url)
-            response.raise_for_status()  # 检查响应状态码
+            response.raise_for_status()  # check status
             service_catalog = response.json()
             
-            # 提取机器ID列表
+            # machine id
             machines_list = service_catalog.get('catalog', {}).get('machinesID', [])
 
-            # 使用集合推导式创建机器类型集合
             machines_type = {machine_id.rsplit('_', 1)[0] for machine_id in machines_list}
-            # 返回排序后的机器类型列表
+            # return machines type
             return sorted(machines_type)
 
         except requests.exceptions.RequestException as e:
@@ -151,11 +150,9 @@ class Telegrambot():
     #     print(f"🔔 New update received:\n{update}")
 
     #     if 'message' in update:
-    #         # 普通聊天消息
     #         self.on_chat_message(update['message'])
 
     #     elif 'callback_query' in update:
-    #         # 按钮点击
     #         self.on_callback_query(update['callback_query'])
 
     #     elif 'my_chat_member' in update:
@@ -196,7 +193,7 @@ class Telegrambot():
     #             self.client.mySubscribe(topic_value)
     #             print(f"✅ Subscribed to topic: {topic_key}")
 
-    #         # 👇 改成 handle_update，自己处理所有 update 类型
+    #         # Start the message loop
     #         MessageLoop(self.bot, self.handle_update).run_as_thread()
     #         print("✅ Message loop started")
 
@@ -229,8 +226,8 @@ class Telegrambot():
                     self.user_states[chat_id] = None
                 elif self.user_states[chat_id] == "choosing_zone":
                     if message in self.zones:
-                        self.user_states[chat_id] = None  # 清除状态
-                        self.fetch_data(chat_id, message)  # 调用处理函数
+                        self.user_states[chat_id] = None  # clean  user states
+                        self.fetch_data(chat_id, message) 
                     else:
                         self.bot.sendMessage(chat_id, "Invalid selection. Please try again.")
                     return
@@ -470,9 +467,9 @@ class Telegrambot():
         self.user_states[chat_id] = "choosing_zone"
         
     def fetch_data(self, chat_id, room):
-        # 处理房间选择后的逻辑
+        # after choosing the room
         self.bot.sendMessage(chat_id, f"You selected '{room}'. Fetching data...")
-        self.admin_see_data(chat_id, room)  # 调用查看数据函数
+        self.admin_see_data(chat_id, room)
             
     def send_hvac_command(self, room, command, mode=None):
         if room == "All":
@@ -536,13 +533,12 @@ class Telegrambot():
                 self.availmachines[machine]["total"] = data.get("total", 0)
                 
             elif topic.startswith("gym/environment/"):
-                room = topic.split("/")[-1]  # 提取 room 名称
-                print(message)
+                room = topic.split("/")[-1]  # extract room 
                 temperature = next((x["v"] for x in message["e"] if x["n"] == "temperature"), None)
                 humidity = next((x["v"] for x in message["e"] if x["n"] == "humidity"), None)
                 timestamp = next((x["t"] for x in message["e"] if x["n"] == "temperature"), None)
 
-                # 存储最新数据
+                # update the newest data
                 self.latest_environment_data[room] = {
                     "temperature": temperature,
                     "humidity": humidity,
