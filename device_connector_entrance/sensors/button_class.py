@@ -98,7 +98,7 @@ class SimulatedButtonSensor:
                     if seconds == 0:
                         return events
 
-            time.sleep(random.uniform(5, 10))
+            time.sleep(random.uniform(10, 20))
 
         return events
 

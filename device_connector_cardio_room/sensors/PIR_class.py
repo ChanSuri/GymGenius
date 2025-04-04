@@ -65,7 +65,7 @@ class SimulatedPIRSensor:
                     return events
 
                 # Wait a random interval between state changes
-                time.sleep(random.randint(1, 3))
+                time.sleep(random.randint(10, 20))
 
         return events
 

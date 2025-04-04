@@ -98,7 +98,7 @@ class DeviceConnector:
                     for event in events:
                         self.register_and_publish(event, event["event_type"])
 
-                time.sleep(5)
+                time.sleep(20)
             except KeyboardInterrupt:
                 print("Simulation interrupted")
                 break
