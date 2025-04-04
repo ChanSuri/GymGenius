@@ -347,7 +347,7 @@ class Telegrambot():
                                 self.chat_auth[str(chat_id)]=True
                                 self.admin_message(chat_id)
                             else:
-                                self.bot.sendMessage(chat_id, 'Password error! Please re-type password!')
+                                self.bot.sendMessage(chat_id, 'Password error! Please retype password!')
                         else:
                             self.bot.sendMessage(chat_id, 'Please enter the correct command!')
                     except:
@@ -498,7 +498,8 @@ class Telegrambot():
             if topic.startswith("gym/environment/alert/"):
                 room = topic.split('/')[-1]
                 alert_message = message["message"]["data"]["alert"]
-                current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # alert
+                # current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # alert
+                current_time = datetime.now()
                 if room != self.last_room or (current_time - self.last_alert_time) >= timedelta(hours=1):
                     tosend = f'{alert_message}. Please check it and do some operations in {room}!'
                     for chat_ID in self.chat_auth:
