@@ -37,7 +37,7 @@
         "id": "118e415f53d5c04c",
         "type": "mqtt-broker",
         "name": "envdata",
-        "broker": "broker.hivemq.com",
+        "broker": "eclipseprojects.io",
         "port": 1883,
         "clientid": "",
         "autoConnect": true,
