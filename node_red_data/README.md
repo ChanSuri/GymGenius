@@ -92,7 +92,7 @@ cd nodered-gym-monitoring
 
 docker-compose.yml:
 node_red:
-    image: nodered/node-red
+    image: nodered/node-red:latest
     ports:
       - "1880:1880"
     volumes:
@@ -103,12 +103,14 @@ node_red:
       - service_catalog
       - resource_catalog
     environment:
-      - NODE_RED_ENABLE_PROJECTS=true 
+      # - NODE_RED_ENABLE_PROJECTS=true  # for project function, single project doesn't need it yet 
+      - TZ=Europe/Amsterdam #Timezone
 
 ### **3. Start Node-RED**
 
 ```bash
 node-red
+# or directly using docker setting to open
 ```
 
 By default, the dashboard will be available at:
@@ -116,8 +118,8 @@ By default, the dashboard will be available at:
 ```
 http://localhost:1880/ui
 ```
-
-### **4. Import the Flow**
+The nodes info will be created by your own PC which is in a file named node_modules. (.gitignore)
+### **4. Import the Flow or Edit extra flows**
 
 - Open **Node-RED Editor** (`[localhost](http://127.0.0.1:1880/)`)
 - Click `Import` and select the provided JSON flow file.
