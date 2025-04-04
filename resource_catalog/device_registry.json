@@ -1,7 +1,7 @@
 {
     "projectOwner": "group 22",
     "projectName": "GymGenius",
-    "brokerIP": "broker.hivemq.com",
+    "brokerIP": "test.mosquitto.org",
     "brokerPort": 1883,
     "devices": [
         {
@@ -10,7 +10,7 @@
             "location": "entrance",
             "status": "active",
             "endpoint": "GymGenius/Occupancy/Entrance",
-            "last_update": "2025-04-04 08:28:56"
+            "last_update": "2025-04-04 09:28:32"
         },
         {
             "device_id": "ExitSensor001",
@@ -18,7 +18,7 @@
             "location": "entrance",
             "status": "active",
             "endpoint": "GymGenius/Occupancy/Exit",
-            "last_update": "2025-04-04 08:29:13"
+            "last_update": "2025-04-04 09:29:25"
         },
         {
             "device_id": "simulated_stationary_bike_3",
@@ -42,7 +42,7 @@
             "location": "entrance",
             "status": "active",
             "endpoint": "gym/environment/entrance",
-            "last_update": "2025-04-04T08:29:26.974651+00:00"
+            "last_update": "2025-04-04T09:29:56.848762+00:00"
         },
         {
             "device_id": "DHT11_Sensor_cardio_room",
@@ -50,7 +50,7 @@
             "location": "cardio_room",
             "status": "active",
             "endpoint": "gym/environment/cardio_room",
-            "last_update": "2025-04-04T08:29:00.521420+00:00"
+            "last_update": "2025-04-04T09:28:12.455231+00:00"
         },
         {
             "device_id": "DHT11_Sensor_lifting_room",
@@ -58,7 +58,7 @@
             "location": "lifting_room",
             "status": "active",
             "endpoint": "gym/environment/lifting_room",
-            "last_update": "2025-04-04T08:29:09.350122+00:00"
+            "last_update": "2025-04-04T09:28:13.201715+00:00"
         },
         {
             "device_id": "DHT11_Sensor_changing_room",
@@ -66,7 +66,7 @@
             "location": "changing_room",
             "status": "active",
             "endpoint": "gym/environment/changing_room",
-            "last_update": "2025-04-04T08:29:34.052885+00:00"
+            "last_update": "2025-04-04T09:30:13.460538+00:00"
         },
         {
             "device_id": "simulated_elliptical_trainer_2",
@@ -309,5 +309,5 @@
             "last_update": "2025-04-04 08:28:51"
         }
     ],
-    "lastUpdate": "2025-04-04 08:29:35"
+    "lastUpdate": "2025-04-04 09:30:33"
 }
