@@ -1,7 +1,7 @@
 {
     "projectOwner": "group 22",
     "projectName": "GymGenius",
-    "brokerIP": "test.mosquitto.org",
+    "brokerIP": "mqtt.eclipseprojects.io",
     "brokerPort": 1883,
     "base_name": "gym/",
     "roomsID": [
