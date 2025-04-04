@@ -172,7 +172,7 @@
                 "current_occupancy": "gym/occupancy/current",
                 "prediction": "gym/occupancy/prediction"
             },
-            "last_update": "2025-03-18 10:21:54"
+            "last_update": "2025-04-04 08:21:54"
         },
         {
             "service_id": "hvac_control",
@@ -190,7 +190,7 @@
                 "automatic_control": "gym/hvac/control/<roomID>",
                 "alert": "gym/environment/alert/<roomID>"
             },
-            "last_update": "2025-03-18 10:21:50"
+            "last_update": "2025-04-04 08:21:51"
         },
         {
             "service_id": "thingspeak_adaptor",
@@ -204,7 +204,7 @@
                 "machine_availability": "gym/group_availability/<machine_type>"
             },
             "published_topics": null,
-            "last_update": "2025-03-18 10:21:50"
+            "last_update": "2025-04-04 08:21:51"
         },
         {
             "service_id": "resource_catalog",
@@ -214,7 +214,7 @@
             "endpoint": "http://resource_catalog:8081",
             "subscribed_topics": null,
             "published_topics": null,
-            "last_update": "2025-03-18 10:21:49"
+            "last_update": "2025-04-04 08:21:49"
         },
         {
             "service_id": "device_connector_cardio_room",
@@ -244,7 +244,7 @@
             "enable_dht11": true,
             "enable_pir": true,
             "enable_button": false,
-            "last_update": "2025-03-18 10:21:50"
+            "last_update": "2025-04-04 08:21:51"
         },
         {
             "service_id": "device_connector_entrance",
@@ -274,7 +274,7 @@
             "enable_dht11": true,
             "enable_pir": false,
             "enable_button": true,
-            "last_update": "2025-03-18 10:21:50"
+            "last_update": "2025-04-04 08:21:51"
         },
         {
             "service_id": "device_connector_changing_room",
@@ -304,7 +304,7 @@
             "enable_dht11": true,
             "enable_pir": false,
             "enable_button": false,
-            "last_update": "2025-03-18 10:21:50"
+            "last_update": "2025-04-04 08:21:51"
         },
         {
             "service_id": "device_connector_lifting_room",
@@ -334,7 +334,7 @@
             "enable_dht11": true,
             "enable_pir": true,
             "enable_button": false,
-            "last_update": "2025-03-18 10:21:50"
+            "last_update": "2025-04-04 08:21:50"
         },
         {
             "service_id": "Telegram_bot",
@@ -360,8 +360,8 @@
                 "entrance": "http://device_connector_entrance:8094",
                 "lifting_room": "http://device_connector_lifting_room:8095"
             },
-            "last_update": "2025-03-18 10:21:51"
+            "last_update": "2025-04-04 08:21:52"
         }
     ],
-    "lastUpdate": "2025-03-18 10:44:32"
+    "lastUpdate": "2025-04-04 08:29:14"
 }
