@@ -27,16 +27,16 @@ class ServiceCatalog:
     exposed = True
 
     def GET(self, *uri, **params):
-        # Se viene fornito un service_id nell'URI, restituisci il servizio specifico
+        # If a service_id is provided in the URI, return the specific service
         if len(uri) > 0:
             service_id = uri[0]
             service = service_registry.get(service_id, None)
             if not service:
                 raise cherrypy.HTTPError(404, "Service not found")
-            # Restituisci i dettagli del servizio specifico
+            # Return the details of the specific service
             return json.dumps({"status": "success", "service": service})
         else:
-            # Restituisci l'intero catalogo se non viene fornito nessun service_id
+            # Return the entire catalog if no service_id is provided
             return json.dumps({"status": "success", "catalog": service_registry})
 
 

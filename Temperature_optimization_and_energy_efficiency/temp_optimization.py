@@ -209,34 +209,24 @@ class TempOptimizationService:
         except (json.JSONDecodeError, TypeError) as e:
             print(f"Failed to decode threshold data for {room}: {e}")
 
-    # def handle_hvac_on_off(self, room, message):
-    #     """Handle HVAC on/off commands for a specific room."""
-    #     try:
-    #         command_data = json.loads(message.payload.decode())
-    #         self.current_command[room] = command_data['message']['data'].get('state', "OFF").upper()
-    #         print(f"[{room}] Received administrator command: {self.current_command[room]}.")
-    #         self.control_hvac(room, temperature=None, humidity=None)
-    #     except (json.JSONDecodeError, TypeError) as e:
-    #         print(f"Failed to decode command data for {room}: {e}")
-
     def handle_hvac_on_off(self, room, message):
         try:
             command_data = json.loads(message.payload.decode())
             
-            # Ricaviamo lo stato e la modalità dal payload
+            # We get the state and mode from the payload
             state = command_data['message']['data'].get('control_command', "OFF").upper()
             mode  = command_data['message']['data'].get('mode', None)
 
-            # Salviamo lo stato
+            # Save the state
             self.current_command[room] = state
 
-            # Se c'è una modalità valida (cool o heat), salviamola in self.hvac_mode
+            # If there is a valid mode (cool or heat), let's save it in self.hvac_mode
             if mode in ["cool", "heat"]:
                 self.hvac_mode[room] = mode
 
             print(f"[{room}] Received administrator command: {state} - mode: {mode}")
             
-            # Usiamo la logica di controllo
+            # We use control logic
             self.control_hvac(room, temperature=None, humidity=None)
 
         except (json.JSONDecodeError, TypeError) as e:
@@ -251,44 +241,6 @@ class TempOptimizationService:
             print(f"Received occupancy data: {self.current_occupancy} clients present.")
         except (json.JSONDecodeError, TypeError) as e:
             print(f"Failed to decode occupancy data: {e}")
-
-    # def control_hvac(self, room, temperature, humidity):
-    #     """Control the HVAC system based on temperature, humidity, and occupancy."""
-    #     ### DA CAPIRE PERCHE' DI DEFAULT OFF O ON
-    #     print(self.current_command[room])
-    #     if self.current_command[room] == "OFF" or self.current_command[room] == "ON":
-    #         print(f"[{room}] Automatic HVAC control disabled by administrator.")
-    #         return
-
-    #     current_time = datetime.now()
-    #     is_open = self.gym_schedule['open'] <= current_time.time() <= self.gym_schedule['close']
-
-    #     # Turn on HVAC in advance to prepare the gym environment
-    #     advance_time = timedelta(minutes=30)
-    #     open_time_with_advance = (datetime.combine(datetime.today(), self.gym_schedule['open']) - advance_time).time()
-
-    #     if open_time_with_advance <= current_time.time() <= self.gym_schedule['close']:
-    #         is_open = True
-
-    #     close_time_with_advance = (datetime.combine(datetime.today(), self.gym_schedule['close']) - advance_time).time()
-    #     if current_time.time() >= close_time_with_advance and self.current_occupancy == 0:
-    #         if self.hvac_state[room] == 'on':
-    #             print(f"[{room}] No clients present 30 minutes before closing. Turning off HVAC.")
-    #             self.hvac_state[room] = 'off'
-    #             self.send_hvac_command(room, 'turn_off')
-    #         return
-
-    #     # Control based on temperature and gym hours
-    #     if is_open and self.hvac_state[room] == 'off':
-    #         if temperature > self.thresholds[room]['upper']:
-    #             self.hvac_state[room] = 'on'
-    #             self.send_hvac_command(room, 'turn_on', 'cool')
-    #         elif temperature < self.thresholds[room]['lower']:
-    #             self.hvac_state[room] = 'on'
-    #             self.send_hvac_command(room, 'turn_on', 'heat')
-    #     elif not is_open and self.hvac_state[room] == 'on':
-    #         self.hvac_state[room] = 'off'
-    #         self.send_hvac_command(room, 'turn_off')
 
     #define manual and automatic control function
     def control_hvac(self, room, temperature, humidity):

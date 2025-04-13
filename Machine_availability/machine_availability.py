@@ -6,7 +6,6 @@ from datetime import datetime
 import signal
 from registration_functions import *
 
-# MQTT Configuration
 class MachineAvailabilityService:
     def __init__(self, config):
         self.config = config
@@ -112,23 +111,11 @@ class MachineAvailabilityService:
             print(machine_type)
             print(self.machines)
 
-            if machine_type in self.machines: # non entra qui
+            if machine_type in self.machines:
                 self.update_availability(machine_type, availability)
         except (json.JSONDecodeError, TypeError, KeyError) as e:
             print(f"Failed to decode machine availability data: {e}")
 
-    # def update_availability(self, machine_type, availability):
-    #     machine_data = self.machines[machine_type]
-
-    #     if availability == 1:  # Machine is occupied
-    #         machine_data['occupied'] += 1
-    #         machine_data['available'] -= 1
-    #     elif availability == 0:  # Machine is available
-    #         machine_data['occupied'] -= 1
-    #         machine_data['available'] += 1
-
-    #     # Publish the updated availability to MQTT topics
-    #     self.publish_availability(machine_type)
     def update_availability(self, machine_type, availability):
         machine_data = self.machines[machine_type]
 
