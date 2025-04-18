@@ -343,9 +343,8 @@ class DeviceConnector:
             return {"status": "error", "message": "No endpoint specified."}
 
         if uri[0] == "environment":
-            # Provide current temperature and humidity states
-            temperature = self.simulated_temperature
-            humidity = self.real_temperature
+            temperature = self.simulated_temperature.get(self.location)
+            humidity    = self.real_temperature.get(self.location)
 
             if temperature is None or humidity is None:
                 return {"status": "error", "message": "No data available."}
@@ -353,9 +352,9 @@ class DeviceConnector:
             return {
                 "status": "success",
                 "senml_record": {
-                    "e": [
-                        {"n": "temperature", "u": "Cel", "v": temperature},
-                        {"n": "humidity", "u": "%", "v": humidity}
+                    "e":[
+                        {"n":"temperature","u":"Cel","v":temperature},
+                        {"n":"humidity","u":"%","v":humidity}
                     ]
                 },
                 "location": self.location
