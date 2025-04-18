@@ -439,8 +439,10 @@ class Telegrambot():
                         temperature = next(iter(temperature.values()))
                     if isinstance(humidity, dict):
                         humidity = next(iter(humidity.values()))
+                    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     message = (
                         f"📍 Room: {room} 📍\n"
+                        f"🕒 Time: {timestamp}\n"
                         f"🌡 Temperature: {temperature:.2f}°C\n"
                         f"💧 Humidity: {humidity:.2f}%"
                     )
