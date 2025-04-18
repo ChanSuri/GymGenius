@@ -149,7 +149,7 @@ services:
     environment:
       - THINGSPEAK_URL=http://thingspeak_adaptor:8089/thingspeak_adaptor/?channel=entrance
       - SERVICE_CATALOG_URL=http://service_catalog:8080
-    restart: always
+    # restart: always
 
   # Machine Availability Service
   machine_availability:
