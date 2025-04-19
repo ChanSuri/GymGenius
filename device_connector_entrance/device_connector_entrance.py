@@ -297,7 +297,6 @@ class DeviceConnector:
                         self.hvac_last_turned_on = datetime.now()
                         self.hvac_mode = mode
                         print(f"HVAC turned ON in {self.hvac_mode} mode.")
-                        self.publish_hvac_status("HVAC turned on")
 
                 elif control_command == 'turn_off':
                     if self.hvac_state == 'on':
@@ -305,7 +304,6 @@ class DeviceConnector:
                         self.hvac_last_turned_on = None
                         self.hvac_mode = None
                         print("HVAC turned OFF.")
-                        self.publish_hvac_status("HVAC turned off")
 
                 else:
                     print(f"Unknown HVAC command: {control_command}")
