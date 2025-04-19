@@ -29,6 +29,7 @@ class DeviceConnector:
         # Store real vs simulated temperatures per room
         self.real_temperature = {}  # Actual temperature from sensors
         self.simulated_temperature = {}  # Adjusted temperature
+        self.real_humidity = {}
 
         # Retrieve MQTT broker information and configure the MQTT client    
         self.mqtt_broker, self.mqtt_port = self.get_mqtt_info_from_service_catalog()
@@ -192,10 +193,14 @@ class DeviceConnector:
             senml_record = input_data.get("senml_record", {})
             temperature = next((e["v"] for e in senml_record["e"] if e["n"] == "temperature"), None)
             room = input_data.get("location")
+            humidity = next((e["v"] for e in senml_record["e"] if e["n"] == "humidity"), None)
+
+            if room and humidity is not None:
+                self.real_humidity[room] = humidity
 
             if room and temperature is not None:
                 # Store the real temperature from the sensor
-                self.real_temperature[room] = temperature 
+                self.real_temperature[room] = temperature
 
                 # Compute simulated temperature based on HVAC effect
                 modified_temperature = self.update_simulated_temperature(room)
@@ -344,10 +349,13 @@ class DeviceConnector:
 
         if uri[0] == "environment":
             temperature = self.simulated_temperature.get(self.location)
-            humidity    = self.real_temperature.get(self.location)
-
-            if temperature is None or humidity is None:
-                return {"status": "error", "message": "No data available."}
+            humidity = self.real_humidity.get(self.location)
+        
+            if temperature is None:
+                return {"status": "error", "message": "Temperature is not available."}
+            
+            if humidity is None:
+                return {"status": "error", "message": "humidity is not available."}
 
             return {
                 "status": "success",
