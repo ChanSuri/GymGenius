@@ -1,6 +1,6 @@
 import time
 import random
-from datetime import datetime, timezone
+from datetime import datetime
 
 class SimulatedDHT11Sensor:
     def __init__(self, room):
@@ -28,7 +28,7 @@ class SimulatedDHT11Sensor:
 
     def generate_sensor_data(self, temperature, humidity):
         """Generate simulated data for the specified room in SenML format."""
-        current_time = datetime.now(timezone.utc).isoformat()
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         data = {
             "device_id": f"DHT11_Sensor_{self.room}",
             "event_type": "environment",
