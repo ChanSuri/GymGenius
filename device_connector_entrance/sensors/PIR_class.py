@@ -12,7 +12,7 @@ class SimulatedPIRSensor:
     def generate_sensor_data(self, value, machine, machine_number):
         """Generate simulated availability data in SenML format for a machine."""
         record = {
-            "bn": f"GymGenius/Availability/{machine}/{machine_number}",
+            "bn": f"GymGenius/availability/{machine}/{machine_number}",
             "bt": 0,
             "n": machine,
             "u": "binary",

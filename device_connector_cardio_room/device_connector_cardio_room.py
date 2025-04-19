@@ -273,7 +273,7 @@ class DeviceConnector:
                 current_time = datetime.now()
 
                 for device in device_registry["devices"]:
-                    last_update_str = device.get("lastUpdate")
+                    last_update_str = device.get("last_update")
                     if last_update_str:
                         last_update = datetime.strptime(last_update_str, "%Y-%m-%d %H:%M:%S")
                         if current_time - last_update > timedelta(days=3):
