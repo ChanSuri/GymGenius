@@ -2,7 +2,8 @@ import cherrypy
 import json
 import requests
 import paho.mqtt.client as mqtt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from dateutil.parser import parse  # 安装：pip install python-dateutil
 from sensors.dht11_class import SimulatedDHT11Sensor
 from sensors.PIR_class import SimulatedPIRSensor
 from sensors.button_class import SimulatedButtonSensor
@@ -261,30 +262,56 @@ class DeviceConnector:
         # Return a rounded value - We can decide to not round
         return round(self.simulated_temperature[room], 2)
 
-
-
     def check_and_delete_inactive_devices(self):
         """Checks for inactive devices and deletes them if they haven't been updated in the last 3 days."""
         try:
-            response = requests.get(self.resource_catalog_url)  # URL for resource catalog is loaded from config 
+            response = requests.get(self.resource_catalog_url)
             if response.status_code == 200:
                 device_registry = response.json().get("devices", [])
-                response = requests.get(self.resource_catalog_url)
-                current_time = datetime.now()
+                current_time = datetime.now(timezone.utc) 
 
                 for device in device_registry["devices"]:
                     last_update_str = device.get("last_update")
                     if last_update_str:
-                        last_update = datetime.strptime(last_update_str, "%Y-%m-%d %H:%M:%S")
-                        if current_time - last_update > timedelta(days=3):
-                            # Device inactive for more than 3 days, send DELETE request
-                            self.delete_device(device.get("device_id"))
+                        try:
+                            last_update = parse(last_update_str)
 
+                            # set default UTC
+                            if last_update.tzinfo is None:
+                                last_update = last_update.replace(tzinfo=timezone.utc)
+
+                            if current_time - last_update > timedelta(days=3):
+                                self.delete_device(device.get("device_id"))
+
+                        except Exception as e:
+                            print(f"Error parsing last_update '{last_update_str}': {e}")
             else:
                 print(f"Error retrieving the device registry: {response.status_code} - {response.text}")
+        except Exception as e:
+            print(f"Error in check_and_delete_inactive_devices: {e}")
 
-        except requests.exceptions.RequestException as e:
-            print(f"Connection error during GET request to the Resource Catalog: {e}")
+    # def check_and_delete_inactive_devices(self):
+    #     """Checks for inactive devices and deletes them if they haven't been updated in the last 3 days."""
+    #     try:
+    #         response = requests.get(self.resource_catalog_url)  # URL for resource catalog is loaded from config 
+    #         if response.status_code == 200:
+    #             device_registry = response.json().get("devices", [])
+    #             response = requests.get(self.resource_catalog_url)
+    #             current_time = datetime.now()
+
+    #             for device in device_registry["devices"]:
+    #                 last_update_str = device.get("last_update")
+    #                 if last_update_str:
+    #                     last_update = datetime.strptime(last_update_str, "%Y-%m-%d %H:%M:%S")
+    #                     if current_time - last_update > timedelta(days=3):
+    #                         # Device inactive for more than 3 days, send DELETE request
+    #                         self.delete_device(device.get("device_id"))
+
+    #         else:
+    #             print(f"Error retrieving the device registry: {response.status_code} - {response.text}")
+
+    #     except requests.exceptions.RequestException as e:
+    #         print(f"Connection error during GET request to the Resource Catalog: {e}")
 
     def delete_device(self, device_id):
         """Deletes an inactive device from the Resource Catalog."""
