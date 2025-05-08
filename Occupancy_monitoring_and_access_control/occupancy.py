@@ -32,8 +32,8 @@ class OccupancyService:
 
         # Calculate min_training_samples based on the number of time slots and days in a week
         global min_training_samples
-        #min_training_samples = 2 * len(self.time_slots) * 7  # 2 data points per slot-hour/day combination
-        min_training_samples = 2
+        min_training_samples = 2 * len(self.time_slots) * 7  # 2 data points per slot-hour/day combination, only 2 for debug (real case needs more sample)
+        # min_training_samples = 2
 
         # Initialize the prediction matrix (dynamic based on time slots)
         self.prediction_matrix = np.zeros((len(self.time_slots), 7))
@@ -192,7 +192,8 @@ class OccupancyService:
         global model
         for hour_slot in range(len(self.time_slots)):
             for day in range(7):
-                self.prediction_matrix[hour_slot, day] = int(round(model.predict([[hour_slot, day]])[0]))
+                raw = model.predict([[hour_slot, day]])[0]
+                self.prediction_matrix[hour_slot, day] = int(round(max(0, raw)))
         print(f"Prediction matrix updated: \n{self.prediction_matrix}")
         self.publish_prediction()
 

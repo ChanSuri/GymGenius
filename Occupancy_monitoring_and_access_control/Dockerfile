@@ -2,8 +2,10 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-COPY . .
+COPY requirements.txt .
 
-RUN pip install paho-mqtt numpy pandas scikit-learn requests
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
 
 CMD ["python", "occupancy.py"]
