@@ -4,6 +4,15 @@ import requests
 import signal
 import paho.mqtt.client as mqtt
 from registration_functions import *
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(levelname)s] %(message)s'
+)
+
+logger = logging.getLogger(__name__)
+
 
 class ThingspeakAdaptor:
     def __init__(self, config):
@@ -38,7 +47,7 @@ class ThingspeakAdaptor:
             else:
                 raise Exception(f"Failed to retrieve service catalog: {response.status_code}")
         except requests.exceptions.RequestException as e:
-            print(f"Error retrieving info from service catalog: {e}")
+            logger.error(f"Error retrieving info from service catalog: {e}")
             return None, None, [], []
 
     def load_thingspeak_config(self):
@@ -54,10 +63,10 @@ class ThingspeakAdaptor:
     def connect_mqtt(self):
         """Connect to the MQTT broker."""
         try:
-            print(self.mqtt_broker, self.mqtt_port)
+            logger.info(f"MQTT broker info: {self.mqtt_broker}:{self.mqtt_port}")
             if self.mqtt_broker:
                 self.client.connect(self.mqtt_broker, self.mqtt_port, 540)
-                print("MQTT connected successfully.")
+                logger.info("MQTT connected successfully.")
             else:
                 print("No MQTT broker information found.")
         except Exception as e:
@@ -87,22 +96,22 @@ class ThingspeakAdaptor:
                 for room in self.roomsID:
                     topic = env_topic_template.replace('<roomID>', room)
                     self.client.subscribe(topic)
-                    print(f"Subscribed to environment topic: {topic}")
+                    logger.debug(f"Subscribed to environment topic: {topic}")
 
             # Subscribe to machine availability topics for each machine
             machine_topic_template = self.config['subscribed_topics'].get('machine_availability')
-            if machine_topic_template:
-                for machine in self.machinesID:
-                    machine_type = '_'.join(machine.split('_')[:-1])  # Extract machine type from machine name
-                    topic = machine_topic_template.replace('<machine_type>', machine_type)
-                    self.client.subscribe(topic)
-                    print(f"Subscribed to machine availability topic: {topic}")
+            machine_types = set('_'.join(m.split('_')[:-1]) for m in self.machinesID)
+            for machine_type in machine_types:
+                topic = machine_topic_template.replace('<machine_type>', machine_type)
+                self.client.subscribe(topic)
+                logger.debug(f"Subscribed to machine availability topic: {topic}")
+
 
             # Subscribe to occupancy topic
             occupancy_topic = self.config['subscribed_topics'].get('current_occupancy')
             if occupancy_topic:
                 self.client.subscribe(occupancy_topic)
-                print(f"Subscribed to occupancy topic: {occupancy_topic}")
+                logger.debug(f"Subscribed to occupancy topic: {occupancy_topic}")
 
         except KeyError as e:
             print(f"Error subscribing to topics: {e}")
@@ -129,7 +138,6 @@ class ThingspeakAdaptor:
         try:
             occupancy_data = payload['message']['data']
             current_occupancy = occupancy_data.get('current_occupancy')
-            print(f"Received occupancy data: {current_occupancy}")
             if current_occupancy is not None:
                 self.update_cache('entrance', 'current_occupancy', current_occupancy)
                 self.upload_to_thingspeak('entrance')
@@ -174,8 +182,11 @@ class ThingspeakAdaptor:
     def update_cache(self, room, field_name, value):
         """Update the cache for a specific field in a room."""
         if room in self.field_cache and field_name in self.field_cache[room]:
-            self.field_cache[room][field_name] = value
-            print(f"Cache updated for {room} - {field_name}: {value}")
+            old_value = self.field_cache[room][field_name]
+            if old_value != value:
+                self.field_cache[room][field_name] = value
+                logger.debug(f"Cache update: {room} - {field_name}: {old_value} → {value}")
+
 
     def upload_to_thingspeak(self, room):
         """Upload data to ThingSpeak for the specified room."""
@@ -194,13 +205,14 @@ class ThingspeakAdaptor:
                 try:
                     response = requests.get(url)
                     if response.status_code == 200:
-                        print(f"Uploaded data to {room}: {update_data}")
+                        logger.info(f"[{room}] ThingSpeak update: {update_data}")
                     else:
                         print(f"Failed to upload to ThingSpeak. Status: {response.status_code}")
                 except requests.exceptions.RequestException as e:
                     print(f"Error uploading data: {e}")
             else:
-                print(f"No data to upload for {room}")
+                logger.debug(f"No data to upload for {room}")
+
 
     def get_room_from_topic(self, topic):
         """Extract room name from the topic."""
@@ -220,11 +232,11 @@ class ThingspeakAdaptor:
 def initialize_service(config_dict):
     """Register the service at startup."""
     register_service(config_dict, config_dict['service_catalog'])
-    print("Thingspeak Adaptor Service Initialized and Registered")
+    logger.info("Thingspeak Adaptor Service Initialized and Registered")
 
 def stop_service(signum, frame):
     """Unregister and stop the service."""
-    print("Stopping service...")
+    logger.info("Stopping service...")
     delete_service("thingspeak_adaptor", config_dict['service_catalog'])
     
     adaptor.stop()
