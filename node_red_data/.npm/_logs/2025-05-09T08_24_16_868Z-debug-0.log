@@ -1,0 +1,27 @@
+0 verbose cli /usr/local/bin/node /usr/local/bin/npm
+1 info using npm@10.8.2
+2 info using node@v20.19.0
+3 silly config load:file:/usr/local/lib/node_modules/npm/npmrc
+4 silly config load:file:/data/.npmrc
+5 silly config load:file:/usr/src/node-red/.npmrc
+6 silly config load:file:/usr/local/etc/npmrc
+7 verbose title npm install node-red-contrib-mqtt-auto@1.0.3
+8 verbose argv "install" "--no-audit" "--no-update-notifier" "--no-fund" "--save" "--save-prefix" "~" "--omit" "dev" "--engine-strict" "node-red-contrib-mqtt-auto@1.0.3"
+9 verbose logfile logs-max:10 dir:/data/.npm/_logs/2025-05-09T08_24_16_868Z-
+10 verbose logfile /data/.npm/_logs/2025-05-09T08_24_16_868Z-debug-0.log
+11 silly packumentCache heap:2197815296 maxSize:549453824 maxEntrySize:274726912
+12 silly logfile start cleaning logs, removing 1 files
+13 silly logfile done cleaning log files
+14 silly idealTree buildDeps
+15 silly fetch manifest node-red-contrib-mqtt-auto@1.0.3
+16 silly packumentCache full:https://registry.npmjs.org/node-red-contrib-mqtt-auto cache-miss
+17 http fetch GET 200 https://registry.npmjs.org/node-red-contrib-mqtt-auto 869ms (cache updated)
+18 silly packumentCache full:https://registry.npmjs.org/node-red-contrib-mqtt-auto set size:undefined disposed:false
+19 silly placeDep ROOT node-red-contrib-mqtt-auto@1.0.3 REPLACE for: node-red-project@0.0.1 want: 1.0.3
+20 silly reify moves {}
+21 verbose cwd /data
+22 verbose os Linux 6.10.11-linuxkit
+23 verbose node v20.19.0
+24 verbose npm  v10.8.2
+25 verbose exit 0
+26 info ok

@@ -3,6 +3,7 @@ import json
 import os
 from datetime import datetime
 from registration_functions import *
+import signal
 
 # Path to the device_registry.json file
 # DEVICE_REGISTRY_FILE = 'C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\resource_catalog\\device_registry.json'
@@ -30,18 +31,18 @@ class ResourceCatalog:
         self.config = config
         self.service_catalog_url = config['service_catalog']  # Get service catalog URL from config.json
 
+
     def GET(self, *uri, **params):
         # If device_id is provided in the URI, return the specific device
         if len(uri) > 0:
             device_id = uri[0]
-            device = device_registry.get(device_id, None)
+            device = next((d for d in device_registry.get("devices", []) if d["device_id"] == device_id), None) #next return the first matching device
             if device:
                 return json.dumps({"status": "success", "device": device})
             else:
                 raise cherrypy.HTTPError(404, "Device not found")
         else:
-            # Return all devices if no device_id is provided
-            # return json.dumps({"status": "success", "devices": list(device_registry.values())})
+            # Return all registry if no device_id is provided
             return json.dumps({"status": "success", "devices": device_registry})
 
 
@@ -122,16 +123,17 @@ class ResourceCatalog:
 def initialize_service(config_dict):
     # Register the service at startup
     register_service(config_dict,service.service_catalog_url)
-    print("Machine Availability Service Initialized and Registered")
+    print("Resource Catalog Service Initialized and Registered")
 
 def stop_service(signum, frame):
-    print("Stopping service...")
-    delete_service("machine_availability",service.service_catalog_url)
+    print("\n[INFO] SIGINT received: Stopping Resource Catalog...")
+    try:
+        delete_service(service.config["service_id"], service.service_catalog_url)
+        print("[INFO] Service successfully deregistered from Service Catalog.")
+    except Exception as e:
+        print(f"[WARNING] Failed to deregister service: {e}")
 
-    # Clean stop of the MQTT client
-    service.stop()
-
-
+    cherrypy.engine.exit()
 
 if __name__ == '__main__':
 
@@ -156,6 +158,10 @@ if __name__ == '__main__':
     # Mount the ResourceCatalog class using MethodDispatcher
     cherrypy.tree.mount(service, '/', conf)
     
+    # Clean stop
+    signal.signal(signal.SIGINT, stop_service)   # Ctrl+C
+    signal.signal(signal.SIGTERM, stop_service)  # From OS
+
     # Start the CherryPy server
     cherrypy.engine.start()
     cherrypy.engine.block()

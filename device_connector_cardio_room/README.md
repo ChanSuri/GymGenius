@@ -25,15 +25,6 @@ The **Device Connector for the Cardio Room** is a microservice designed to manag
 ## Installation
 ### Prerequisites
 - Python 3.x
-- Required libraries: `paho-mqtt`, `cherrypy`, `requests`
-
-Install dependencies:
-```bash
-pip install paho-mqtt cherrypy requests
-```
-
-### Prerequisites
-- Python 3.x
 - `paho-mqtt` library
 - `cherrypy` library
 - `requests` library
@@ -81,8 +72,8 @@ The service simulates temperature changes in each room by applying HVAC effects 
   {
     "topic": "gym/hvac/control/{room_name}",
     "message": {
-      "device_id": "Temperature optiimization and energy efficiency block",
-      "timestamp": ""YYYY-MM-DD HH:MM:SS"",
+      "device_id": "Temperature optimization and energy efficiency block",
+      "timestamp": "YYYY-MM-DD HH:MM:SS",
       "data": {
         "control_command": "turn_on",
         "mode": "cool"
@@ -98,9 +89,9 @@ The service simulates temperature changes in each room by applying HVAC effects 
     "topic": "gym/hvac/on_off/{room_name}",
     "message": {
       "device_id": "admin_id",
-      "timestamp": ""YYYY-MM-DD HH:MM:SS"",
+      "timestamp": "YYYY-MM-DD HH:MM:SS",
       "data": {
-        "state": "ON"
+        "state": "ON",
         "mode": "cool"
       }
     }
