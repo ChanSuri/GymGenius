@@ -91,6 +91,8 @@ class ResourceCatalog:
             if device["device_id"] == device_id:
                 device_registry["devices"][i] = input_data
                 break
+        else: # else with for cicle is used when the cicle ends without a break
+            raise cherrypy.HTTPError(404, "Device not found")
 
         # Update last update of the whole register
         device_registry["lastUpdate"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
