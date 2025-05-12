@@ -181,8 +181,7 @@ def initialize_service(config_dict):
 
 def stop_service(signum, frame):
     print("Stopping service...")
-    delete_service("machine_availability",service.service_catalog_url)
-
+    delete_service(service.config["service_id"],service.service_catalog_url)
     # Clean stop of the MQTT client
     service.stop()
 
@@ -197,8 +196,8 @@ if __name__ == "__main__":
     service = MachineAvailabilityService(config)
     initialize_service(config)
 
-    # Start the MQTT client loop
-    service.client.loop_forever()
-
     # Signal handler for clean stop
     signal.signal(signal.SIGINT, stop_service)
+
+    # Start the MQTT client loop
+    service.client.loop_forever()
