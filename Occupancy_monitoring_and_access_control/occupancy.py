@@ -11,15 +11,6 @@ import signal
 import pandas as pd
 import io
 
-# Global variables
-current_occupancy = 0
-X_train = []
-Y_train = []
-min_training_samples = None  # Will be calculated based on the number of time slots
-
-# Model for regression
-model = LinearRegression()
-
 # Class to manage occupancy
 class OccupancyService:
 
@@ -30,12 +21,11 @@ class OccupancyService:
         self.time_slots = self.get_time_slots_from_service_catalog()
         self.thing_speak_url = self.get_thingspeak_url_from_service_catalog()
 
-        # Calculate min_training_samples based on the number of time slots and days in a week
-        global min_training_samples
-        min_training_samples = 2 * len(self.time_slots) * 7  # 2 data points per slot-hour/day combination, only 2 for debug (real case needs more sample)
-        # min_training_samples = 2
-
-        # Initialize the prediction matrix (dynamic based on time slots)
+        self.min_training_samples = 2 * len(self.time_slots) * 7
+        self.current_occupancy = 0
+        self.X_train = []
+        self.Y_train = []
+        self.model = LinearRegression()
         self.prediction_matrix = np.zeros((len(self.time_slots), 7))
 
         # MQTT client configuration
@@ -43,7 +33,7 @@ class OccupancyService:
         self.client.connect(self.mqtt_broker, self.mqtt_port, 60)
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
-        # self.client.loop_start()
+        
 
     def get_mqtt_info_from_service_catalog(self):
         """Retrieve MQTT broker and port information from the service catalog."""
@@ -108,7 +98,6 @@ class OccupancyService:
             (f"failed to connect to MQTT broker. Return code: {rc}")
 
     def on_message(self, client, userdata, msg):
-        global current_occupancy
 
         # Validate entry and exit messages
         if msg.topic == self.config["subscribed_topics"]["entries"]:
@@ -120,7 +109,7 @@ class OccupancyService:
         self.fetch_historical_data()
 
         # Check if we can train the model
-        if len(X_train) >= min_training_samples: 
+        if len(self.X_train) >= self.min_training_samples: 
             self.train_model()
             self.update_prediction()
 
@@ -128,18 +117,16 @@ class OccupancyService:
         self.publish_current_occupancy()
 
     def increment_occupancy(self):
-        global current_occupancy
-        if current_occupancy < 1000:
-            current_occupancy += 1
-            print(f"Increment: New occupancy = {current_occupancy}")
+        if self.current_occupancy < 1000:
+            self.current_occupancy += 1
+            print(f"Increment: New occupancy = {self.current_occupancy}")
         else:
             print("Maximum occupancy reached, cannot increment.")
 
     def decrement_occupancy(self):
-        global current_occupancy
-        if current_occupancy > 0:
-            current_occupancy -= 1
-            print(f"Decrement: New occupancy = {current_occupancy}")
+        if self.current_occupancy > 0:
+            self.current_occupancy -= 1
+            print(f"Decrement: New occupancy = {self.current_occupancy}")
         else:
             print("Occupancy is already zero, cannot decrement.")
     
@@ -164,10 +151,10 @@ class OccupancyService:
                 occupancy = row['current_occupancy']
 
                 # Add data to X_train and Y_train
-                X_train.append([hour_slot, day_of_week])
-                Y_train.append(occupancy)
+                self.X_train.append([hour_slot, day_of_week])
+                self.Y_train.append(occupancy)
 
-            print(f"Load {len(X_train)} sample.")
+            print(f"Load {len(self.X_train)} sample.")
         else:
             print(f"Failed to fetch data from ThingSpeak, status code: {response.status_code}")
 
@@ -182,17 +169,17 @@ class OccupancyService:
 
     def train_model(self):
         global model
-        X_train_np = np.array(X_train)
-        Y_train_np = np.array(Y_train)
+        X_train_np = np.array(self.X_train)
+        Y_train_np = np.array(self.Y_train)
 
-        model.fit(X_train_np, Y_train_np)
+        self.model.fit(X_train_np, Y_train_np)
         print("Model trained with regression")
     
     def update_prediction(self):
         global model
         for hour_slot in range(len(self.time_slots)):
             for day in range(7):
-                raw = model.predict([[hour_slot, day]])[0]
+                raw = self.model.predict([[hour_slot, day]])[0]
                 self.prediction_matrix[hour_slot, day] = int(round(max(0, raw)))
         print(f"Prediction matrix updated: \n{self.prediction_matrix}")
         self.publish_prediction()
@@ -206,13 +193,13 @@ class OccupancyService:
                 "device_id": "DeviceConnector",
                 "timestamp": now,
                 "data": {
-                    "current_occupancy": current_occupancy,
+                    "current_occupancy": self.current_occupancy,
                     "unit": "count"
                 }
             }
         }
         self.client.publish(self.config["published_topics"]["current_occupancy"], json.dumps(message))
-        print(f"Published current occupancy: {current_occupancy}")
+        print(f"Published current occupancy: {self.current_occupancy}")
 
     def publish_prediction(self):
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -239,11 +226,10 @@ def initialize_service(config_dict):
     register_service(config_dict, config_dict["service_catalog"])
     print("Occupancy Service Initialized and Registered")
 
-def stop_service(signum, frame):
-    with open('config.json') as f:
-        config_dict = json.load(f)
+def stop_service(service_instance):
     print("Stopping service...")
-    delete_service("occupancy", config_dict["service_catalog"])
+    delete_service(service_instance.config["service_id"], service_instance.config["service_catalog"])
+    service_instance.stop()
 
 if __name__ == '__main__':
     # Open config.json once and pass it to both functions
@@ -254,7 +240,6 @@ if __name__ == '__main__':
     # Initialize the service with the loaded configuration
     initialize_service(config_dict)
 
-    signal.signal(signal.SIGINT, stop_service)
-
     occupancy_service = OccupancyService(config=config_dict)
+    signal.signal(signal.SIGINT, lambda s, f: stop_service(occupancy_service))
     occupancy_service.client.loop_forever()

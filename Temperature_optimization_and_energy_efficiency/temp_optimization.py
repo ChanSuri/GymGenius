@@ -420,7 +420,7 @@ def initialize_service(config_dict):
 def stop_service(signum, frame):
     """Cleanly stop the service."""
     print("Stopping service...")
-    delete_service("hvac_control",service.service_catalog_url)
+    delete_service(service.config["service_id"],service.service_catalog_url)
     service.stop()
 
 if __name__ == "__main__":
