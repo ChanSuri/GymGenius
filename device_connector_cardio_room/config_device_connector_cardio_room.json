@@ -17,10 +17,10 @@
         "availability": "gym/availability/<machineID>"
     },
     "simulation_parameters": {
-        "dht11_seconds": 5,
+        "dht11_seconds": 20,
         "pir_machine_type": "cardio",
         "pir_machines_per_type": 4,
-        "pir_seconds": 2,
+        "pir_seconds": 10,
         "button_seconds": null
     },
     "enable_dht11": true,

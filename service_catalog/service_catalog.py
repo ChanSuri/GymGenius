@@ -4,7 +4,6 @@ import os
 from datetime import datetime
 
 # Path to the service_registry.json file
-# SERVICE_REGISTRY_FILE = 'C:\\Users\\feder\\OneDrive\\Desktop\\GymGenius\\service_catalog\\service_registry.json'
 SERVICE_REGISTRY_FILE = 'service_registry.json'
 
 def load_registry():
@@ -66,7 +65,7 @@ class ServiceCatalog:
         service_registry["services"].append(input_data)
 
         # Update last update of the whole register
-        service_registry["lastUpdate"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        service_registry["last_update"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         save_service_registry(service_registry)
         return json.dumps({"status": "success", "message": "Service registered successfully"})
     
@@ -89,7 +88,7 @@ class ServiceCatalog:
             raise cherrypy.HTTPError(404, "Service not found")
 
         # Update last update of the whole register
-        service_registry["lastUpdate"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        service_registry["last_update"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         save_service_registry(service_registry)
 
         return json.dumps({"status": "success", "message": "Service updated successfully"})
@@ -107,8 +106,8 @@ class ServiceCatalog:
                 # Remove the service from the registry
                 del service_registry["services"][i]
                 
-                # Update lastUpdate
-                service_registry["lastUpdate"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                # Update last_update
+                service_registry["last_update"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 save_service_registry(service_registry)
                 return json.dumps({"status": "success", "message": f"Service {service_id} deleted successfully"})
         

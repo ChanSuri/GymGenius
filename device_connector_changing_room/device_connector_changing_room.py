@@ -2,7 +2,8 @@ import cherrypy
 import json
 import requests
 import paho.mqtt.client as mqtt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from dateutil.parser import parse
 from sensors.dht11_class import SimulatedDHT11Sensor
 from sensors.PIR_class import SimulatedPIRSensor
 from sensors.button_class import SimulatedButtonSensor
@@ -243,27 +244,34 @@ class DeviceConnector:
             return round(self.simulated_temperature[room], 2)
 
     def check_and_delete_inactive_devices(self):
-        """Checks for inactive devices and deletes them if they haven't been updated in the last 3 days."""
+        """Delete devices mai aggiornati negli ultimi 3 giorni."""
         try:
-            response = requests.get(self.resource_catalog_url)  # URL for resource catalog is loaded from config 
-            if response.status_code == 200:
-                device_registry = response.json().get("devices", [])
-                response = requests.get(self.resource_catalog_url)
-                current_time = datetime.now()
+            resp = requests.get(self.resource_catalog_url)            
+            if resp.status_code != 200:
+                print(f"[RC] {resp.status_code} – {resp.text}")
+                return
 
-                for device in device_registry["devices"]:
-                    last_update_str = device.get("lastUpdate")
-                    if last_update_str:
-                        last_update = datetime.strptime(last_update_str, "%Y-%m-%d %H:%M:%S")
-                        if current_time - last_update > timedelta(days=3):
-                            # Device inactive for more than 3 days, send DELETE request
-                            self.delete_device(device.get("device_id"))
+            registry  = resp.json().get("devices", {})                
+            devices   = registry.get("devices", [])                  
+            now_utc   = datetime.now(timezone.utc)
 
-            else:
-                print(f"Error retrieving the device registry: {response.status_code} - {response.text}")
+            for dev in devices:
+                last_up_str = dev.get("last_update")                  
+                if not last_up_str:
+                    continue
 
-        except requests.exceptions.RequestException as e:
-            print(f"Connection error during GET request to the Resource Catalog: {e}")
+                try:
+                    last_up = parse(last_up_str)
+                    if last_up.tzinfo is None:                         
+                        last_up = last_up.replace(tzinfo=timezone.utc)
+
+                    if now_utc - last_up > timedelta(days=3):
+                        self.delete_device(dev.get("device_id"))
+                except Exception as e:
+                    print(f"[RC] errore parsing '{last_up_str}': {e}")
+
+        except Exception as e:
+            print(f"[RC] errore nella check: {e}")
 
 
     def delete_device(self, device_id):

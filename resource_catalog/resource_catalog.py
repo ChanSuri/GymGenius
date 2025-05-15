@@ -71,7 +71,7 @@ class ResourceCatalog:
         device_registry["devices"].append(input_data)
         
         # update last update of the whole register 
-        device_registry["lastUpdate"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        device_registry["last_update"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         save_device_registry(device_registry)
         return json.dumps({"status": "success", "message": "Device registered successfully"})
 
@@ -95,7 +95,7 @@ class ResourceCatalog:
             raise cherrypy.HTTPError(404, "Device not found")
 
         # Update last update of the whole register
-        device_registry["lastUpdate"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        device_registry["last_update"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         save_device_registry(device_registry)
         
         return json.dumps({"status": "success", "message": "Device updated successfully"})
@@ -114,8 +114,8 @@ class ResourceCatalog:
                 # Remove the device from the registry
                 del device_registry["devices"][i]
                 
-                # Update lastUpdate
-                device_registry["lastUpdate"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                # Update last_update
+                device_registry["last_update"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 save_device_registry(device_registry)
                 return json.dumps({"status": "success", "message": f"Device {device_id} deleted successfully"})
         

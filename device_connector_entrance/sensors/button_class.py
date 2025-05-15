@@ -14,7 +14,7 @@ class SimulatedButtonSensor:
 
         # Base SenML records for entrance and exit buttons
         self.entrance_base_record = {
-            "bn": "GymGenius/Occupancy/Entrance",
+            "bn": "gym/occupancy/entrance",
             "bt": 0,
             "n": "push-button-enter",
             "u": "count",
@@ -22,7 +22,7 @@ class SimulatedButtonSensor:
         }
         
         self.exit_base_record = {
-            "bn": "GymGenius/Occupancy/Exit",
+            "bn": "gym/occupancy/exit",
             "bt": 0,
             "n": "push-button-exit",
             "u": "count",
