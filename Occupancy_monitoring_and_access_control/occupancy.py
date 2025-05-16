@@ -136,7 +136,10 @@ class OccupancyService:
             print("ThingSpeak URL not available.")
             return
 
-        response = requests.get(self.thing_speak_url)
+        room_id = "entrance" 
+        url = self.thing_speak_url.replace("<roomID>", room_id)
+
+        response = requests.get(url)
         if response.status_code == 200:
             data = response.content.decode('utf-8')
             df = pd.read_csv(io.StringIO(data))
