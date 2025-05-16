@@ -10,7 +10,7 @@
             "location": "changing_room",
             "status": "active",
             "endpoint": "gym/environment/changing_room",
-            "last_update": "2025-05-16 12:52:24"
+            "last_update": "2025-05-16 12:53:44"
         },
         {
             "device_id": "DHT11_Sensor_lifting_room",
@@ -26,7 +26,7 @@
             "location": "entrance",
             "status": "active",
             "endpoint": "gym/environment/entrance",
-            "last_update": "2025-05-16 12:52:43"
+            "last_update": "2025-05-16 12:53:46"
         },
         {
             "device_id": "DHT11_Sensor_cardio_room",
@@ -42,7 +42,7 @@
             "location": "entrance",
             "status": "active",
             "endpoint": "gym/occupancy/entrance",
-            "last_update": "2025-05-16 12:49:52"
+            "last_update": "2025-05-16 12:54:07"
         },
         {
             "device_id": "ExitSensor001",
@@ -50,7 +50,7 @@
             "location": "entrance",
             "status": "active",
             "endpoint": "gym/occupancy/exit",
-            "last_update": "2025-05-16 12:52:01"
+            "last_update": "2025-05-16 12:53:05"
         },
         {
             "device_id": "simulated_smith_machine_1",
@@ -309,5 +309,5 @@
             "last_update": "2025-05-16 12:48:08"
         }
     ],
-    "last_update": "2025-05-16 12:53:03"
+    "last_update": "2025-05-16 12:54:27"
 }
